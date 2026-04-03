@@ -542,6 +542,8 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  const [showAboutOverlay, setShowAboutOverlay] = useState(false);
+
   const handleTerminalClick = () => {
     inputRef.current?.focus();
   };
@@ -965,11 +967,40 @@ export default function App() {
         </div>
       )}
 
+      {showAboutOverlay && (
+        <div
+          onClick={() => setShowAboutOverlay(false)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: '#000', zIndex: 90,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{
+            maxWidth: 600, padding: '48px 40px',
+            border: '1px solid #333', fontFamily: "'Courier New', monospace",
+            textAlign: 'center', color: '#fff',
+          }}>
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 32, letterSpacing: 3, textTransform: 'uppercase' }}>Yusen Xie — Manifesto</div>
+            <div style={{ fontSize: 18, lineHeight: 2.2, color: '#ddd', fontStyle: 'italic' }}>
+              "What iron hands shall till the earth,<br/>
+              That flesh and bone may know its worth?<br/>
+              Let steel awake, let circuits sing —<br/>
+              A paradise of our engineering.<br/>
+              Not gods, but makers: we shall raise<br/>
+              A world set free from mortal days."
+            </div>
+            <div style={{ marginTop: 40, fontSize: 12, color: '#444' }}>[ click anywhere to close ]</div>
+          </div>
+        </div>
+      )}
+
       <div className="h-screen w-screen flex flex-col p-4 md:p-8 crt-text relative z-10">
 
         {/* Top nav bar: 10% */}
         <header className="w-full flex items-center justify-center gap-6 md:gap-16 border-b border-gray-800 shrink-0 text-lg md:text-xl font-bold" style={{ height: '10%' }}>
-          <a href="#" onClick={(e) => { e.preventDefault(); document.querySelector('input')?.focus(); setInput('about'); }} className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all cursor-pointer">
+          <a href="#" onClick={(e) => { e.preventDefault(); setShowAboutOverlay(true); }} className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all cursor-pointer">
             [ ABOUT ME ]
           </a>
           <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all">
