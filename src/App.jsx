@@ -414,6 +414,8 @@ export default function App() {
   const [history, setHistory] = useState([
     { type: 'ascii', text: HEADER_ASCII },
     { type: 'system', text: 'SYSTEM INITIALIZED. Welcome to Yusen Xie\'s personal terminal.' },
+    { type: 'system', text: 'Robotics + AI engineer @ Carnegie Mellon University.' },
+    { type: 'system', text: 'Co-founder of Vector Robotics. Building Vector OS Nano.' },
     { type: 'system', text: 'Type "help" to see available commands.' }
   ]);
   const [input, setInput] = useState('');
@@ -461,48 +463,85 @@ export default function App() {
 
     switch (cmd) {
       case 'help':
-        newHistory.push({ type: 'output', text: 'AVAILABLE COMMANDS:\n  about    - Who is Yusen?\n  skills   - My tech stack\n  projects - View recent works\n  contact  - How to reach me\n  scan     - Activate robot scan mode\n  clear    - Clear terminal\n  sudo     - ???' });
+        newHistory.push({ type: 'output', text: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  education  - Academic background\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  vectoros   - Vector OS Nano project\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT effects\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???' });
         setAvatarState('success');
         resetState();
         break;
       case 'about':
-        newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\n\nI am an AI Engineering student at Carnegie Mellon University,\nfocused on building robots that interact with the real world.\n\nMy work spans the entire stack:\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\nI believe the future belongs to machines that can see, think, and act.\nCurrently exploring embodied AI, end-to-end locomotion, and\nhuman-robot interaction at the edge of what is possible.' });
+        newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\n\nI am an AI Engineering student at Carnegie Mellon University,\nfocused on building robots that interact with the real world.\n\nMy work spans the entire stack:\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\nCo-founder of Vector Robotics. Currently building Vector OS Nano —\na cross-embodiment robot operating system with autonomous navigation,\nnatural language control, and sim-to-real transfer.\n\nI believe the future belongs to machines that can see, think, and act.' });
+        setAvatarState('success');
+        resetState();
+        break;
+      case 'education':
+        newHistory.push({ type: 'output', text: 'EDUCATION:\n\n  Carnegie Mellon University\n  B.S. Artificial Intelligence Engineering\n\n  Coursework:\n  > Computer Vision\n  > Robot Kinematics & Dynamics\n  > Deep Reinforcement Learning\n  > Real-Time Embedded Systems\n  > Linear Algebra & Optimization' });
         setAvatarState('success');
         resetState();
         break;
       case 'skills':
-        newHistory.push({ type: 'output', text: 'LOADING SKILL STACK...\n> JAVASCRIPT    [##########--] 85%\n> REACT/VUE     [#########---] 80%\n> CSS/CANVAS    [###########-] 95%\n> NODE.JS       [########----] 70%\n> LINUX/BASH    [#########---] 80%' });
+        newHistory.push({ type: 'output', text: 'LOADING SKILL STACK...\n\n  ROBOTICS & AI\n  > ROS2/Humble  [###########-] 95%\n  > Python       [###########-] 95%\n  > C++          [##########--] 85%\n  > PyTorch      [#########---] 80%\n  > MuJoCo       [########----] 75%\n  > Isaac Sim    [########----] 75%\n\n  HARDWARE\n  > FPGA         [########----] 70%\n  > ESP32        [#########---] 80%\n  > Embedded C   [########----] 75%\n\n  SOFTWARE\n  > React/TS     [##########--] 85%\n  > Docker       [#########---] 80%\n  > Linux/Bash   [###########-] 90%\n  > Git/CI       [##########--] 85%' });
+        setAvatarState('success');
+        resetState();
+        break;
+      case 'neofetch':
+        newHistory.push({ type: 'output', text: '  yusen@cmu\n  ─────────────────────\n  OS:       Human v24\n  Host:     Carnegie Mellon University\n  Kernel:   AI Engineering\n  Uptime:   4 years in robotics\n  Shell:    ROS2 Humble\n  Terminal: This one :)\n  CPU:      Caffeinated Neural Net\n  GPU:      Isaac Sim + MuJoCo\n  Memory:   Lots of papers\n  Org:      Vector Robotics (Co-founder)\n  Project:  Vector OS Nano' });
+        setAvatarState('success');
+        resetState();
+        break;
+      case 'vectoros':
+        newHistory.push({ type: 'output', text: 'VECTOR OS NANO\n══════════════════════════════════════════════\n\nCross-embodiment robot operating system.\n\n  Status:    ACTIVE DEVELOPMENT\n  Role:      Co-founder & Builder\n  Org:       github.com/VectorRobotics\n  Repo:      github.com/VectorRobotics/vector-os-nano\n\n  Features:\n  > Industrial-grade autonomous navigation\n  > Natural language control interface\n  > Sim-to-real transfer pipeline\n  > Multi-embodiment support\n\n  Hardware:  Unitree Go2 + SO-ARM101\n  Stack:     ROS2 Humble / MuJoCo / Isaac Sim\n  Origin:    CMU Robotics Institute\n\n  Visit: https://github.com/VectorRobotics/vector-os-nano' });
         setAvatarState('success');
         resetState();
         break;
       case 'projects':
-        newHistory.push({ type: 'output', text: 'RECENT PROJECTS:\n1. [TermFolio] - The site you are looking at, a geek terminal powered by React & Dithering algorithms.\n2. [PixelEngine] - Lightweight high-fidelity web pixel renderer.\n3. [CyberSpace] - Minimalist monochrome blog system.' });
+        newHistory.push({ type: 'output', text: 'ALL PROJECTS:\n\n  [01] Vector OS Nano         (type "vectoros" for details)\n       Cross-embodiment robot OS — autonomous nav + NL control\n       github.com/VectorRobotics/vector-os-nano\n\n  [02] Vector Robotics Core\n       General-purpose agentic robotics system (Ubuntu + ROS2)\n       github.com/yusenthebot/vector-robotics-core\n\n  [03] G1 Locomotion\n       End-to-end humanoid locomotion & manipulation\n       github.com/yusenthebot/G1-end-to-end-locomotion-manipulation\n\n  [04] OpenClaw Dashboard\n       Terminal-aesthetic real-time agent monitoring panel\n       github.com/yusenthebot/openclaw-dashboard\n\n  [05] TermFolio\n       This site — cyberpunk terminal portfolio with Bayer dithering' });
+        setAvatarState('success');
+        resetState();
+        break;
+      case 'resume':
+        newHistory.push({ type: 'output', text: 'RESUME:\n  Status: Available upon request.\n  Contact: yusenthebot@outlook.com\n  LinkedIn: linkedin.com/in/yusen-xie-5327b8382' });
         setAvatarState('success');
         resetState();
         break;
       case 'contact':
-        newHistory.push({ type: 'output', text: 'CONTACT INFORMATION:\nEmail: hi@yusen.dev\nGitHub: github.com/yusen\nX(Twitter): @yusen_dev' });
+        newHistory.push({ type: 'output', text: 'CONTACT INFORMATION:\n  Email:    yusenthebot@outlook.com\n  GitHub:   github.com/yusenthebot\n  LinkedIn: linkedin.com/in/yusen-xie-5327b8382\n  Org:      github.com/VectorRobotics' });
+        setAvatarState('success');
+        resetState();
+        break;
+      case 'links':
+        newHistory.push({ type: 'output', text: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Vector OS]  github.com/VectorRobotics/vector-os-nano\n  [VectorOrg]  github.com/VectorRobotics\n  [LinkedIn]   linkedin.com/in/yusen-xie-5327b8382\n  [Email]      yusenthebot@outlook.com' });
         setAvatarState('success');
         resetState();
         break;
       case 'scan':
-        newHistory.push({ type: 'output', text: 'INITIATING FULL SPECTRUM SCAN...\n> Scanning visitor biometrics.......... DONE\n> Threat level: NONE\n> Curiosity level: HIGH\n> Classification: FRIENDLY HUMAN\n> Recommendation: GRANT ACCESS' });
+        newHistory.push({ type: 'output', text: 'INITIATING FULL SPECTRUM SCAN...\n> Scanning visitor biometrics.......... DONE\n> Analyzing neural pattern............. DONE\n> Cross-referencing database........... DONE\n\n  Threat level:     NONE\n  Curiosity level:  HIGH\n  Technical depth:  SIGNIFICANT\n  Classification:   FRIENDLY HUMAN\n  Recommendation:   GRANT FULL ACCESS' });
         avatarGlitchRef.current = 0.8;
         setAvatarState('scan');
         if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
         stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 4000);
+        break;
+      case 'theme':
+        newHistory.push({ type: 'output', text: 'CRT THEME: ACTIVE\n> Scan lines: ON\n> Flicker: ON\n> Dithering: BAYER 8x8\n> Color mode: MONOCHROME\n> This is the only theme. Embrace it.' });
+        avatarGlitchRef.current = 0.5;
+        setAvatarState('success');
+        resetState();
+        break;
+      case 'hack':
+        newHistory.push({ type: 'error', text: 'SECURITY ALERT!\n> Intrusion detected...\n> Tracing IP address...\n> ...\n> Just kidding. But the Cyber-Unit is watching.' });
+        avatarGlitchRef.current = 1.0;
+        setAvatarState('error');
+        resetState();
         break;
       case 'clear':
         setHistory([]);
         setInput('');
         return;
       case 'sudo':
-        newHistory.push({ type: 'error', text: 'PERMISSION DENIED: Nice try, but you don\'t have admin privileges here!' });
+        newHistory.push({ type: 'error', text: 'PERMISSION DENIED: Nice try, but you don\'t have admin privileges here!\n\n  Hint: Only the Cyber-Unit has root access.\n  Try clicking on it instead.' });
         setAvatarState('error');
         resetState();
         break;
       default:
-        newHistory.push({ type: 'error', text: `COMMAND NOT FOUND: ${cmd}. Type "help" to see commands.` });
+        newHistory.push({ type: 'error', text: `COMMAND NOT FOUND: ${cmd}\nType "help" to see available commands.` });
         setAvatarState('error');
         resetState();
     }
