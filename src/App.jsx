@@ -28,22 +28,18 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
     let animationFrameId;
     let frameCount = 0;
 
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let canvasMouseX = 0.5;
-    let canvasMouseY = 0.5;
+    // Raw mouse target + smoothed (lerped) for fluid 3D inertia
+    let targetMX = 0, targetMY = 0;
+    let smoothMX = 0, smoothMY = 0;
 
     const handleMouseMove = (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+      targetMX = (e.clientX / window.innerWidth) * 2 - 1;
+      targetMY = (e.clientY / window.innerHeight) * 2 - 1;
       const rect = canvas.getBoundingClientRect();
-      canvasMouseX = (e.clientX - rect.left) / rect.width;
-      canvasMouseY = (e.clientY - rect.top) / rect.height;
-      // proximity to robot center (0.5, 0.4)
-      const dx = canvasMouseX - 0.5;
-      const dy = canvasMouseY - 0.4;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      hoverProximityRef.current = Math.max(0, 1 - dist * 2.5);
+      const cx = (e.clientX - rect.left) / rect.width;
+      const cy = (e.clientY - rect.top) / rect.height;
+      const dx = cx - 0.5, dy = cy - 0.4;
+      hoverProximityRef.current = Math.max(0, 1 - Math.sqrt(dx*dx + dy*dy) * 2.5);
     };
     window.addEventListener('mousemove', handleMouseMove);
 
@@ -62,20 +58,24 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
     const render = () => {
       frameCount++;
 
+      // Smooth interpolation (inertia) — makes head feel heavy/physical
+      const lerp = 0.08;
+      smoothMX += (targetMX - smoothMX) * lerp;
+      smoothMY += (targetMY - smoothMY) * lerp;
+      const mx = smoothMX;
+      const my = smoothMY;
+
       oCtx.fillStyle = 'rgb(10, 10, 10)';
       oCtx.fillRect(0, 0, 1000, 800);
 
-      const mx = (mouseX / window.innerWidth) * 2 - 1;
-      const my = (mouseY / window.innerHeight) * 2 - 1;
-
-      // Multi-plane parallax
-      const nX = mx * 10;  const nY = my * 5;
-      const aX = mx * 20;  const aY = my * 10;
-      const earX = mx * 25; const earY = my * 15;
-      const hX = mx * 45;  const hY = my * 25;
-      const vX = mx * 35;  const vY = my * 20;
-      const oX = mx * 15;  const oY = my * 10;
-      const refX = mx * -25; const refY = my * -15;
+      // Multi-plane parallax (amplified for stronger 3D)
+      const nX = mx * 12;   const nY = my * 6;     // neck: minimal
+      const aX = mx * 28;   const aY = my * 14;    // body armor
+      const earX = mx * 35;  const earY = my * 20;  // ears: side-mounted
+      const hX = mx * 65;   const hY = my * 35;    // head shell: big shift
+      const vX = mx * 50;   const vY = my * 28;    // visor: mid-depth
+      const oX = mx * 18;   const oY = my * 12;    // optics: deep inside
+      const refX = mx * -35; const refY = my * -20; // reflection: inverse
 
       // 1. Body Armor
       const armorGrad = oCtx.createLinearGradient(200 + aX, 500 + aY, 800 + aX, 800 + aY);
@@ -128,9 +128,15 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
         oCtx.fillRect(420 + nX, 460 + nY + i*18, 160, 8);
       }
 
-      // 3. Head Dome
-      const lightX = 450 + hX - mx * 30;
-      const lightY = 200 + hY - my * 30;
+      // 3. Head Dome (with tilt rotation for 3D)
+      oCtx.save();
+      const headCX = 500 + hX, headCY = 300 + hY;
+      oCtx.translate(headCX, headCY);
+      oCtx.rotate(mx * 0.04); // subtle tilt
+      oCtx.translate(-headCX, -headCY);
+
+      const lightX = 450 + hX - mx * 40;
+      const lightY = 200 + hY - my * 40;
 
       const headGrad = oCtx.createRadialGradient(lightX, lightY, 20, 500+hX, 300+hY, 450);
       headGrad.addColorStop(0, 'rgb(255, 255, 255)');
@@ -309,13 +315,14 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       oCtx.lineTo(750 + refX, 400 + refY);
       oCtx.fill();
 
-      oCtx.restore();
+      oCtx.restore(); // end visor clip
+      oCtx.restore(); // end head tilt rotation
 
       // 8. Typing hands (foreground)
       if (avatarState === 'typing') {
         const typeFrame = Math.floor(frameCount / 4) % 2;
-        const fX = mx * 60;
-        const fY = my * 30;
+        const fX = mx * 80;
+        const fY = my * 40;
 
         oCtx.fillStyle = 'rgb(200, 205, 210)';
         oCtx.strokeStyle = 'rgb(20, 20, 20)';
