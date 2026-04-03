@@ -130,6 +130,8 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
   const canvasRef = useRef(null);
   const glitchRef = externalGlitchRef || { current: 0 };
   const hoverProximityRef = useRef(0);
+  const creepRef = useRef(0);
+  creepRef.current = creepLevel;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -184,7 +186,7 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       oCtx.fillRect(0, 0, 1000, 800);
 
       // Creep distortion
-      const cl = creepLevel;
+      const cl = creepRef.current;
       const twitch = cl > 0 ? (Math.random() - 0.5) * cl * 8 : 0;
       const headTwitch = cl >= 2 ? (Math.random() - 0.5) * cl * 5 : 0;
 
@@ -735,6 +737,9 @@ export default function App() {
   };
 
   const handleAvatarClick = () => {
+    // Block clicks during blackout sequence
+    if (blackout) return;
+
     clickCountRef.current += 1;
     const n = clickCountRef.current;
 
