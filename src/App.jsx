@@ -261,16 +261,37 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       // Eye state animations
       const isBlink = avatarState === 'idle' && (frameCount % 250 > 240);
       const proximity = hoverProximityRef.current;
-      const glitchT = glitchRef.current;
+      const cl = creepRef.current;
 
       eyes.forEach(ex => {
         if (avatarState === 'error') {
-          oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 6;
-          oCtx.beginPath(); oCtx.moveTo(ex-18, eyeY-18); oCtx.lineTo(ex+18, eyeY+18); oCtx.stroke();
-          oCtx.beginPath(); oCtx.moveTo(ex+18, eyeY-18); oCtx.lineTo(ex-18, eyeY+18); oCtx.stroke();
-          if (Math.floor(frameCount / 4) % 2 === 0) {
-            oCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; oCtx.lineWidth = 3;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, 40, 0, Math.PI*2); oCtx.stroke();
+          if (cl >= 2) {
+            // Menacing stare: huge dilated pupils, intense unblinking glow
+            const pulse = 0.7 + Math.sin(frameCount * 0.15) * 0.3;
+            const twitch = (Math.random() - 0.5) * 6;
+            // Bright burning core — unnaturally large
+            oCtx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.5, 28, 0, Math.PI*2); oCtx.fill();
+            // Outer menacing ring — pulsing
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${pulse * 0.8})`; oCtx.lineWidth = 4;
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.5, 36, 0, Math.PI*2); oCtx.stroke();
+            // Second flickering ring
+            if (Math.random() > 0.3) {
+              oCtx.strokeStyle = `rgba(255, 255, 255, ${0.2 + Math.random() * 0.3})`; oCtx.lineWidth = 2;
+              oCtx.beginPath(); oCtx.arc(ex, eyeY, 42 + Math.random() * 5, 0, Math.PI*2); oCtx.stroke();
+            }
+            // Angry slit — narrowed horizontal line through the pupil
+            oCtx.fillStyle = 'rgb(0, 0, 0)';
+            oCtx.fillRect(ex + twitch - 22, eyeY + twitch * 0.5 - 3, 44, 6);
+          } else {
+            // Normal error: X eyes
+            oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 6;
+            oCtx.beginPath(); oCtx.moveTo(ex-18, eyeY-18); oCtx.lineTo(ex+18, eyeY+18); oCtx.stroke();
+            oCtx.beginPath(); oCtx.moveTo(ex+18, eyeY-18); oCtx.lineTo(ex-18, eyeY+18); oCtx.stroke();
+            if (Math.floor(frameCount / 4) % 2 === 0) {
+              oCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; oCtx.lineWidth = 3;
+              oCtx.beginPath(); oCtx.arc(ex, eyeY, 40, 0, Math.PI*2); oCtx.stroke();
+            }
           }
         } else if (avatarState === 'success') {
           const ringRadius = 10 + Math.abs(Math.sin(frameCount * 0.2)) * 22;
@@ -306,19 +327,27 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
           oCtx.fillStyle = 'rgb(255, 255, 255)';
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 5, 0, Math.PI*2); oCtx.fill();
         } else {
-          // Idle: proximity-reactive glow
-          const baseAlpha = 0.3 + proximity * 0.5;
-          const coreAlpha = baseAlpha + Math.sin(frameCount * 0.05) * 0.2;
-          const ringSize = 18 + proximity * 8;
-          const coreSize = 9 + proximity * 5;
-          oCtx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha + 0.1})`; oCtx.lineWidth = 3 + proximity * 3;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize, 0, Math.PI*2); oCtx.stroke();
-          if (proximity > 0.5) {
-            oCtx.strokeStyle = `rgba(255, 255, 255, ${(proximity - 0.5) * 0.4})`; oCtx.lineWidth = 1;
+          // Idle: proximity-reactive glow, modified by creep level
+          const baseAlpha = 0.3 + proximity * 0.5 + cl * 0.15;
+          const coreAlpha = baseAlpha + Math.sin(frameCount * (0.05 + cl * 0.03)) * 0.2;
+          const ringSize = 18 + proximity * 8 + cl * 3;
+          const coreSize = 9 + proximity * 5 + cl * 4;
+          const eyeTwitch = cl >= 1 ? (Math.random() - 0.5) * cl * 2 : 0;
+
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${Math.min(1, baseAlpha + 0.1)})`; oCtx.lineWidth = 3 + proximity * 3 + cl;
+          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, ringSize, 0, Math.PI*2); oCtx.stroke();
+          if (proximity > 0.5 || cl >= 1) {
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${Math.max((proximity - 0.5) * 0.4, cl * 0.15)})`; oCtx.lineWidth = 1;
             oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 10, 0, Math.PI*2); oCtx.stroke();
           }
-          oCtx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, coreSize, 0, Math.PI*2); oCtx.fill();
+          oCtx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, coreAlpha)})`;
+          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, coreSize, 0, Math.PI*2); oCtx.fill();
+
+          // Creep level 2: angry slit pupil
+          if (cl >= 2) {
+            oCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            oCtx.fillRect(ex + eyeTwitch - 16, eyeY + eyeTwitch * 0.5 - 2, 32, 4);
+          }
         }
       });
 
