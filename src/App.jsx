@@ -667,8 +667,11 @@ export default function App() {
     clickCountRef.current += 1;
     const n = clickCountRef.current;
 
-    // Trigger glitch on every click
-    avatarGlitchRef.current = 1.0;
+    // Glitch only after 10th dialogue (creepy phase onwards)
+    const dialogueIdx = n >= 2 ? (n - 2) % 30 : -1;
+    if (dialogueIdx >= 10) {
+      avatarGlitchRef.current = 0.4 + Math.min(dialogueIdx - 10, 14) * 0.04;
+    }
 
     // First click: introduce yourself
     if (n === 1) {
