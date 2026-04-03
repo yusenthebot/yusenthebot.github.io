@@ -11,7 +11,37 @@ const HEADER_ASCII = `
 `;
 
 // Pixel Avatar with Bayer Dithering
-const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef }) => {
+// Speech bubble with typewriter effect
+const SpeechBubble = ({ text }) => {
+  const [displayed, setDisplayed] = useState('');
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    setDisplayed('');
+    indexRef.current = 0;
+    if (!text) return;
+    const interval = setInterval(() => {
+      indexRef.current++;
+      setDisplayed(text.slice(0, indexRef.current));
+      if (indexRef.current >= text.length) clearInterval(interval);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  if (!text) return null;
+
+  return (
+    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 max-w-[85%] z-20 pointer-events-none">
+      <div className="bg-black border border-gray-600 rounded px-3 py-2 text-sm text-white font-mono relative">
+        <span>{displayed}</span>
+        {displayed.length < text.length && <span className="animate-pulse">_</span>}
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-gray-600"></div>
+      </div>
+    </div>
+  );
+};
+
+const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef, speech }) => {
   const canvasRef = useRef(null);
   const glitchRef = externalGlitchRef || { current: 0 };
   const hoverProximityRef = useRef(0);
@@ -412,6 +442,7 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       <div className="absolute top-4 right-4 text-sm text-gray-400 font-mono animate-pulse bg-black px-2 py-1 rounded border border-gray-800">
         [ UNIT_STATUS: {avatarState.toUpperCase()} ]
       </div>
+      <SpeechBubble text={speech} />
     </div>
   );
 };
@@ -427,12 +458,21 @@ export default function App() {
   ]);
   const [input, setInput] = useState('');
   const [avatarState, setAvatarState] = useState('idle');
+  const [robotSpeech, setRobotSpeech] = useState('');
   const clickCountRef = useRef(0);
   const avatarGlitchRef = useRef(0);
+  const speechTimeoutRef = useRef(null);
   const terminalEndRef = useRef(null);
   const inputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const stateResetTimeoutRef = useRef(null);
+
+  const speak = (text, duration) => {
+    setRobotSpeech('');
+    setTimeout(() => setRobotSpeech(text), 10);
+    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+    speechTimeoutRef.current = setTimeout(() => setRobotSpeech(''), duration || (text.length * 50 + 2000));
+  };
 
   const scrollToBottom = () => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -471,11 +511,13 @@ export default function App() {
     switch (cmd) {
       case 'help':
         newHistory.push({ type: 'output', text: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  education  - Academic background\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  vectoros   - Vector OS Nano project\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT effects\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???' });
+        speak('Here are all the commands. Try "about" or "vectoros".');
         setAvatarState('success');
         resetState();
         break;
       case 'about':
         newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\n\nI am an AI Engineering student at Carnegie Mellon University,\nfocused on building robots that interact with the real world.\n\nMy work spans the entire stack:\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\nCo-founder of Vector Robotics. Currently building Vector OS Nano —\na cross-embodiment robot operating system with autonomous navigation,\nnatural language control, and sim-to-real transfer.\n\nI believe the future belongs to machines that can see, think, and act.' });
+        speak('Nice to meet you. I build robots that think and act.');
         setAvatarState('success');
         resetState();
         break;
@@ -486,6 +528,7 @@ export default function App() {
         break;
       case 'skills':
         newHistory.push({ type: 'output', text: 'LOADING SKILL STACK...\n\n  ROBOTICS & AI\n  > ROS2/Humble  [###########-] 95%\n  > Python       [###########-] 95%\n  > C++          [##########--] 85%\n  > PyTorch      [#########---] 80%\n  > MuJoCo       [########----] 75%\n  > Isaac Sim    [########----] 75%\n\n  HARDWARE\n  > FPGA         [########----] 70%\n  > ESP32        [#########---] 80%\n  > Embedded C   [########----] 75%\n\n  SOFTWARE\n  > React/TS     [##########--] 85%\n  > Docker       [#########---] 80%\n  > Linux/Bash   [###########-] 90%\n  > Git/CI       [##########--] 85%' });
+        speak('My stack goes from silicon to cloud. Full vertical.');
         setAvatarState('success');
         resetState();
         break;
@@ -496,6 +539,7 @@ export default function App() {
         break;
       case 'vectoros':
         newHistory.push({ type: 'output', text: 'VECTOR OS NANO\n══════════════════════════════════════════════\n\nCross-embodiment robot operating system.\n\n  Status:    ACTIVE DEVELOPMENT\n  Role:      Co-founder & Builder\n  Org:       github.com/VectorRobotics\n  Repo:      github.com/VectorRobotics/vector-os-nano\n\n  Features:\n  > Industrial-grade autonomous navigation\n  > Natural language control interface\n  > Sim-to-real transfer pipeline\n  > Multi-embodiment support\n\n  Hardware:  Unitree Go2 + SO-ARM101\n  Stack:     ROS2 Humble / MuJoCo / Isaac Sim\n  Origin:    CMU Robotics Institute\n\n  Visit: https://github.com/VectorRobotics/vector-os-nano' });
+        speak('Vector OS is my primary project. A real robot operating system.');
         setAvatarState('success');
         resetState();
         break;
@@ -521,6 +565,7 @@ export default function App() {
         break;
       case 'scan':
         newHistory.push({ type: 'output', text: 'INITIATING FULL SPECTRUM SCAN...\n> Scanning visitor biometrics.......... DONE\n> Analyzing neural pattern............. DONE\n> Cross-referencing database........... DONE\n\n  Threat level:     NONE\n  Curiosity level:  HIGH\n  Technical depth:  SIGNIFICANT\n  Classification:   FRIENDLY HUMAN\n  Recommendation:   GRANT FULL ACCESS' });
+        speak('Scanning... You look interesting. Access granted.');
         avatarGlitchRef.current = 0.8;
         setAvatarState('scan');
         if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
@@ -534,6 +579,7 @@ export default function App() {
         break;
       case 'hack':
         newHistory.push({ type: 'error', text: 'SECURITY ALERT!\n> Intrusion detected...\n> Tracing IP address...\n> ...\n> Just kidding. But the Cyber-Unit is watching.' });
+        speak('Did you really just try that? I am watching you.');
         avatarGlitchRef.current = 1.0;
         setAvatarState('error');
         resetState();
@@ -543,11 +589,13 @@ export default function App() {
         setInput('');
         return;
       case 'sudo':
+        speak('Permission denied. Only I have root access here.');
         newHistory.push({ type: 'error', text: 'PERMISSION DENIED: Nice try, but you don\'t have admin privileges here!\n\n  Hint: Only the Cyber-Unit has root access.\n  Try clicking on it instead.' });
         setAvatarState('error');
         resetState();
         break;
       default:
+        speak('Unknown command. Try "help".');
         newHistory.push({ type: 'error', text: `COMMAND NOT FOUND: ${cmd}\nType "help" to see available commands.` });
         setAvatarState('error');
         resetState();
@@ -565,24 +613,27 @@ export default function App() {
     avatarGlitchRef.current = 1.0;
 
     const responses = [
-      '> [System] You pinged the Cyber-Unit... Diagnostics are green.',
-      '> [System] Sensor array recalibrated. All optics nominal.',
-      '> [System] Neural link acknowledged. Hello, human.',
-      '> [System] Running self-diagnostic... 0 errors, 0 warnings.',
-      '> [System] Gesture detected. Adjusting attention matrix.',
-      '> [System] Core temperature: 42.7C. Operating within limits.',
-      '> [System] I see you. Do you see me?',
+      { log: '> [System] You pinged the Cyber-Unit... Diagnostics are green.', say: 'Hello there.' },
+      { log: '> [System] Sensor array recalibrated. All optics nominal.', say: 'Sensors recalibrated. I can see you better now.' },
+      { log: '> [System] Neural link acknowledged. Hello, human.', say: 'Neural link established. Welcome.' },
+      { log: '> [System] Running self-diagnostic... 0 errors, 0 warnings.', say: 'All systems nominal. Zero defects.' },
+      { log: '> [System] Gesture detected. Adjusting attention matrix.', say: 'You have my full attention.' },
+      { log: '> [System] Core temperature: 42.7C. Operating within limits.', say: 'Running warm but within spec.' },
+      { log: '> [System] I see you. Do you see me?', say: 'I see you. Do you see me?' },
     ];
 
     if (n % 10 === 0) {
       setHistory(prev => [...prev, { type: 'system', text: `> [System] WARNING: Interaction count ${n}. You seem... persistent.` }]);
+      speak(`Interaction #${n}. You are... persistent.`);
       setAvatarState('error');
     } else if (n % 5 === 0) {
       setHistory(prev => [...prev, { type: 'system', text: '> [System] Entering scan mode... Analyzing visitor.' }]);
+      speak('Initiating scan. Hold still.');
       setAvatarState('scan');
     } else {
-      const msg = responses[(n - 1) % responses.length];
-      setHistory(prev => [...prev, { type: 'system', text: msg }]);
+      const r = responses[(n - 1) % responses.length];
+      setHistory(prev => [...prev, { type: 'system', text: r.log }]);
+      speak(r.say);
       setAvatarState('success');
     }
 
@@ -730,7 +781,7 @@ export default function App() {
 
           {/* Right: Cyberpunk Robot */}
           <div className="flex-1 h-full bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden">
-            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} glitchRef={avatarGlitchRef} />
+            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} glitchRef={avatarGlitchRef} speech={robotSpeech} />
           </div>
 
         </div>
