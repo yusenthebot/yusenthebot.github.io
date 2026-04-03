@@ -399,23 +399,38 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
 
       // 8c. Creep visual noise
       if (cl >= 1) {
-        // Random static lines
-        const staticCount = cl * 4;
+        // Static noise lines
+        const staticCount = cl * 8;
         for (let i = 0; i < staticCount; i++) {
           const sy = Math.floor(Math.random() * 800);
-          oCtx.fillStyle = `rgba(255, 255, 255, ${0.03 + Math.random() * cl * 0.04})`;
+          oCtx.fillStyle = `rgba(255, 255, 255, ${0.03 + Math.random() * cl * 0.06})`;
           oCtx.fillRect(0, sy, 1000, 1);
+        }
+        // Intermittent micro-glitch slices
+        if (Math.random() < cl * 0.15) {
+          const gy = Math.floor(Math.random() * 800);
+          const gh = Math.floor(Math.random() * 10 + 3);
+          const gSliceH = Math.min(gh, 800 - gy);
+          if (gSliceH > 0) {
+            const gSlice = oCtx.getImageData(0, gy, 1000, gSliceH);
+            oCtx.putImageData(gSlice, Math.floor((Math.random() - 0.5) * cl * 30), gy);
+          }
         }
       }
       if (cl >= 2) {
-        // Corruption blocks
-        for (let i = 0; i < cl; i++) {
+        // Heavy corruption blocks
+        for (let i = 0; i < cl * 3; i++) {
           const bx = Math.floor(Math.random() * 900);
           const by = Math.floor(Math.random() * 700);
-          const bw = Math.floor(Math.random() * 80 + 20);
-          const bh = Math.floor(Math.random() * 5 + 2);
-          oCtx.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0}, ${Math.random() > 0.5 ? 255 : 0}, ${Math.random() > 0.5 ? 255 : 0}, ${0.05 + Math.random() * 0.1})`;
+          const bw = Math.floor(Math.random() * 100 + 30);
+          const bh = Math.floor(Math.random() * 8 + 2);
+          oCtx.fillStyle = `rgba(255, 255, 255, ${0.06 + Math.random() * 0.15})`;
           oCtx.fillRect(bx, by, bw, bh);
+        }
+        // Random full-width white flash (rare)
+        if (Math.random() < 0.05) {
+          oCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+          oCtx.fillRect(0, 0, 1000, 800);
         }
       }
 
@@ -438,15 +453,56 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       // 10. Glitch effect (triggered on click, decays over time)
       if (glitchRef.current > 0) {
         const g = glitchRef.current;
-        const sliceCount = Math.floor(g * 12);
+
+        // Horizontal slice displacement (more slices, bigger offset)
+        const sliceCount = Math.floor(g * 20);
         for (let i = 0; i < sliceCount; i++) {
           const y = Math.floor(Math.random() * 800);
-          const h = Math.floor(Math.random() * 20 + 5);
-          const offset = Math.floor((Math.random() - 0.5) * g * 80);
-          const slice = oCtx.getImageData(0, y, 1000, Math.min(h, 800 - y));
-          oCtx.putImageData(slice, offset, y);
+          const h = Math.floor(Math.random() * 30 + 5);
+          const offset = Math.floor((Math.random() - 0.5) * g * 150);
+          const sliceH = Math.min(h, 800 - y);
+          if (sliceH > 0) {
+            const slice = oCtx.getImageData(0, y, 1000, sliceH);
+            oCtx.putImageData(slice, offset, y);
+          }
         }
-        glitchRef.current = Math.max(0, g - 0.04);
+
+        // White flash bars
+        if (g > 0.6) {
+          for (let i = 0; i < Math.floor(g * 5); i++) {
+            const barY = Math.floor(Math.random() * 800);
+            oCtx.fillStyle = `rgba(255, 255, 255, ${g * 0.5})`;
+            oCtx.fillRect(0, barY, 1000, Math.random() * 4 + 1);
+          }
+        }
+
+        // Block corruption (random inverted blocks)
+        if (g > 0.4) {
+          for (let i = 0; i < Math.floor(g * 6); i++) {
+            const bx = Math.floor(Math.random() * 900);
+            const by = Math.floor(Math.random() * 700);
+            const bw = Math.floor(Math.random() * 120 + 30);
+            const bh = Math.floor(Math.random() * 15 + 3);
+            const blockData = oCtx.getImageData(bx, by, Math.min(bw, 1000 - bx), Math.min(bh, 800 - by));
+            const bd = blockData.data;
+            for (let p = 0; p < bd.length; p += 4) {
+              bd[p] = 255 - bd[p];
+              bd[p+1] = 255 - bd[p+1];
+              bd[p+2] = 255 - bd[p+2];
+            }
+            oCtx.putImageData(blockData, bx + Math.floor((Math.random()-0.5) * 20), by);
+          }
+        }
+
+        // Screen tear (duplicate a section vertically offset)
+        if (g > 0.7) {
+          const tearY = Math.floor(Math.random() * 600);
+          const tearH = Math.floor(Math.random() * 80 + 40);
+          const tearSlice = oCtx.getImageData(0, tearY, 1000, Math.min(tearH, 800 - tearY));
+          oCtx.putImageData(tearSlice, 0, tearY + Math.floor(Math.random() * 60 - 30));
+        }
+
+        glitchRef.current = Math.max(0, g - 0.03);
       }
 
       // 11. Proximity scan line (when mouse is near the robot)
@@ -571,7 +627,7 @@ export default function App() {
 
     switch (cmd) {
       case 'help':
-        newHistory.push({ type: 'output', text: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  education  - Academic background\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  vectoros   - Vector OS Nano project\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT effects\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???' });
+        newHistory.push({ type: 'output', text: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  vectoros   - Vector OS Nano project\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT effects\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???' });
         speak('Here are all the commands. Try "about" or "vectoros".');
         setAvatarState('success');
         resetState();
@@ -579,11 +635,6 @@ export default function App() {
       case 'about':
         newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\n\nI am an AI Engineering student at Carnegie Mellon University,\nfocused on building robots that interact with the real world.\n\nMy work spans the entire stack:\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\nCo-founder of Vector Robotics. Currently building Vector OS Nano —\na cross-embodiment robot operating system with autonomous navigation,\nnatural language control, and sim-to-real transfer.\n\nI believe the future belongs to machines that can see, think, and act.' });
         speak('Nice to meet you. I build robots that think and act.');
-        setAvatarState('success');
-        resetState();
-        break;
-      case 'education':
-        newHistory.push({ type: 'output', text: 'EDUCATION:\n\n  Carnegie Mellon University\n  B.S. Artificial Intelligence Engineering\n\n  Coursework:\n  > Computer Vision\n  > Robot Kinematics & Dynamics\n  > Deep Reinforcement Learning\n  > Real-Time Embedded Systems\n  > Linear Algebra & Optimization' });
         setAvatarState('success');
         resetState();
         break;
@@ -764,8 +815,15 @@ export default function App() {
       const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
       const runSequence = async () => {
+        // Sustained heavy glitch before blackout
+        avatarGlitchRef.current = 1.0;
+        await wait(500);
+        avatarGlitchRef.current = 1.0;
+        await wait(500);
+        avatarGlitchRef.current = 1.0;
+        await wait(500);
+
         // Phase 1: Signal lost
-        await wait(1500);
         setRobotSpeech('');
         setBlackoutContent(
           <div style={{ fontSize: 24, animation: 'flicker 0.1s infinite' }}>{'> SIGNAL LOST_'}</div>
