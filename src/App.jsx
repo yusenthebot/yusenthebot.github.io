@@ -11,8 +11,10 @@ const HEADER_ASCII = `
 `;
 
 // Pixel Avatar with Bayer Dithering
-const PixelAvatar = ({ avatarState, onAvatarClick }) => {
+const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef }) => {
   const canvasRef = useRef(null);
+  const glitchRef = externalGlitchRef || { current: 0 };
+  const hoverProximityRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,9 +30,20 @@ const PixelAvatar = ({ avatarState, onAvatarClick }) => {
 
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
+    let canvasMouseX = 0.5;
+    let canvasMouseY = 0.5;
+
     const handleMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+      const rect = canvas.getBoundingClientRect();
+      canvasMouseX = (e.clientX - rect.left) / rect.width;
+      canvasMouseY = (e.clientY - rect.top) / rect.height;
+      // proximity to robot center (0.5, 0.4)
+      const dx = canvasMouseX - 0.5;
+      const dy = canvasMouseY - 0.4;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      hoverProximityRef.current = Math.max(0, 1 - dist * 2.5);
     };
     window.addEventListener('mousemove', handleMouseMove);
 
@@ -205,6 +218,8 @@ const PixelAvatar = ({ avatarState, onAvatarClick }) => {
 
       // Eye state animations
       const isBlink = avatarState === 'idle' && (frameCount % 250 > 240);
+      const proximity = hoverProximityRef.current;
+      const glitchT = glitchRef.current;
 
       eyes.forEach(ex => {
         if (avatarState === 'error') {
@@ -221,6 +236,22 @@ const PixelAvatar = ({ avatarState, onAvatarClick }) => {
           oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
           oCtx.fillStyle = 'rgb(255, 255, 255)';
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 8, 0, Math.PI*2); oCtx.fill();
+        } else if (avatarState === 'scan') {
+          // Scanning: rotating radar sweep
+          const sweepAngle = (frameCount * 0.08) % (Math.PI * 2);
+          oCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; oCtx.lineWidth = 3;
+          for (let r = 0; r < 3; r++) {
+            const a = sweepAngle + r * (Math.PI * 2 / 3);
+            oCtx.beginPath();
+            oCtx.moveTo(ex, eyeY);
+            oCtx.lineTo(ex + Math.cos(a) * 38, eyeY + Math.sin(a) * 38);
+            oCtx.stroke();
+          }
+          oCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; oCtx.lineWidth = 2;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, 20, 0, Math.PI*2); oCtx.stroke();
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, 35, 0, Math.PI*2); oCtx.stroke();
+          oCtx.fillStyle = 'rgb(255, 255, 255)';
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, 4, 0, Math.PI*2); oCtx.fill();
         } else if (isBlink) {
           oCtx.fillStyle = 'rgb(200, 200, 200)'; oCtx.fillRect(ex - 35, eyeY - 2, 70, 4);
         } else if (avatarState === 'typing') {
@@ -233,11 +264,19 @@ const PixelAvatar = ({ avatarState, onAvatarClick }) => {
           oCtx.fillStyle = 'rgb(255, 255, 255)';
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 5, 0, Math.PI*2); oCtx.fill();
         } else {
-          oCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; oCtx.lineWidth = 4;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, 18, 0, Math.PI*2); oCtx.stroke();
-          const coreAlpha = 0.5 + Math.sin(frameCount * 0.05) * 0.5;
+          // Idle: proximity-reactive glow (eyes brighten as mouse approaches)
+          const baseAlpha = 0.3 + proximity * 0.5;
+          const coreAlpha = baseAlpha + Math.sin(frameCount * 0.05) * 0.2;
+          const ringSize = 18 + proximity * 8;
+          const coreSize = 9 + proximity * 5;
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha + 0.1})`; oCtx.lineWidth = 3 + proximity * 3;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize, 0, Math.PI*2); oCtx.stroke();
+          if (proximity > 0.5) {
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${(proximity - 0.5) * 0.4})`; oCtx.lineWidth = 1;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 10, 0, Math.PI*2); oCtx.stroke();
+          }
           oCtx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, 9, 0, Math.PI*2); oCtx.fill();
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, coreSize, 0, Math.PI*2); oCtx.fill();
         }
       });
 
@@ -311,7 +350,31 @@ const PixelAvatar = ({ avatarState, onAvatarClick }) => {
       }
       oCtx.putImageData(imgData, 0, 0);
 
-      // 10. Final render
+      // 10. Glitch effect (triggered on click, decays over time)
+      if (glitchRef.current > 0) {
+        const g = glitchRef.current;
+        const sliceCount = Math.floor(g * 12);
+        for (let i = 0; i < sliceCount; i++) {
+          const y = Math.floor(Math.random() * 800);
+          const h = Math.floor(Math.random() * 20 + 5);
+          const offset = Math.floor((Math.random() - 0.5) * g * 80);
+          const slice = oCtx.getImageData(0, y, 1000, Math.min(h, 800 - y));
+          oCtx.putImageData(slice, offset, y);
+        }
+        glitchRef.current = Math.max(0, g - 0.04);
+      }
+
+      // 11. Proximity scan line (when mouse is near the robot)
+      if (proximity > 0.3) {
+        const scanY = (frameCount * 3) % 800;
+        const scanAlpha = (proximity - 0.3) * 0.6;
+        oCtx.fillStyle = `rgba(255, 255, 255, ${scanAlpha})`;
+        oCtx.fillRect(0, scanY, 1000, 2);
+        oCtx.fillStyle = `rgba(255, 255, 255, ${scanAlpha * 0.3})`;
+        oCtx.fillRect(0, scanY - 4, 1000, 10);
+      }
+
+      // 12. Final render
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#050505';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -355,6 +418,8 @@ export default function App() {
   ]);
   const [input, setInput] = useState('');
   const [avatarState, setAvatarState] = useState('idle');
+  const clickCountRef = useRef(0);
+  const avatarGlitchRef = useRef(0);
   const terminalEndRef = useRef(null);
   const inputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -396,12 +461,12 @@ export default function App() {
 
     switch (cmd) {
       case 'help':
-        newHistory.push({ type: 'output', text: 'AVAILABLE COMMANDS:\n  about    - Who is Yusen?\n  skills   - My tech stack\n  projects - View recent works\n  contact  - How to reach me\n  clear    - Clear terminal\n  sudo     - ???' });
+        newHistory.push({ type: 'output', text: 'AVAILABLE COMMANDS:\n  about    - Who is Yusen?\n  skills   - My tech stack\n  projects - View recent works\n  contact  - How to reach me\n  scan     - Activate robot scan mode\n  clear    - Clear terminal\n  sudo     - ???' });
         setAvatarState('success');
         resetState();
         break;
       case 'about':
-        newHistory.push({ type: 'output', text: 'ABOUT ME:\nI am a Full Stack Developer, digital nomad, and cybernetic enthusiast.\nI love typing code in the terminal and bringing retro elements (like Bayer Dithering) into modern web dev.\nCurrently focused on building high-performance web apps and extreme interactive experiences.' });
+        newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\n\nI am an AI Engineering student at Carnegie Mellon University,\nfocused on building robots that interact with the real world.\n\nMy work spans the entire stack:\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\nI believe the future belongs to machines that can see, think, and act.\nCurrently exploring embodied AI, end-to-end locomotion, and\nhuman-robot interaction at the edge of what is possible.' });
         setAvatarState('success');
         resetState();
         break;
@@ -419,6 +484,13 @@ export default function App() {
         newHistory.push({ type: 'output', text: 'CONTACT INFORMATION:\nEmail: hi@yusen.dev\nGitHub: github.com/yusen\nX(Twitter): @yusen_dev' });
         setAvatarState('success');
         resetState();
+        break;
+      case 'scan':
+        newHistory.push({ type: 'output', text: 'INITIATING FULL SPECTRUM SCAN...\n> Scanning visitor biometrics.......... DONE\n> Threat level: NONE\n> Curiosity level: HIGH\n> Classification: FRIENDLY HUMAN\n> Recommendation: GRANT ACCESS' });
+        avatarGlitchRef.current = 0.8;
+        setAvatarState('scan');
+        if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
+        stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 4000);
         break;
       case 'clear':
         setHistory([]);
@@ -440,10 +512,36 @@ export default function App() {
   };
 
   const handleAvatarClick = () => {
-    setHistory(prev => [...prev, { type: 'system', text: '> [System] You pinged the Cyber-Unit... Diagnostics are green.' }]);
-    setAvatarState('success');
+    clickCountRef.current += 1;
+    const n = clickCountRef.current;
+
+    // Trigger glitch on every click
+    avatarGlitchRef.current = 1.0;
+
+    const responses = [
+      '> [System] You pinged the Cyber-Unit... Diagnostics are green.',
+      '> [System] Sensor array recalibrated. All optics nominal.',
+      '> [System] Neural link acknowledged. Hello, human.',
+      '> [System] Running self-diagnostic... 0 errors, 0 warnings.',
+      '> [System] Gesture detected. Adjusting attention matrix.',
+      '> [System] Core temperature: 42.7C. Operating within limits.',
+      '> [System] I see you. Do you see me?',
+    ];
+
+    if (n % 10 === 0) {
+      setHistory(prev => [...prev, { type: 'system', text: `> [System] WARNING: Interaction count ${n}. You seem... persistent.` }]);
+      setAvatarState('error');
+    } else if (n % 5 === 0) {
+      setHistory(prev => [...prev, { type: 'system', text: '> [System] Entering scan mode... Analyzing visitor.' }]);
+      setAvatarState('scan');
+    } else {
+      const msg = responses[(n - 1) % responses.length];
+      setHistory(prev => [...prev, { type: 'system', text: msg }]);
+      setAvatarState('success');
+    }
+
     if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
-    stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 2000);
+    stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 2500);
   };
 
   return (
@@ -579,7 +677,7 @@ export default function App() {
 
           {/* Right: Cyberpunk Robot */}
           <div className="flex-1 h-full bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden">
-            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} />
+            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} glitchRef={avatarGlitchRef} />
           </div>
 
         </div>
