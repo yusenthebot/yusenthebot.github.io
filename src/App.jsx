@@ -982,7 +982,7 @@ export default function App() {
             border: '1px solid #333', fontFamily: "'Courier New', monospace",
             textAlign: 'center', color: '#fff',
           }}>
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 32, letterSpacing: 3, textTransform: 'uppercase' }}>Yusen Xie  Manifesto</div>
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 32, letterSpacing: 3, textTransform: 'uppercase' }}>The Manifesto</div>
             <div style={{ fontSize: 18, lineHeight: 2.2, color: '#ddd', fontStyle: 'italic' }}>
               "What iron hands shall till the earth,<br/>
               That flesh and bone may know its worth?<br/>
