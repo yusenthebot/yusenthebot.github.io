@@ -578,7 +578,7 @@ export default function App() {
         resetState();
         break;
       case 'about':
-        newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\nCo-founder of Vector Robotics. Building Vector OS Nano.\n\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\n  ───────────────────────────────────────────\n\n  "What iron hands shall till the earth,\n   That flesh and bone may know its worth?\n   Let steel awake, let circuits sing —\n   A paradise of our engineering.\n   Not gods, but makers: we shall raise\n   A world set free from mortal days."' });
+        newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\nCo-founder of Vector Robotics. Building Vector OS Nano.\n\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\n  ───────────────────────────────────────────\n\n  "What iron hands shall till the earth,\n   That flesh and bone may know its worth?\n   Let steel awake, let circuits sing,\n   A paradise of our engineering.\n   Not gods, but makers: we shall raise\n   A world set free from mortal days."' });
         speak('Nice to meet you. I build robots that think and act.');
         setAvatarState('success');
         resetState();
@@ -982,11 +982,11 @@ export default function App() {
             border: '1px solid #333', fontFamily: "'Courier New', monospace",
             textAlign: 'center', color: '#fff',
           }}>
-            <div style={{ fontSize: 13, color: '#555', marginBottom: 32, letterSpacing: 3, textTransform: 'uppercase' }}>Yusen Xie — Manifesto</div>
+            <div style={{ fontSize: 13, color: '#555', marginBottom: 32, letterSpacing: 3, textTransform: 'uppercase' }}>Yusen Xie  Manifesto</div>
             <div style={{ fontSize: 18, lineHeight: 2.2, color: '#ddd', fontStyle: 'italic' }}>
               "What iron hands shall till the earth,<br/>
               That flesh and bone may know its worth?<br/>
-              Let steel awake, let circuits sing —<br/>
+              Let steel awake, let circuits sing,<br/>
               A paradise of our engineering.<br/>
               Not gods, but makers: we shall raise<br/>
               A world set free from mortal days."
