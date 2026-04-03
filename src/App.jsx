@@ -24,7 +24,7 @@ const SpeechBubble = ({ text }) => {
       indexRef.current++;
       setDisplayed(text.slice(0, indexRef.current));
       if (indexRef.current >= text.length) clearInterval(interval);
-    }, 30);
+    }, 15);
     return () => clearInterval(interval);
   }, [text]);
 
