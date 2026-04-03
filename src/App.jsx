@@ -414,8 +414,8 @@ export default function App() {
   const [history, setHistory] = useState([
     { type: 'ascii', text: HEADER_ASCII },
     { type: 'system', text: 'SYSTEM INITIALIZED. Welcome to Yusen Xie\'s personal terminal.' },
-    { type: 'system', text: 'Robotics + AI engineer @ Carnegie Mellon University.' },
-    { type: 'system', text: 'Co-founder of Vector Robotics. Building Vector OS Nano.' },
+    { type: 'intro', text: 'Robotics + AI Engineer @ Carnegie Mellon University' },
+    { type: 'intro', text: 'Co-founder of Vector Robotics — Building Vector OS Nano' },
     { type: 'system', text: 'Type "help" to see available commands.' }
   ]);
   const [input, setInput] = useState('');
@@ -680,6 +680,13 @@ export default function App() {
                       >
                         {line.text}
                       </pre>
+                    </div>
+                  );
+                }
+                if (line.type === 'intro') {
+                  return (
+                    <div key={i} className="text-lg md:text-xl font-bold text-white whitespace-pre-wrap break-words tracking-wide">
+                      {line.text}
                     </div>
                   );
                 }
