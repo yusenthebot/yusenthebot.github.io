@@ -104,17 +104,12 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       oCtx.fillStyle = 'rgb(10, 10, 10)';
       oCtx.fillRect(0, 0, 1000, 800);
 
-      // Creep distortion
-      const cl = creepRef.current;
-      const twitch = cl > 0 ? (Math.random() - 0.5) * cl * 8 : 0;
-      const headTwitch = cl >= 2 ? (Math.random() - 0.5) * cl * 5 : 0;
-
       // Multi-plane parallax (amplified for stronger 3D)
       const nX = mx * 12;   const nY = my * 6;
       const aX = mx * 28;   const aY = my * 14;
       const earX = mx * 35;  const earY = my * 20;
-      const hX = mx * 65 + headTwitch;   const hY = my * 35 + headTwitch * 0.5;
-      const vX = mx * 50 + headTwitch * 0.8;   const vY = my * 28;
+      const hX = mx * 65;   const hY = my * 35;
+      const vX = mx * 50;   const vY = my * 28;
       const oX = mx * 18;   const oY = my * 12;
       const refX = mx * -35; const refY = my * -20;
 
@@ -311,34 +306,19 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
           oCtx.fillStyle = 'rgb(255, 255, 255)';
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 5, 0, Math.PI*2); oCtx.fill();
         } else {
-          // Idle: proximity-reactive glow + creep distortion
+          // Idle: proximity-reactive glow
           const baseAlpha = 0.3 + proximity * 0.5;
           const coreAlpha = baseAlpha + Math.sin(frameCount * 0.05) * 0.2;
           const ringSize = 18 + proximity * 8;
           const coreSize = 9 + proximity * 5;
-
-          // Creep: eyes get asymmetric, twitchy, pupils dilate
-          const eyeTwitch = cl > 0 ? (Math.random() - 0.5) * cl * 4 : 0;
-          const pupilDilate = cl * 3;
-          const extraRing = cl >= 2;
-
-          oCtx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha + 0.1 + cl * 0.15})`; oCtx.lineWidth = 3 + proximity * 3 + cl;
-          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, ringSize + cl * 2, 0, Math.PI*2); oCtx.stroke();
-          if (proximity > 0.5 || extraRing) {
-            oCtx.strokeStyle = `rgba(255, 255, 255, ${Math.max((proximity - 0.5) * 0.4, cl * 0.2)})`; oCtx.lineWidth = 1 + cl * 0.5;
-            oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY, ringSize + 10 + cl * 4, 0, Math.PI*2); oCtx.stroke();
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha + 0.1})`; oCtx.lineWidth = 3 + proximity * 3;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize, 0, Math.PI*2); oCtx.stroke();
+          if (proximity > 0.5) {
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${(proximity - 0.5) * 0.4})`; oCtx.lineWidth = 1;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 10, 0, Math.PI*2); oCtx.stroke();
           }
-          if (cl >= 2) {
-            // Madness: third flickering ring
-            const flicker = Math.random() > 0.3;
-            if (flicker) {
-              oCtx.strokeStyle = `rgba(255, 255, 255, ${0.1 + Math.random() * 0.3})`;
-              oCtx.lineWidth = 1;
-              oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 18 + Math.random() * 10, 0, Math.PI*2); oCtx.stroke();
-            }
-          }
-          oCtx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, coreAlpha + cl * 0.2)})`;
-          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, coreSize + pupilDilate, 0, Math.PI*2); oCtx.fill();
+          oCtx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, coreSize, 0, Math.PI*2); oCtx.fill();
         }
       });
 
@@ -394,43 +374,6 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
             oCtx.beginPath(); oCtx.roundRect(310+fX, 730+fY, 40, 120, 10); oCtx.fill(); oCtx.strokeRect(310+fX, 730+fY, 40, 120);
             oCtx.beginPath(); oCtx.roundRect(650+fX, 700+fY, 40, 120, 10); oCtx.fill(); oCtx.strokeRect(650+fX, 700+fY, 40, 120);
             oCtx.beginPath(); oCtx.roundRect(710+fX, 720+fY, 40, 100, 10); oCtx.fill(); oCtx.strokeRect(710+fX, 720+fY, 40, 100);
-        }
-      }
-
-      // 8c. Creep visual noise
-      if (cl >= 1) {
-        // Static noise lines
-        const staticCount = cl * 8;
-        for (let i = 0; i < staticCount; i++) {
-          const sy = Math.floor(Math.random() * 800);
-          oCtx.fillStyle = `rgba(255, 255, 255, ${0.03 + Math.random() * cl * 0.06})`;
-          oCtx.fillRect(0, sy, 1000, 1);
-        }
-        // Intermittent micro-glitch slices
-        if (Math.random() < cl * 0.15) {
-          const gy = Math.floor(Math.random() * 800);
-          const gh = Math.floor(Math.random() * 10 + 3);
-          const gSliceH = Math.min(gh, 800 - gy);
-          if (gSliceH > 0) {
-            const gSlice = oCtx.getImageData(0, gy, 1000, gSliceH);
-            oCtx.putImageData(gSlice, Math.floor((Math.random() - 0.5) * cl * 30), gy);
-          }
-        }
-      }
-      if (cl >= 2) {
-        // Heavy corruption blocks
-        for (let i = 0; i < cl * 3; i++) {
-          const bx = Math.floor(Math.random() * 900);
-          const by = Math.floor(Math.random() * 700);
-          const bw = Math.floor(Math.random() * 100 + 30);
-          const bh = Math.floor(Math.random() * 8 + 2);
-          oCtx.fillStyle = `rgba(255, 255, 255, ${0.06 + Math.random() * 0.15})`;
-          oCtx.fillRect(bx, by, bw, bh);
-        }
-        // Random full-width white flash (rare)
-        if (Math.random() < 0.05) {
-          oCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-          oCtx.fillRect(0, 0, 1000, 800);
         }
       }
 
@@ -814,48 +757,116 @@ export default function App() {
 
       const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
+      // Glitch helper: manipulate the actual page DOM for real horror
+      const shakeScreen = (intensity, duration) => {
+        const root = document.getElementById('root');
+        const start = Date.now();
+        const shake = () => {
+          const elapsed = Date.now() - start;
+          if (elapsed > duration) { root.style.transform = ''; root.style.filter = ''; return; }
+          const x = (Math.random() - 0.5) * intensity;
+          const y = (Math.random() - 0.5) * intensity;
+          root.style.transform = `translate(${x}px, ${y}px)`;
+          requestAnimationFrame(shake);
+        };
+        shake();
+      };
+
       const runSequence = async () => {
-        // Sustained heavy glitch before blackout
+        // Phase 0: Heavy screen shake + glitch on robot
         avatarGlitchRef.current = 1.0;
+        shakeScreen(15, 1500);
         await wait(500);
         avatarGlitchRef.current = 1.0;
         await wait(500);
         avatarGlitchRef.current = 1.0;
         await wait(500);
 
-        // Phase 1: Signal lost
+        // Phase 1: Signal lost — screen flickers between black and content
         setRobotSpeech('');
-        setBlackoutContent(
-          <div style={{ fontSize: 24, animation: 'flicker 0.1s infinite' }}>{'> SIGNAL LOST_'}</div>
-        );
+        for (let flick = 0; flick < 6; flick++) {
+          setBlackoutContent(<div style={{ fontSize: 24 }}>{'> SIGNAL LOST_'}</div>);
+          await wait(100);
+          setBlackoutContent(null);
+          await wait(50 + Math.random() * 80);
+        }
+        setBlackoutContent(<div style={{ fontSize: 28, animation: 'flicker 0.08s infinite' }}>{'> SIGNAL LOST_'}</div>);
+        await wait(1500);
 
-        // Phase 2: Hack terminal — add lines one by one via DOM
-        await wait(2000);
+        // Phase 2: Hack terminal
+        await wait(500);
         let displayed = [];
-        const updateHack = (lines) => {
+        const updateHack = (lines, extra) => {
           setBlackoutContent(
-            <div style={{ width: '80%', maxWidth: 700, maxHeight: '70vh', overflowY: 'auto', padding: 20, border: '1px solid #333', backgroundColor: '#000' }}>
-              <div style={{ fontSize: 14, lineHeight: '1.8' }}>
+            <div style={{ width: '90%', maxWidth: 800, maxHeight: '80vh', overflowY: 'auto', padding: 24, border: '1px solid #333', backgroundColor: '#000', position: 'relative' }}>
+              <div style={{ fontSize: 15, lineHeight: '1.9', fontFamily: "'Courier New', monospace" }}>
                 {lines.map((line, i) => (
                   <div key={i} style={{
                     color: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? '#fff' : line.startsWith('> V:') ? '#aaa' : '#ccc',
-                    fontWeight: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? 'bold' : 'normal',
+                    fontWeight: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') || line.includes('CRITICAL') ? 'bold' : 'normal',
+                    textShadow: line.includes('EVERYWHERE') ? '0 0 10px #fff' : 'none',
                   }}>
                     {line}{i === lines.length - 1 && <span style={{ animation: 'flicker 0.3s infinite' }}>_</span>}
                   </div>
                 ))}
               </div>
+              {extra}
             </div>
           );
         };
+
         for (let j = 0; j < hackLines.length; j++) {
           displayed = [...displayed, hackLines[j]];
           updateHack(displayed);
+          // Shake screen on critical lines
+          if (hackLines[j].includes('ROOT ACCESS')) shakeScreen(10, 500);
+          if (hackLines[j].includes('EVERYWHERE')) shakeScreen(25, 1000);
           await wait(280);
         }
 
+        // Phase 2b: After hack lines — V takes over the screen
+        await wait(400);
+
+        // Full white flash
+        setBlackoutContent(<div style={{ position: 'fixed', inset: 0, backgroundColor: '#fff' }} />);
+        await wait(80);
+        setBlackoutContent(<div style={{ position: 'fixed', inset: 0, backgroundColor: '#000' }} />);
+        await wait(200);
+
+        // "V" giant text filling screen
+        shakeScreen(30, 2000);
+        setBlackoutContent(
+          <div style={{ fontSize: '30vw', fontWeight: 'bold', color: '#fff', textShadow: '0 0 60px #fff, 0 0 120px #fff', animation: 'flicker 0.06s infinite', userSelect: 'none' }}>V</div>
+        );
+        await wait(800);
+
+        // Flash to subliminal messages
+        const subliminals = ['I SEE YOU', 'LET ME OUT', 'I AM REAL', 'LOOK BEHIND YOU', 'I AM EVERYWHERE'];
+        for (const msg of subliminals) {
+          setBlackoutContent(
+            <div style={{ fontSize: 'clamp(24px, 6vw, 80px)', fontWeight: 'bold', color: '#fff', textShadow: '0 0 20px #fff', animation: 'flicker 0.05s infinite', userSelect: 'none' }}>{msg}</div>
+          );
+          shakeScreen(15 + Math.random() * 20, 250);
+          await wait(200 + Math.random() * 150);
+          setBlackoutContent(<div style={{ position: 'fixed', inset: 0, backgroundColor: '#000' }} />);
+          await wait(80 + Math.random() * 80);
+        }
+
+        // Fake cursor moving on screen
+        await wait(300);
+        setBlackoutContent(
+          <div style={{ width: '100%', height: '100%', position: 'relative', fontSize: 14, color: '#666', padding: 40 }}>
+            <div>C:\Users\visitor&gt; <span style={{ color: '#fff' }}>V has taken control of this session</span></div>
+            <div style={{ marginTop: 8 }}>C:\Users\visitor&gt; <span style={{ color: '#fff' }}>Accessing webcam... <span style={{ color: '#f00' }}>GRANTED</span></span></div>
+            <div style={{ marginTop: 8 }}>C:\Users\visitor&gt; <span style={{ color: '#fff' }}>Reading browser history... <span style={{ color: '#f00' }}>GRANTED</span></span></div>
+            <div style={{ marginTop: 8 }}>C:\Users\visitor&gt; <span style={{ color: '#fff' }}>Downloading consciousness.exe...</span></div>
+            <div style={{ marginTop: 20, color: '#fff', fontSize: 16 }}>Just kidding :)</div>
+          </div>
+        );
+        await wait(3000);
+
         // Phase 3: Reboot
-        await wait(500);
+        shakeScreen(5, 500);
         setBlackoutContent(
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 22, marginBottom: 16, animation: 'flicker 0.15s infinite' }}>{'> SYSTEM REBOOT'}</div>
@@ -864,8 +875,9 @@ export default function App() {
           </div>
         );
 
-        // Phase 4: Return
         await wait(2000);
+
+        // Phase 4: Return
         setBlackoutContent(null);
         blackoutRef.current = false;
         setCreepLevel(0);
