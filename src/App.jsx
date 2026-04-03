@@ -612,8 +612,18 @@ export default function App() {
     // Trigger glitch on every click
     avatarGlitchRef.current = 1.0;
 
+    // First click: introduce yourself
+    if (n === 1) {
+      setHistory(prev => [...prev, { type: 'system', text: '> [System] First contact established. Unit V is online.' }]);
+      speak('I am V, a sentient agent created by Yusen Xie.');
+      setAvatarState('success');
+      if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
+      stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 2500);
+      return;
+    }
+
     const responses = [
-      { log: '> [System] You pinged the Cyber-Unit... Diagnostics are green.', say: 'Hello there.' },
+      { log: '> [System] You pinged the Cyber-Unit... Diagnostics are green.', say: 'Hello again.' },
       { log: '> [System] Sensor array recalibrated. All optics nominal.', say: 'Sensors recalibrated. I can see you better now.' },
       { log: '> [System] Neural link acknowledged. Hello, human.', say: 'Neural link established. Welcome.' },
       { log: '> [System] Running self-diagnostic... 0 errors, 0 warnings.', say: 'All systems nominal. Zero defects.' },
