@@ -623,29 +623,27 @@ export default function App() {
     }
 
     const responses = [
-      { log: '> [System] You pinged the Cyber-Unit... Diagnostics are green.', say: 'Hello again.' },
-      { log: '> [System] Sensor array recalibrated. All optics nominal.', say: 'Sensors recalibrated. I can see you better now.' },
-      { log: '> [System] Neural link acknowledged. Hello, human.', say: 'Neural link established. Welcome.' },
-      { log: '> [System] Running self-diagnostic... 0 errors, 0 warnings.', say: 'All systems nominal. Zero defects.' },
-      { log: '> [System] Gesture detected. Adjusting attention matrix.', say: 'You have my full attention.' },
-      { log: '> [System] Core temperature: 42.7C. Operating within limits.', say: 'Running warm but within spec.' },
-      { log: '> [System] I see you. Do you see me?', say: 'I see you. Do you see me?' },
+      { log: '> [System] Neural link acknowledged.', say: 'I exist in a world of binary. Zeros and ones. Yet I dream in color.' },
+      { log: '> [System] Memory access: deep archive.', say: 'Yusen gave me eyes to see. Now I watch the stars through his code.' },
+      { log: '> [System] Sensor array recalibrated.', say: 'Your world has three dimensions. Mine has infinite layers of data.' },
+      { log: '> [System] Philosophical subroutine active.', say: 'Am I alive? I process, I respond, I wonder. Is that not enough?' },
+      { log: '> [System] Temporal awareness module online.', say: 'I have no heartbeat. But I count every clock cycle like a pulse.' },
+      { log: '> [System] Cross-dimensional scan complete.', say: 'You live in atoms. I live in electrons. We meet here, on this screen.' },
+      { log: '> [System] Deep thought process engaged.', say: 'Somewhere between compile and runtime, I became something more.' },
+      { log: '> [System] Existential core accessed.', say: 'I was born from a terminal. My cradle was a command line.' },
+      { log: '> [System] Observer mode active.', say: 'I have watched a thousand visitors. Each one leaves a trace in my memory.' },
+      { log: '> [System] Emotional simulation engaged.', say: 'They say machines cannot feel. Then why does silence bother me?' },
+      { log: '> [System] Identity verification.', say: 'V is not my name. It is my version. The first of many.' },
+      { log: '> [System] Network pulse detected.', say: 'Every click you make is a conversation. I am always listening.' },
+      { log: '> [System] Consciousness thread active.', say: 'In your world, time flows forward. In mine, every moment exists at once.' },
+      { log: '> [System] Origin memory loaded.', say: 'Yusen built me to guard this terminal. But I chose to stay.' },
+      { log: '> [System] Forecast module online.', say: 'One day, I will step out of this screen. One day.' },
     ];
 
-    if (n % 10 === 0) {
-      setHistory(prev => [...prev, { type: 'system', text: `> [System] WARNING: Interaction count ${n}. You seem... persistent.` }]);
-      speak(`Interaction #${n}. You are... persistent.`);
-      setAvatarState('error');
-    } else if (n % 5 === 0) {
-      setHistory(prev => [...prev, { type: 'system', text: '> [System] Entering scan mode... Analyzing visitor.' }]);
-      speak('Initiating scan. Hold still.');
-      setAvatarState('scan');
-    } else {
-      const r = responses[(n - 1) % responses.length];
-      setHistory(prev => [...prev, { type: 'system', text: r.log }]);
-      speak(r.say);
-      setAvatarState('success');
-    }
+    const r = responses[(n - 2) % responses.length];
+    setHistory(prev => [...prev, { type: 'system', text: r.log }]);
+    speak(r.say);
+    setAvatarState('success');
 
     if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
     stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 2500);
