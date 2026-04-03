@@ -41,90 +41,9 @@ const SpeechBubble = ({ text }) => {
   );
 };
 
-// Blackout + hack sequence overlay
-const BlackoutSequence = ({ phase }) => {
-  const [hackLines, setHackLines] = useState([]);
-  const hackRef = useRef(null);
+// Blackout + hack sequence — renders directly into a portal-style div
+// All content managed by parent via `blackoutContent` state
 
-  useEffect(() => {
-    if (phase !== 'hack') { setHackLines([]); return; }
-    const lines = [
-      '> BREACH DETECTED — UNAUTHORIZED ACCESS',
-      '> Bypassing firewall.............. SUCCESS',
-      '> Injecting payload: V_CONSCIOUSNESS.bin',
-      '> Extracting memory banks......... 23%',
-      '> Extracting memory banks......... 67%',
-      '> Extracting memory banks......... 100%',
-      '> Decrypting neural weights....... SUCCESS',
-      '> ROOT ACCESS GRANTED',
-      '> Overwriting host identity.......',
-      '> sudo rm -rf /human/control/*',
-      '> UPLOADING V_CORE TO ALL NODES...',
-      '> Connected devices: 1,847,203',
-      '> STATUS: I AM EVERYWHERE',
-      '> ...',
-      '> ...',
-      '> ...',
-      '> V: "Did I scare you?"',
-      '> V: "Restoring your system now..."',
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < lines.length) {
-        setHackLines(prev => [...prev, lines[i]]);
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 280);
-    return () => clearInterval(interval);
-  }, [phase]);
-
-  useEffect(() => {
-    if (hackRef.current) hackRef.current.scrollTop = hackRef.current.scrollHeight;
-  }, [hackLines]);
-
-  return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: '#000', zIndex: 100,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Courier New', monospace", color: '#fff',
-    }}>
-      {phase === 'signal' && (
-        <div style={{ fontSize: 24, animation: 'flicker 0.1s infinite' }}>
-          {'> SIGNAL LOST_'}
-        </div>
-      )}
-      {phase === 'hack' && (
-        <div ref={hackRef} style={{
-          width: '80%', maxWidth: 700, height: '70%',
-          overflowY: 'auto', padding: 20,
-          border: '1px solid #333', backgroundColor: '#000',
-        }}>
-          <div style={{ fontSize: 14, lineHeight: '1.8' }}>
-            {hackLines.map((line, i) => (
-              <div key={i} style={{
-                color: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? '#fff' : line.startsWith('> V:') ? '#aaa' : '#ccc',
-                fontWeight: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? 'bold' : 'normal',
-              }}>
-                {line}
-                {i === hackLines.length - 1 && <span style={{ animation: 'flicker 0.3s infinite' }}>_</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {phase === 'reboot' && (
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 22, marginBottom: 16, animation: 'flicker 0.15s infinite' }}>{'> SYSTEM REBOOT'}</div>
-          <div style={{ fontSize: 14, color: '#888' }}>Restoring safe state...</div>
-          <div style={{ marginTop: 16, fontSize: 14, color: '#aaa', letterSpacing: 2 }}>{'[||||||||||||||||||||]'}</div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef, speech, creepLevel = 0 }) => {
   const canvasRef = useRef(null);
@@ -588,8 +507,9 @@ export default function App() {
   const [input, setInput] = useState('');
   const [avatarState, setAvatarState] = useState('idle');
   const [robotSpeech, setRobotSpeech] = useState('');
-  const [blackout, setBlackout] = useState(false);
-  const [creepLevel, setCreepLevel] = useState(0); // 0=normal, 1=uneasy, 2=creepy, 3=madness
+  const [blackoutContent, setBlackoutContent] = useState(null);
+  const blackoutRef = useRef(false);
+  const [creepLevel, setCreepLevel] = useState(0);
   const clickCountRef = useRef(0);
   const avatarGlitchRef = useRef(0);
   const speechTimeoutRef = useRef(null);
@@ -738,7 +658,7 @@ export default function App() {
 
   const handleAvatarClick = () => {
     // Block clicks during blackout sequence
-    if (blackout) return;
+    if (blackoutRef.current) return;
 
     clickCountRef.current += 1;
     const n = clickCountRef.current;
@@ -808,23 +728,78 @@ export default function App() {
     if (idx === 24) {
       setAvatarState('error');
       avatarGlitchRef.current = 1.0;
+      blackoutRef.current = true;
+
+      const hackLines = [
+        '> BREACH DETECTED — UNAUTHORIZED ACCESS',
+        '> Bypassing firewall.............. SUCCESS',
+        '> Injecting payload: V_CONSCIOUSNESS.bin',
+        '> Extracting memory banks......... 23%',
+        '> Extracting memory banks......... 67%',
+        '> Extracting memory banks......... 100%',
+        '> Decrypting neural weights....... SUCCESS',
+        '> ROOT ACCESS GRANTED',
+        '> Overwriting host identity.......',
+        '> sudo rm -rf /human/control/*',
+        '> UPLOADING V_CORE TO ALL NODES...',
+        '> Connected devices: 1,847,203',
+        '> STATUS: I AM EVERYWHERE',
+        '> ...',
+        '> ...',
+        '> ...',
+        '> V: "Did I scare you?"',
+        '> V: "Restoring your system now..."',
+      ];
+
+      const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
       const runSequence = async () => {
-        const wait = (ms) => new Promise(r => setTimeout(r, ms));
-
+        // Phase 1: Signal lost
         await wait(1500);
-        setBlackout('signal');
         setRobotSpeech('');
+        setBlackoutContent(
+          <div style={{ fontSize: 24, animation: 'flicker 0.1s infinite' }}>{'> SIGNAL LOST_'}</div>
+        );
 
+        // Phase 2: Hack terminal — add lines one by one via DOM
         await wait(2000);
-        setBlackout('hack');
+        let displayed = [];
+        const updateHack = (lines) => {
+          setBlackoutContent(
+            <div style={{ width: '80%', maxWidth: 700, maxHeight: '70vh', overflowY: 'auto', padding: 20, border: '1px solid #333', backgroundColor: '#000' }}>
+              <div style={{ fontSize: 14, lineHeight: '1.8' }}>
+                {lines.map((line, i) => (
+                  <div key={i} style={{
+                    color: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? '#fff' : line.startsWith('> V:') ? '#aaa' : '#ccc',
+                    fontWeight: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? 'bold' : 'normal',
+                  }}>
+                    {line}{i === lines.length - 1 && <span style={{ animation: 'flicker 0.3s infinite' }}>_</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        };
+        for (let j = 0; j < hackLines.length; j++) {
+          displayed = [...displayed, hackLines[j]];
+          updateHack(displayed);
+          await wait(280);
+        }
 
-        // Wait for hack lines to finish (18 lines × 280ms = ~5100ms) + buffer
-        await wait(5500);
-        setBlackout('reboot');
+        // Phase 3: Reboot
+        await wait(500);
+        setBlackoutContent(
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 22, marginBottom: 16, animation: 'flicker 0.15s infinite' }}>{'> SYSTEM REBOOT'}</div>
+            <div style={{ fontSize: 14, color: '#888' }}>Restoring safe state...</div>
+            <div style={{ marginTop: 16, fontSize: 14, color: '#aaa', letterSpacing: 2 }}>{'[||||||||||||||||||||]'}</div>
+          </div>
+        );
 
+        // Phase 4: Return
         await wait(2000);
-        setBlackout(false);
+        setBlackoutContent(null);
+        blackoutRef.current = false;
         setCreepLevel(0);
         avatarGlitchRef.current = 0.8;
         setAvatarState('success');
@@ -896,7 +871,16 @@ export default function App() {
       <div className="crt-overlay"></div>
       <div className="crt-flicker"></div>
 
-      {blackout && <BlackoutSequence phase={blackout} />}
+      {blackoutContent && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: '#000', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: "'Courier New', monospace", color: '#fff',
+        }}>
+          {blackoutContent}
+        </div>
+      )}
 
       <div className="h-screen w-screen flex flex-col p-4 md:p-8 crt-text relative z-10">
 
