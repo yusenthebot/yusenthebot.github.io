@@ -808,30 +808,33 @@ export default function App() {
     if (idx === 24) {
       setAvatarState('error');
       avatarGlitchRef.current = 1.0;
-      // Phase 1: SIGNAL LOST
-      setTimeout(() => {
+
+      const runSequence = async () => {
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+        await wait(1500);
         setBlackout('signal');
         setRobotSpeech('');
-      }, 1500);
-      // Phase 2: Hack terminal
-      setTimeout(() => {
+
+        await wait(2000);
         setBlackout('hack');
-      }, 3500);
-      // Phase 3: Reboot
-      setTimeout(() => {
+
+        // Wait for hack lines to finish (18 lines × 280ms = ~5100ms) + buffer
+        await wait(5500);
         setBlackout('reboot');
-      }, 9000);
-      // Phase 4: Return
-      setTimeout(() => {
+
+        await wait(2000);
         setBlackout(false);
         setCreepLevel(0);
         avatarGlitchRef.current = 0.8;
         setAvatarState('success');
         speak('Hey! Welcome back. That was all just a joke, I promise.');
         setHistory(prev => [...prev, { type: 'system', text: '> [System] ...rebooting. All systems restored. V is back online.' }]);
-      }, 11000);
-      if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
-      stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 14000);
+
+        await wait(4000);
+        setAvatarState('idle');
+      };
+      runSequence();
       return;
     }
 
