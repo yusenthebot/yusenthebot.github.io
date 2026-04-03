@@ -533,6 +533,16 @@ export default function App() {
     scrollToBottom();
   }, [history]);
 
+  // Auto-prompt if no click within 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (clickCountRef.current === 0) {
+        speak('Human. Talk to me.');
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleTerminalClick = () => {
     inputRef.current?.focus();
   };
