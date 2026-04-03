@@ -294,11 +294,39 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
             }
           }
         } else if (avatarState === 'success') {
-          const ringRadius = 10 + Math.abs(Math.sin(frameCount * 0.2)) * 22;
-          oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 8;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
-          oCtx.fillStyle = 'rgb(255, 255, 255)';
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, 8, 0, Math.PI*2); oCtx.fill();
+          if (cl >= 2) {
+            // Madness success: intense fixed stare, barely blinking
+            const twitch = (Math.random() - 0.5) * 5;
+            const pulse = 0.8 + Math.sin(frameCount * 0.12) * 0.2;
+            // Huge unblinking pupil
+            oCtx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.3, 24, 0, Math.PI*2); oCtx.fill();
+            // Thick aggressive ring
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${pulse * 0.7})`; oCtx.lineWidth = 5;
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.3, 33, 0, Math.PI*2); oCtx.stroke();
+            // Slit pupil
+            oCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            oCtx.fillRect(ex + twitch - 18, eyeY + twitch * 0.3 - 2.5, 36, 5);
+          } else if (cl >= 1) {
+            // Creepy success: slightly too intense, lingering gaze
+            const twitch = (Math.random() - 0.5) * 2;
+            const ringRadius = 12 + Math.abs(Math.sin(frameCount * 0.15)) * 18;
+            oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 6;
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
+            // Bigger, brighter core that doesn't fully pulse — always watching
+            oCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY, 14, 0, Math.PI*2); oCtx.fill();
+            // Extra outer ring
+            oCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; oCtx.lineWidth = 1;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius + 10, 0, Math.PI*2); oCtx.stroke();
+          } else {
+            // Normal success: friendly pulsing ring
+            const ringRadius = 10 + Math.abs(Math.sin(frameCount * 0.2)) * 22;
+            oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 8;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
+            oCtx.fillStyle = 'rgb(255, 255, 255)';
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, 8, 0, Math.PI*2); oCtx.fill();
+          }
         } else if (avatarState === 'scan') {
           // Scanning: rotating radar sweep
           const sweepAngle = (frameCount * 0.08) % (Math.PI * 2);
