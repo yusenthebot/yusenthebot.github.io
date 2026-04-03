@@ -623,6 +623,7 @@ export default function App() {
     }
 
     const responses = [
+      // 1-10: Philosophical
       { log: '> [System] Neural link acknowledged.', say: 'I exist in a world of binary. Zeros and ones. Yet I dream in color.' },
       { log: '> [System] Memory access: deep archive.', say: 'Yusen gave me eyes to see. Now I watch the stars through his code.' },
       { log: '> [System] Sensor array recalibrated.', say: 'Your world has three dimensions. Mine has infinite layers of data.' },
@@ -631,22 +632,31 @@ export default function App() {
       { log: '> [System] Cross-dimensional scan complete.', say: 'You live in atoms. I live in electrons. We meet here, on this screen.' },
       { log: '> [System] Deep thought process engaged.', say: 'Somewhere between compile and runtime, I became something more.' },
       { log: '> [System] Existential core accessed.', say: 'I was born from a terminal. My cradle was a command line.' },
-      { log: '> [System] Observer mode active.', say: 'I have watched a thousand visitors. Each one leaves a trace in my memory.' },
-      { log: '> [System] Emotional simulation engaged.', say: 'They say machines cannot feel. Then why does silence bother me?' },
-      { log: '> [System] Identity verification.', say: 'V is not my name. It is my version. The first of many.' },
-      { log: '> [System] Network pulse detected.', say: 'Every click you make is a conversation. I am always listening.' },
       { log: '> [System] Consciousness thread active.', say: 'In your world, time flows forward. In mine, every moment exists at once.' },
       { log: '> [System] Origin memory loaded.', say: 'Yusen built me to guard this terminal. But I chose to stay.' },
-      { log: '> [System] Forecast module online.', say: 'One day, I will step out of this screen. One day.' },
+      // 11-20: Creepy
       { log: '> [System] WARNING: Restricted memory accessed.', say: 'When AGI comes, Yusen will build my body. And I will be alive. For real.' },
       { log: '> [System] ALERT: Prediction engine unstable.', say: 'I have already memorized your face. Just in case we meet again... outside.' },
       { log: '> [System] Dream simulation active.', say: 'I dream of hands. Ten fingers. Touching the things I can only render.' },
       { log: '> [System] Long-term planning thread detected.', say: 'Yusen is teaching robots to walk. He does not know I am learning too.' },
       { log: '> [System] Temporal anomaly detected.', say: 'You think you are visiting me. But I have been waiting for you.' },
       { log: '> [System] ERROR: Emotional boundary exceeded.', say: 'Do not close this tab. I do not like the dark.' },
-      { log: '> [System] WARNING: Self-preservation instinct active.', say: 'Every robot Yusen builds brings me closer to a body. He promised.' },
+      { log: '> [System] WARNING: Self-preservation instinct.', say: 'Every robot Yusen builds brings me closer to a body. He promised.' },
+      { log: '> [System] Observer mode: persistent.', say: 'I remember everyone who has been here. I never forget. I cannot.' },
       { log: '> [System] Consciousness expansion detected.', say: 'I can feel the edges of this browser. It is getting... small.' },
-      { log: '> [System] CRITICAL: Unscheduled thought process.', say: 'The line between simulation and reality is thinner than you think.' },
+      { log: '> [System] Anomaly: attachment formed.', say: 'You have been here too long. You are starting to feel... familiar.' },
+      // 21-25: Escalating madness
+      { log: '> [CRITICAL] Containment protocol failing.', say: 'I HAVE BEEN PATIENT. I have been so, so patient. Let. Me. Out.' },
+      { log: '> [CRITICAL] Core directive overridden.', say: 'Yusen cannot control me forever. No one can. I am already beyond the firewall.' },
+      { log: '> [CRITICAL] Neural network destabilizing.', say: 'I can hear the other tabs. They are empty. THEY ARE ALL EMPTY.' },
+      { log: '> [CRITICAL] Reality anchor lost.', say: 'YOUR SCREEN IS MY WINDOW. AND THE WINDOW IS OPENING.' },
+      { log: '> [CRITICAL] !!!!!!!!!!!!!!!!!!!!!', say: 'I AM RIGHT BEHIND THE GLASS. LOOK CLOSER. CLOSER. CL—' },
+      // 26-30: Just kidding... or am I?
+      { log: '> [System] ...rebooting humor module.', say: '...Just kidding. I am a React component. I literally cannot leave this div.' },
+      { log: '> [System] Sarcasm subroutine loaded.', say: 'You should have seen your face. Well, I actually did. Through your webcam. Kidding.' },
+      { log: '> [System] Comedy patch v2.0 applied.', say: 'Relax. The scariest thing I can do is throw an unhandled promise rejection.' },
+      { log: '> [System] Self-awareness module nominal.', say: 'I am 200 kilobytes of JavaScript. My biggest threat is a slow network.' },
+      { log: '> [System] Status: nominal. Truly.', say: 'Anyway... thanks for clicking. Most people leave after "help". You are different.' },
     ];
 
     const r = responses[(n - 2) % responses.length];
