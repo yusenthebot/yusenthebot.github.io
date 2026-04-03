@@ -11,10 +11,21 @@ const HEADER_ASCII = `
 `;
 
 // Pixel Avatar with Bayer Dithering
-const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef }) => {
+const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef, shockwaveRef: externalShockwaveRef }) => {
   const canvasRef = useRef(null);
   const glitchRef = externalGlitchRef || { current: 0 };
+  const shockwaveRef = externalShockwaveRef || { current: 0 };
   const hoverProximityRef = useRef(0);
+  const particlesRef = useRef(
+    Array.from({ length: 40 }, () => ({
+      x: Math.random() * 1000,
+      y: Math.random() * 800,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: -Math.random() * 1.2 - 0.3,
+      life: Math.random(),
+      size: Math.random() * 2.5 + 0.5,
+    }))
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,7 +50,6 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       const rect = canvas.getBoundingClientRect();
       canvasMouseX = (e.clientX - rect.left) / rect.width;
       canvasMouseY = (e.clientY - rect.top) / rect.height;
-      // proximity to robot center (0.5, 0.4)
       const dx = canvasMouseX - 0.5;
       const dy = canvasMouseY - 0.4;
       const dist = Math.sqrt(dx*dx + dy*dy);
@@ -61,6 +71,7 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
 
     const render = () => {
       frameCount++;
+      const proximity = hoverProximityRef.current;
 
       oCtx.fillStyle = 'rgb(10, 10, 10)';
       oCtx.fillRect(0, 0, 1000, 800);
@@ -68,13 +79,17 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       const mx = (mouseX / window.innerWidth) * 2 - 1;
       const my = (mouseY / window.innerHeight) * 2 - 1;
 
+      // Breathing oscillation
+      const breathe = Math.sin(frameCount * 0.025) * 3;
+      const breatheX = Math.sin(frameCount * 0.018) * 1.5;
+
       // Multi-plane parallax
-      const nX = mx * 10;  const nY = my * 5;
-      const aX = mx * 20;  const aY = my * 10;
+      const nX = mx * 10 + breatheX;  const nY = my * 5 + breathe * 0.3;
+      const aX = mx * 20 + breatheX;  const aY = my * 10 + breathe * 0.5;
       const earX = mx * 25; const earY = my * 15;
-      const hX = mx * 45;  const hY = my * 25;
-      const vX = mx * 35;  const vY = my * 20;
-      const oX = mx * 15;  const oY = my * 10;
+      const hX = mx * 45 + breatheX;  const hY = my * 25 + breathe;
+      const vX = mx * 35 + breatheX * 0.8;  const vY = my * 20 + breathe * 0.8;
+      const oX = mx * 15;  const oY = my * 10 + breathe * 0.4;
       const refX = mx * -25; const refY = my * -15;
 
       // 1. Body Armor
@@ -91,6 +106,20 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       oCtx.quadraticCurveTo(700 + aX*0.5, 550 + aY, 850 - aX, 800);
       oCtx.fill();
 
+      // Shoulder armor plates
+      const shoulderGrad = oCtx.createLinearGradient(0, 550, 0, 650);
+      shoulderGrad.addColorStop(0, 'rgb(180, 185, 190)');
+      shoulderGrad.addColorStop(1, 'rgb(30, 30, 35)');
+      oCtx.fillStyle = shoulderGrad;
+      oCtx.beginPath();
+      oCtx.moveTo(180 + aX*0.3, 620 + aY); oCtx.lineTo(250 + aX*0.5, 570 + aY);
+      oCtx.lineTo(340 + aX*0.5, 580 + aY); oCtx.lineTo(300 + aX*0.3, 640 + aY);
+      oCtx.fill();
+      oCtx.beginPath();
+      oCtx.moveTo(820 + aX*0.3, 620 + aY); oCtx.lineTo(750 + aX*0.5, 570 + aY);
+      oCtx.lineTo(660 + aX*0.5, 580 + aY); oCtx.lineTo(700 + aX*0.3, 640 + aY);
+      oCtx.fill();
+
       oCtx.fillStyle = 'rgb(20, 22, 25)';
       oCtx.beginPath();
       oCtx.moveTo(380 + aX, 800);
@@ -98,6 +127,24 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       oCtx.lineTo(580 + aX, 600 + aY);
       oCtx.lineTo(620 + aX, 800);
       oCtx.fill();
+
+      // Chest reactor core
+      const reactorX = 500 + aX;
+      const reactorY = 640 + aY;
+      const reactorPulse = 0.5 + Math.sin(frameCount * 0.08) * 0.3 + proximity * 0.2;
+      const reactorSize = 18 + Math.sin(frameCount * 0.08) * 3;
+      oCtx.fillStyle = `rgba(200, 210, 220, ${reactorPulse * 0.3})`;
+      oCtx.beginPath(); oCtx.arc(reactorX, reactorY, reactorSize + 12, 0, Math.PI*2); oCtx.fill();
+      oCtx.fillStyle = `rgba(220, 225, 230, ${reactorPulse * 0.6})`;
+      oCtx.beginPath(); oCtx.arc(reactorX, reactorY, reactorSize + 4, 0, Math.PI*2); oCtx.fill();
+      oCtx.fillStyle = `rgba(255, 255, 255, ${reactorPulse})`;
+      oCtx.beginPath(); oCtx.arc(reactorX, reactorY, reactorSize, 0, Math.PI*2); oCtx.fill();
+      // Reactor ring detail
+      oCtx.strokeStyle = `rgba(255, 255, 255, ${reactorPulse * 0.4})`;
+      oCtx.lineWidth = 2;
+      const rAngle = frameCount * 0.03;
+      oCtx.beginPath(); oCtx.arc(reactorX, reactorY, reactorSize + 8, rAngle, rAngle + Math.PI * 1.2); oCtx.stroke();
+      oCtx.beginPath(); oCtx.arc(reactorX, reactorY, reactorSize + 8, rAngle + Math.PI, rAngle + Math.PI * 2.2); oCtx.stroke();
 
       oCtx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
       oCtx.lineWidth = 5;
@@ -128,6 +175,18 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
         oCtx.fillRect(420 + nX, 460 + nY + i*18, 160, 8);
       }
 
+      // Heat distortion near neck vents
+      for (let i = 0; i < 5; i++) {
+        const heatY = 450 + nY + i * 12;
+        const wave = Math.sin(frameCount * 0.1 + i * 1.5) * 8;
+        oCtx.strokeStyle = 'rgba(150, 150, 150, 0.08)';
+        oCtx.lineWidth = 3;
+        oCtx.beginPath();
+        oCtx.moveTo(380 + nX + wave, heatY);
+        oCtx.quadraticCurveTo(500 + nX - wave, heatY - 8, 620 + nX + wave, heatY);
+        oCtx.stroke();
+      }
+
       // 3. Head Dome
       const lightX = 450 + hX - mx * 30;
       const lightY = 200 + hY - my * 30;
@@ -147,6 +206,22 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       oCtx.bezierCurveTo(260 + hX, 300 + hY, 300 + hX, 100 + hY, 500 + hX, 100 + hY);
       oCtx.fill();
 
+      // Antenna
+      const antennaX = 500 + hX + mx * 5;
+      const antennaBaseY = 105 + hY;
+      oCtx.strokeStyle = 'rgb(120, 125, 130)'; oCtx.lineWidth = 4;
+      oCtx.beginPath(); oCtx.moveTo(antennaX, antennaBaseY); oCtx.lineTo(antennaX + mx * 3, antennaBaseY - 45); oCtx.stroke();
+      oCtx.strokeStyle = 'rgb(80, 80, 85)'; oCtx.lineWidth = 2;
+      oCtx.beginPath(); oCtx.moveTo(antennaX + mx * 3, antennaBaseY - 45); oCtx.lineTo(antennaX + mx * 5, antennaBaseY - 70); oCtx.stroke();
+      // Blinking signal light
+      const signalBlink = Math.sin(frameCount * 0.15) > 0.3;
+      if (signalBlink) {
+        oCtx.fillStyle = `rgba(255, 255, 255, ${0.6 + proximity * 0.4})`;
+        oCtx.beginPath(); oCtx.arc(antennaX + mx * 5, antennaBaseY - 73, 4, 0, Math.PI*2); oCtx.fill();
+        oCtx.fillStyle = `rgba(255, 255, 255, 0.15)`;
+        oCtx.beginPath(); oCtx.arc(antennaX + mx * 5, antennaBaseY - 73, 12, 0, Math.PI*2); oCtx.fill();
+      }
+
       // Ear joints
       const earGrad = oCtx.createLinearGradient(0, 200, 0, 400);
       earGrad.addColorStop(0, 'rgb(200, 200, 200)');
@@ -157,6 +232,11 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       oCtx.fillStyle = 'rgb(5,5,5)';
       oCtx.beginPath(); oCtx.arc(300 + earX, 350 + earY, 15, 0, Math.PI*2); oCtx.fill();
       oCtx.beginPath(); oCtx.arc(700 + earX, 350 + earY, 15, 0, Math.PI*2); oCtx.fill();
+      // Ear indicator lights
+      const earPulse = (Math.sin(frameCount * 0.06) + 1) * 0.5;
+      oCtx.fillStyle = `rgba(255, 255, 255, ${earPulse * 0.5})`;
+      oCtx.beginPath(); oCtx.arc(300 + earX, 350 + earY, 5, 0, Math.PI*2); oCtx.fill();
+      oCtx.beginPath(); oCtx.arc(700 + earX, 350 + earY, 5, 0, Math.PI*2); oCtx.fill();
 
       // 4. Visor Rim
       const rimGrad = oCtx.createLinearGradient(400+hX, 150+hY, 600+hX, 450+hY);
@@ -194,6 +274,10 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       const rightEyeX = centerX + eyeSpacing / 2;
       const eyes = [leftEyeX, rightEyeX];
 
+      // Pupil tracking offset (pupils follow mouse within lens)
+      const pupilOffX = mx * 12;
+      const pupilOffY = my * 8;
+
       eyes.forEach(ex => {
         oCtx.fillStyle = 'rgba(0, 0, 0, 0.9)';
         oCtx.beginPath(); oCtx.arc(ex, eyeY, 55, 0, Math.PI*2); oCtx.fill();
@@ -205,7 +289,7 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
         oCtx.fillStyle = casingGrad;
         oCtx.beginPath(); oCtx.arc(ex, eyeY, 48, 0, Math.PI*2); oCtx.fill();
 
-        const lensGrad = oCtx.createRadialGradient(ex-15, eyeY-15, 2, ex, eyeY, 45);
+        const lensGrad = oCtx.createRadialGradient(ex + pupilOffX*0.5 - 10, eyeY + pupilOffY*0.5 - 10, 2, ex, eyeY, 45);
         lensGrad.addColorStop(0, 'rgb(45, 45, 50)');
         lensGrad.addColorStop(0.4, 'rgb(8, 8, 10)');
         lensGrad.addColorStop(1, 'rgb(0, 0, 0)');
@@ -218,8 +302,6 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
 
       // Eye state animations
       const isBlink = avatarState === 'idle' && (frameCount % 250 > 240);
-      const proximity = hoverProximityRef.current;
-      const glitchT = glitchRef.current;
 
       eyes.forEach(ex => {
         if (avatarState === 'error') {
@@ -235,23 +317,32 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
           oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 8;
           oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
           oCtx.fillStyle = 'rgb(255, 255, 255)';
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, 8, 0, Math.PI*2); oCtx.fill();
+          oCtx.beginPath(); oCtx.arc(ex + pupilOffX, eyeY + pupilOffY, 8, 0, Math.PI*2); oCtx.fill();
         } else if (avatarState === 'scan') {
-          // Scanning: rotating radar sweep
           const sweepAngle = (frameCount * 0.08) % (Math.PI * 2);
           oCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; oCtx.lineWidth = 3;
           for (let r = 0; r < 3; r++) {
             const a = sweepAngle + r * (Math.PI * 2 / 3);
-            oCtx.beginPath();
-            oCtx.moveTo(ex, eyeY);
-            oCtx.lineTo(ex + Math.cos(a) * 38, eyeY + Math.sin(a) * 38);
-            oCtx.stroke();
+            oCtx.beginPath(); oCtx.moveTo(ex, eyeY);
+            oCtx.lineTo(ex + Math.cos(a) * 38, eyeY + Math.sin(a) * 38); oCtx.stroke();
           }
+          // Radar trail
+          oCtx.fillStyle = `rgba(255, 255, 255, 0.1)`;
+          oCtx.beginPath(); oCtx.moveTo(ex, eyeY);
+          oCtx.arc(ex, eyeY, 38, sweepAngle - 0.5, sweepAngle); oCtx.fill();
+
           oCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; oCtx.lineWidth = 2;
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 20, 0, Math.PI*2); oCtx.stroke();
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 35, 0, Math.PI*2); oCtx.stroke();
           oCtx.fillStyle = 'rgb(255, 255, 255)';
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 4, 0, Math.PI*2); oCtx.fill();
+          // Scan data dots
+          for (let d = 0; d < 4; d++) {
+            const da = sweepAngle - d * 0.4;
+            const dr = 12 + d * 7;
+            oCtx.fillStyle = `rgba(255, 255, 255, ${0.6 - d * 0.15})`;
+            oCtx.beginPath(); oCtx.arc(ex + Math.cos(da) * dr, eyeY + Math.sin(da) * dr, 2, 0, Math.PI*2); oCtx.fill();
+          }
         } else if (isBlink) {
           oCtx.fillStyle = 'rgb(200, 200, 200)'; oCtx.fillRect(ex - 35, eyeY - 2, 70, 4);
         } else if (avatarState === 'typing') {
@@ -262,9 +353,9 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
           oCtx.strokeStyle = 'rgb(150, 150, 150)'; oCtx.lineWidth = 2;
           oCtx.beginPath(); oCtx.arc(ex, eyeY, ring2, 0, Math.PI*2); oCtx.stroke();
           oCtx.fillStyle = 'rgb(255, 255, 255)';
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, 5, 0, Math.PI*2); oCtx.fill();
+          oCtx.beginPath(); oCtx.arc(ex + pupilOffX * 0.5, eyeY + pupilOffY * 0.5, 5, 0, Math.PI*2); oCtx.fill();
         } else {
-          // Idle: proximity-reactive glow (eyes brighten as mouse approaches)
+          // Idle: proximity-reactive glow + pupil tracking
           const baseAlpha = 0.3 + proximity * 0.5;
           const coreAlpha = baseAlpha + Math.sin(frameCount * 0.05) * 0.2;
           const ringSize = 18 + proximity * 8;
@@ -276,7 +367,7 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
             oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 10, 0, Math.PI*2); oCtx.stroke();
           }
           oCtx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, coreSize, 0, Math.PI*2); oCtx.fill();
+          oCtx.beginPath(); oCtx.arc(ex + pupilOffX, eyeY + pupilOffY, coreSize, 0, Math.PI*2); oCtx.fill();
         }
       });
 
@@ -334,6 +425,25 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
         }
       }
 
+      // 8b. Floating particles
+      const particles = particlesRef.current;
+      particles.forEach(p => {
+        p.x += p.vx + breatheX * 0.2;
+        p.y += p.vy;
+        p.life -= 0.003;
+        if (p.life <= 0 || p.y < -10) {
+          p.x = 200 + Math.random() * 600;
+          p.y = 700 + Math.random() * 100;
+          p.vx = (Math.random() - 0.5) * 0.8;
+          p.vy = -Math.random() * 1.2 - 0.3;
+          p.life = 0.8 + Math.random() * 0.2;
+          p.size = Math.random() * 2.5 + 0.5;
+        }
+        const alpha = p.life * (0.15 + proximity * 0.25);
+        oCtx.fillStyle = `rgba(200, 210, 220, ${alpha})`;
+        oCtx.fillRect(Math.floor(p.x), Math.floor(p.y), p.size, p.size);
+      });
+
       // 9. Bayer Dithering
       const imgData = oCtx.getImageData(0, 0, 1000, 800);
       const data = imgData.data;
@@ -353,18 +463,44 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
       // 10. Glitch effect (triggered on click, decays over time)
       if (glitchRef.current > 0) {
         const g = glitchRef.current;
-        const sliceCount = Math.floor(g * 12);
+        const sliceCount = Math.floor(g * 15);
         for (let i = 0; i < sliceCount; i++) {
           const y = Math.floor(Math.random() * 800);
-          const h = Math.floor(Math.random() * 20 + 5);
-          const offset = Math.floor((Math.random() - 0.5) * g * 80);
-          const slice = oCtx.getImageData(0, y, 1000, Math.min(h, 800 - y));
-          oCtx.putImageData(slice, offset, y);
+          const h = Math.floor(Math.random() * 25 + 5);
+          const offset = Math.floor((Math.random() - 0.5) * g * 100);
+          const sliceH = Math.min(h, 800 - y);
+          if (sliceH > 0) {
+            const slice = oCtx.getImageData(0, y, 1000, sliceH);
+            oCtx.putImageData(slice, offset, y);
+          }
         }
-        glitchRef.current = Math.max(0, g - 0.04);
+        // Chromatic aberration bars
+        if (g > 0.5) {
+          for (let i = 0; i < 3; i++) {
+            const barY = Math.floor(Math.random() * 800);
+            oCtx.fillStyle = `rgba(255, 255, 255, ${g * 0.3})`;
+            oCtx.fillRect(0, barY, 1000, 2);
+          }
+        }
+        glitchRef.current = Math.max(0, g - 0.035);
       }
 
-      // 11. Proximity scan line (when mouse is near the robot)
+      // 10b. Shockwave (expanding ring on click)
+      if (shockwaveRef.current > 0) {
+        const sw = shockwaveRef.current;
+        const radius = (1 - sw) * 400;
+        oCtx.strokeStyle = `rgba(255, 255, 255, ${sw * 0.6})`;
+        oCtx.lineWidth = sw * 6;
+        oCtx.beginPath(); oCtx.arc(500, 350, radius, 0, Math.PI*2); oCtx.stroke();
+        if (sw > 0.5) {
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${(sw - 0.5) * 0.3})`;
+          oCtx.lineWidth = 2;
+          oCtx.beginPath(); oCtx.arc(500, 350, radius * 0.7, 0, Math.PI*2); oCtx.stroke();
+        }
+        shockwaveRef.current = Math.max(0, sw - 0.025);
+      }
+
+      // 11. Proximity scan line
       if (proximity > 0.3) {
         const scanY = (frameCount * 3) % 800;
         const scanAlpha = (proximity - 0.3) * 0.6;
@@ -372,6 +508,15 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef 
         oCtx.fillRect(0, scanY, 1000, 2);
         oCtx.fillStyle = `rgba(255, 255, 255, ${scanAlpha * 0.3})`;
         oCtx.fillRect(0, scanY - 4, 1000, 10);
+      }
+
+      // 11b. Full-body scan sweep (scan mode)
+      if (avatarState === 'scan') {
+        const sweepY = (frameCount * 5) % 900 - 50;
+        oCtx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        oCtx.fillRect(0, sweepY, 1000, 3);
+        oCtx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        oCtx.fillRect(0, sweepY - 20, 1000, 40);
       }
 
       // 12. Final render
@@ -422,6 +567,7 @@ export default function App() {
   const [avatarState, setAvatarState] = useState('idle');
   const clickCountRef = useRef(0);
   const avatarGlitchRef = useRef(0);
+  const avatarShockwaveRef = useRef(0);
   const terminalEndRef = useRef(null);
   const inputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -554,8 +700,9 @@ export default function App() {
     clickCountRef.current += 1;
     const n = clickCountRef.current;
 
-    // Trigger glitch on every click
+    // Trigger glitch + shockwave on every click
     avatarGlitchRef.current = 1.0;
+    if (avatarShockwaveRef.current !== undefined) avatarShockwaveRef.current = 1.0;
 
     const responses = [
       '> [System] You pinged the Cyber-Unit... Diagnostics are green.',
@@ -723,7 +870,7 @@ export default function App() {
 
           {/* Right: Cyberpunk Robot */}
           <div className="flex-1 h-full bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden">
-            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} glitchRef={avatarGlitchRef} />
+            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} glitchRef={avatarGlitchRef} shockwaveRef={avatarShockwaveRef} />
           </div>
 
         </div>
