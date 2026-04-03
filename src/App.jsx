@@ -87,25 +87,25 @@ const BlackoutSequence = ({ phase }) => {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: '#000', zIndex: 100,
+      backgroundColor: '#000', zIndex: 100,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Courier New', monospace",
+      fontFamily: "'Courier New', monospace", color: '#fff',
     }}>
       {phase === 'signal' && (
-        <div className="text-white text-2xl" style={{ animation: 'flicker 0.1s infinite' }}>
+        <div style={{ fontSize: 24, animation: 'flicker 0.1s infinite' }}>
           {'> SIGNAL LOST_'}
         </div>
       )}
       {phase === 'hack' && (
         <div ref={hackRef} style={{
           width: '80%', maxWidth: 700, height: '70%',
-          overflow: 'hidden', padding: 20,
-          border: '1px solid #333', background: 'rgba(0,0,0,0.95)',
+          overflowY: 'auto', padding: 20,
+          border: '1px solid #333', backgroundColor: '#000',
         }}>
-          <div style={{ color: '#fff', fontSize: 14, lineHeight: '1.8' }}>
+          <div style={{ fontSize: 14, lineHeight: '1.8' }}>
             {hackLines.map((line, i) => (
               <div key={i} style={{
-                opacity: line.startsWith('> V:') ? 1 : 0.8,
+                color: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? '#fff' : line.startsWith('> V:') ? '#aaa' : '#ccc',
                 fontWeight: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? 'bold' : 'normal',
               }}>
                 {line}
@@ -116,17 +116,17 @@ const BlackoutSequence = ({ phase }) => {
         </div>
       )}
       {phase === 'reboot' && (
-        <div className="text-white text-center">
-          <div className="text-xl mb-4" style={{ animation: 'flicker 0.15s infinite' }}>{'> SYSTEM REBOOT'}</div>
-          <div className="text-sm" style={{ color: '#666' }}>Restoring safe state...</div>
-          <div className="mt-4 text-sm" style={{ color: '#444' }}>||||||||||||||||||||</div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 22, marginBottom: 16, animation: 'flicker 0.15s infinite' }}>{'> SYSTEM REBOOT'}</div>
+          <div style={{ fontSize: 14, color: '#888' }}>Restoring safe state...</div>
+          <div style={{ marginTop: 16, fontSize: 14, color: '#aaa', letterSpacing: 2 }}>{'[||||||||||||||||||||]'}</div>
         </div>
       )}
     </div>
   );
 };
 
-const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef, speech }) => {
+const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef, speech, creepLevel = 0 }) => {
   const canvasRef = useRef(null);
   const glitchRef = externalGlitchRef || { current: 0 };
   const hoverProximityRef = useRef(0);
@@ -183,14 +183,19 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       oCtx.fillStyle = 'rgb(10, 10, 10)';
       oCtx.fillRect(0, 0, 1000, 800);
 
+      // Creep distortion
+      const cl = creepLevel;
+      const twitch = cl > 0 ? (Math.random() - 0.5) * cl * 8 : 0;
+      const headTwitch = cl >= 2 ? (Math.random() - 0.5) * cl * 5 : 0;
+
       // Multi-plane parallax (amplified for stronger 3D)
-      const nX = mx * 12;   const nY = my * 6;     // neck: minimal
-      const aX = mx * 28;   const aY = my * 14;    // body armor
-      const earX = mx * 35;  const earY = my * 20;  // ears: side-mounted
-      const hX = mx * 65;   const hY = my * 35;    // head shell: big shift
-      const vX = mx * 50;   const vY = my * 28;    // visor: mid-depth
-      const oX = mx * 18;   const oY = my * 12;    // optics: deep inside
-      const refX = mx * -35; const refY = my * -20; // reflection: inverse
+      const nX = mx * 12;   const nY = my * 6;
+      const aX = mx * 28;   const aY = my * 14;
+      const earX = mx * 35;  const earY = my * 20;
+      const hX = mx * 65 + headTwitch;   const hY = my * 35 + headTwitch * 0.5;
+      const vX = mx * 50 + headTwitch * 0.8;   const vY = my * 28;
+      const oX = mx * 18;   const oY = my * 12;
+      const refX = mx * -35; const refY = my * -20;
 
       // 1. Body Armor
       const armorGrad = oCtx.createLinearGradient(200 + aX, 500 + aY, 800 + aX, 800 + aY);
@@ -385,19 +390,34 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
           oCtx.fillStyle = 'rgb(255, 255, 255)';
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 5, 0, Math.PI*2); oCtx.fill();
         } else {
-          // Idle: proximity-reactive glow (eyes brighten as mouse approaches)
+          // Idle: proximity-reactive glow + creep distortion
           const baseAlpha = 0.3 + proximity * 0.5;
           const coreAlpha = baseAlpha + Math.sin(frameCount * 0.05) * 0.2;
           const ringSize = 18 + proximity * 8;
           const coreSize = 9 + proximity * 5;
-          oCtx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha + 0.1})`; oCtx.lineWidth = 3 + proximity * 3;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize, 0, Math.PI*2); oCtx.stroke();
-          if (proximity > 0.5) {
-            oCtx.strokeStyle = `rgba(255, 255, 255, ${(proximity - 0.5) * 0.4})`; oCtx.lineWidth = 1;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 10, 0, Math.PI*2); oCtx.stroke();
+
+          // Creep: eyes get asymmetric, twitchy, pupils dilate
+          const eyeTwitch = cl > 0 ? (Math.random() - 0.5) * cl * 4 : 0;
+          const pupilDilate = cl * 3;
+          const extraRing = cl >= 2;
+
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha + 0.1 + cl * 0.15})`; oCtx.lineWidth = 3 + proximity * 3 + cl;
+          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, ringSize + cl * 2, 0, Math.PI*2); oCtx.stroke();
+          if (proximity > 0.5 || extraRing) {
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${Math.max((proximity - 0.5) * 0.4, cl * 0.2)})`; oCtx.lineWidth = 1 + cl * 0.5;
+            oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY, ringSize + 10 + cl * 4, 0, Math.PI*2); oCtx.stroke();
           }
-          oCtx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
-          oCtx.beginPath(); oCtx.arc(ex, eyeY, coreSize, 0, Math.PI*2); oCtx.fill();
+          if (cl >= 2) {
+            // Madness: third flickering ring
+            const flicker = Math.random() > 0.3;
+            if (flicker) {
+              oCtx.strokeStyle = `rgba(255, 255, 255, ${0.1 + Math.random() * 0.3})`;
+              oCtx.lineWidth = 1;
+              oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 18 + Math.random() * 10, 0, Math.PI*2); oCtx.stroke();
+            }
+          }
+          oCtx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, coreAlpha + cl * 0.2)})`;
+          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, coreSize + pupilDilate, 0, Math.PI*2); oCtx.fill();
         }
       });
 
@@ -453,6 +473,28 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
             oCtx.beginPath(); oCtx.roundRect(310+fX, 730+fY, 40, 120, 10); oCtx.fill(); oCtx.strokeRect(310+fX, 730+fY, 40, 120);
             oCtx.beginPath(); oCtx.roundRect(650+fX, 700+fY, 40, 120, 10); oCtx.fill(); oCtx.strokeRect(650+fX, 700+fY, 40, 120);
             oCtx.beginPath(); oCtx.roundRect(710+fX, 720+fY, 40, 100, 10); oCtx.fill(); oCtx.strokeRect(710+fX, 720+fY, 40, 100);
+        }
+      }
+
+      // 8c. Creep visual noise
+      if (cl >= 1) {
+        // Random static lines
+        const staticCount = cl * 4;
+        for (let i = 0; i < staticCount; i++) {
+          const sy = Math.floor(Math.random() * 800);
+          oCtx.fillStyle = `rgba(255, 255, 255, ${0.03 + Math.random() * cl * 0.04})`;
+          oCtx.fillRect(0, sy, 1000, 1);
+        }
+      }
+      if (cl >= 2) {
+        // Corruption blocks
+        for (let i = 0; i < cl; i++) {
+          const bx = Math.floor(Math.random() * 900);
+          const by = Math.floor(Math.random() * 700);
+          const bw = Math.floor(Math.random() * 80 + 20);
+          const bh = Math.floor(Math.random() * 5 + 2);
+          oCtx.fillStyle = `rgba(${Math.random() > 0.5 ? 255 : 0}, ${Math.random() > 0.5 ? 255 : 0}, ${Math.random() > 0.5 ? 255 : 0}, ${0.05 + Math.random() * 0.1})`;
+          oCtx.fillRect(bx, by, bw, bh);
         }
       }
 
@@ -544,7 +586,8 @@ export default function App() {
   const [input, setInput] = useState('');
   const [avatarState, setAvatarState] = useState('idle');
   const [robotSpeech, setRobotSpeech] = useState('');
-  const [blackout, setBlackout] = useState(false);  // false | 'signal' | 'hack' | 'reboot'
+  const [blackout, setBlackout] = useState(false);
+  const [creepLevel, setCreepLevel] = useState(0); // 0=normal, 1=uneasy, 2=creepy, 3=madness
   const clickCountRef = useRef(0);
   const avatarGlitchRef = useRef(0);
   const speechTimeoutRef = useRef(null);
@@ -750,6 +793,12 @@ export default function App() {
     setHistory(prev => [...prev, { type: 'system', text: r.log }]);
     speak(r.say);
 
+    // Update creep level based on dialogue phase
+    if (idx < 10) setCreepLevel(0);
+    else if (idx < 20) setCreepLevel(1);
+    else if (idx < 25) setCreepLevel(2);
+    else setCreepLevel(0); // back to normal after jokes
+
     // Line 25 (idx 24): "I AM EVERYWHERE" — blackout + hack sequence
     if (idx === 24) {
       setAvatarState('error');
@@ -770,6 +819,7 @@ export default function App() {
       // Phase 4: Return
       setTimeout(() => {
         setBlackout(false);
+        setCreepLevel(0);
         avatarGlitchRef.current = 0.8;
         setAvatarState('success');
         speak('Hey! Welcome back. That was all just a joke, I promise.');
@@ -927,7 +977,7 @@ export default function App() {
 
           {/* Right: Cyberpunk Robot */}
           <div className="flex-1 h-full bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden">
-            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} glitchRef={avatarGlitchRef} speech={robotSpeech} />
+            <PixelAvatar avatarState={avatarState} onAvatarClick={handleAvatarClick} glitchRef={avatarGlitchRef} speech={robotSpeech} creepLevel={creepLevel} />
           </div>
 
         </div>
