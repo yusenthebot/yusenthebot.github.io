@@ -1003,8 +1003,11 @@ export default function App() {
           <a href="#" onClick={(e) => { e.preventDefault(); setShowAboutOverlay(true); }} className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all cursor-pointer">
             [ ABOUT ME ]
           </a>
-          <a href="https://github.com/VectorRobotics/vector-os-nano" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all">
+          <a href="https://github.com/yusenthebot" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all">
             [ GITHUB ]
+          </a>
+          <a href="https://github.com/VectorRobotics/vector-os-nano" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all">
+            [ VECTOR OS ]
           </a>
           <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all">
             [ LINKEDIN ]
