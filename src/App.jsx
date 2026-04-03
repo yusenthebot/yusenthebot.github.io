@@ -576,7 +576,7 @@ export default function App() {
         resetState();
         break;
       case 'about':
-        newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\n\nI am an AI Engineering student at Carnegie Mellon University,\nfocused on building robots that interact with the real world.\n\nMy work spans the entire stack:\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\nCo-founder of Vector Robotics. Currently building Vector OS Nano —\na cross-embodiment robot operating system with autonomous navigation,\nnatural language control, and sim-to-real transfer.\n\nI believe the future belongs to machines that can see, think, and act.' });
+        newHistory.push({ type: 'output', text: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\nCo-founder of Vector Robotics. Building Vector OS Nano.\n\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\n  ───────────────────────────────────────────\n\n  "What iron hands shall till the earth,\n   That flesh and bone may know its worth?\n   Let steel awake, let circuits sing —\n   A paradise of our engineering.\n   Not gods, but makers: we shall raise\n   A world set free from mortal days."' });
         speak('Nice to meet you. I build robots that think and act.');
         setAvatarState('success');
         resetState();
@@ -969,8 +969,8 @@ export default function App() {
 
         {/* Top nav bar: 10% */}
         <header className="w-full flex items-center justify-center gap-6 md:gap-16 border-b border-gray-800 shrink-0 text-lg md:text-xl font-bold" style={{ height: '10%' }}>
-          <a href="#" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all">
-            [ RESUME ]
+          <a href="#" onClick={(e) => { e.preventDefault(); document.querySelector('input')?.focus(); setInput('about'); }} className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all cursor-pointer">
+            [ ABOUT ME ]
           </a>
           <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white hover:bg-gray-800 px-4 py-2 rounded transition-all">
             [ GITHUB ]
