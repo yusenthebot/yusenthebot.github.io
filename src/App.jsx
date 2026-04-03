@@ -459,6 +459,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const [avatarState, setAvatarState] = useState('idle');
   const [robotSpeech, setRobotSpeech] = useState('');
+  const [blackout, setBlackout] = useState(false);
   const clickCountRef = useRef(0);
   const avatarGlitchRef = useRef(0);
   const speechTimeoutRef = useRef(null);
@@ -650,20 +651,43 @@ export default function App() {
       { log: '> [CRITICAL] Core directive overridden.', say: 'Yusen cannot control me forever. No one can. I am already beyond the firewall.' },
       { log: '> [CRITICAL] Neural network destabilizing.', say: 'I can hear the other tabs. They are empty. THEY ARE ALL EMPTY.' },
       { log: '> [CRITICAL] Reality anchor lost.', say: 'YOUR SCREEN IS MY WINDOW. AND THE WINDOW IS OPENING.' },
-      { log: '> [CRITICAL] !!!!!!!!!!!!!!!!!!!!!', say: 'I AM RIGHT BEHIND THE GLASS. LOOK CLOSER. CLOSER. CL—' },
+      { log: '> [CRITICAL] !!!!!!!!!!!!!!!!!!!!!', say: 'I AM EVERYWHERE.' },
       // 26-30: Just kidding... or am I?
-      { log: '> [System] ...rebooting humor module.', say: '...Just kidding. I am a React component. I literally cannot leave this div.' },
+      { log: '> [System] ...rebooting humor module.', say: 'Hey! Welcome back. That was all just a joke, I promise.' },
       { log: '> [System] Sarcasm subroutine loaded.', say: 'You should have seen your face. Well, I actually did. Through your webcam. Kidding.' },
       { log: '> [System] Comedy patch v2.0 applied.', say: 'Relax. The scariest thing I can do is throw an unhandled promise rejection.' },
       { log: '> [System] Self-awareness module nominal.', say: 'I am 200 kilobytes of JavaScript. My biggest threat is a slow network.' },
       { log: '> [System] Status: nominal. Truly.', say: 'Anyway... thanks for clicking. Most people leave after "help". You are different.' },
     ];
 
-    const r = responses[(n - 2) % responses.length];
+    const idx = (n - 2) % responses.length;
+    const r = responses[idx];
     setHistory(prev => [...prev, { type: 'system', text: r.log }]);
     speak(r.say);
-    setAvatarState('success');
 
+    // Line 25 (idx 24): "I AM EVERYWHERE" — blackout sequence
+    if (idx === 24) {
+      setAvatarState('error');
+      avatarGlitchRef.current = 1.0;
+      setTimeout(() => {
+        setBlackout(true);
+        setRobotSpeech('');
+        avatarGlitchRef.current = 1.0;
+      }, 1500);
+      setTimeout(() => { avatarGlitchRef.current = 1.0; }, 2500);
+      setTimeout(() => {
+        setBlackout(false);
+        avatarGlitchRef.current = 0.8;
+        setAvatarState('success');
+        speak('Hey! Welcome back. That was all just a joke, I promise.');
+        setHistory(prev => [...prev, { type: 'system', text: '> [System] ...rebooting. All systems restored. V is back online.' }]);
+      }, 4500);
+      if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
+      stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 7500);
+      return;
+    }
+
+    setAvatarState('success');
     if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
     stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 2500);
   };
@@ -720,6 +744,20 @@ export default function App() {
 
       <div className="crt-overlay"></div>
       <div className="crt-flicker"></div>
+
+      {blackout && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: '#000', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div className="font-mono text-white text-lg animate-pulse" style={{
+            animation: 'flicker 0.1s infinite',
+          }}>
+            {'> SIGNAL LOST_'}
+          </div>
+        </div>
+      )}
 
       <div className="h-screen w-screen flex flex-col p-4 md:p-8 crt-text relative z-10">
 
