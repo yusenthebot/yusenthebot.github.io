@@ -851,10 +851,10 @@ export default function App() {
           setBlackoutContent(
             <div style={{ fontSize: 'clamp(24px, 6vw, 80px)', fontWeight: 'bold', color: '#fff', textShadow: '0 0 20px #fff', animation: 'flicker 0.05s infinite', userSelect: 'none' }}>{msg}</div>
           );
-          shakeScreen(15 + Math.random() * 20, 250);
-          await wait(200 + Math.random() * 150);
+          shakeScreen(15 + Math.random() * 20, 550);
+          await wait(500 + Math.random() * 150);
           setBlackoutContent(<div style={{ position: 'fixed', inset: 0, backgroundColor: '#000' }} />);
-          await wait(80 + Math.random() * 80);
+          await wait(100 + Math.random() * 80);
         }
 
         // Fake cursor moving on screen
