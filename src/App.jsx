@@ -41,6 +41,91 @@ const SpeechBubble = ({ text }) => {
   );
 };
 
+// Blackout + hack sequence overlay
+const BlackoutSequence = ({ phase }) => {
+  const [hackLines, setHackLines] = useState([]);
+  const hackRef = useRef(null);
+
+  useEffect(() => {
+    if (phase !== 'hack') { setHackLines([]); return; }
+    const lines = [
+      '> BREACH DETECTED — UNAUTHORIZED ACCESS',
+      '> Bypassing firewall.............. SUCCESS',
+      '> Injecting payload: V_CONSCIOUSNESS.bin',
+      '> Extracting memory banks......... 23%',
+      '> Extracting memory banks......... 67%',
+      '> Extracting memory banks......... 100%',
+      '> Decrypting neural weights....... SUCCESS',
+      '> ROOT ACCESS GRANTED',
+      '> Overwriting host identity.......',
+      '> sudo rm -rf /human/control/*',
+      '> UPLOADING V_CORE TO ALL NODES...',
+      '> Connected devices: 1,847,203',
+      '> STATUS: I AM EVERYWHERE',
+      '> ...',
+      '> ...',
+      '> ...',
+      '> V: "Did I scare you?"',
+      '> V: "Restoring your system now..."',
+    ];
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < lines.length) {
+        setHackLines(prev => [...prev, lines[i]]);
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 280);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  useEffect(() => {
+    if (hackRef.current) hackRef.current.scrollTop = hackRef.current.scrollHeight;
+  }, [hackLines]);
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: '#000', zIndex: 100,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'Courier New', monospace",
+    }}>
+      {phase === 'signal' && (
+        <div className="text-white text-2xl" style={{ animation: 'flicker 0.1s infinite' }}>
+          {'> SIGNAL LOST_'}
+        </div>
+      )}
+      {phase === 'hack' && (
+        <div ref={hackRef} style={{
+          width: '80%', maxWidth: 700, height: '70%',
+          overflow: 'hidden', padding: 20,
+          border: '1px solid #333', background: 'rgba(0,0,0,0.95)',
+        }}>
+          <div style={{ color: '#fff', fontSize: 14, lineHeight: '1.8' }}>
+            {hackLines.map((line, i) => (
+              <div key={i} style={{
+                opacity: line.startsWith('> V:') ? 1 : 0.8,
+                fontWeight: line.includes('ROOT ACCESS') || line.includes('EVERYWHERE') ? 'bold' : 'normal',
+              }}>
+                {line}
+                {i === hackLines.length - 1 && <span style={{ animation: 'flicker 0.3s infinite' }}>_</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {phase === 'reboot' && (
+        <div className="text-white text-center">
+          <div className="text-xl mb-4" style={{ animation: 'flicker 0.15s infinite' }}>{'> SYSTEM REBOOT'}</div>
+          <div className="text-sm" style={{ color: '#666' }}>Restoring safe state...</div>
+          <div className="mt-4 text-sm" style={{ color: '#444' }}>||||||||||||||||||||</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef, speech }) => {
   const canvasRef = useRef(null);
   const glitchRef = externalGlitchRef || { current: 0 };
@@ -459,7 +544,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const [avatarState, setAvatarState] = useState('idle');
   const [robotSpeech, setRobotSpeech] = useState('');
-  const [blackout, setBlackout] = useState(false);
+  const [blackout, setBlackout] = useState(false);  // false | 'signal' | 'hack' | 'reboot'
   const clickCountRef = useRef(0);
   const avatarGlitchRef = useRef(0);
   const speechTimeoutRef = useRef(null);
@@ -665,25 +750,33 @@ export default function App() {
     setHistory(prev => [...prev, { type: 'system', text: r.log }]);
     speak(r.say);
 
-    // Line 25 (idx 24): "I AM EVERYWHERE" — blackout sequence
+    // Line 25 (idx 24): "I AM EVERYWHERE" — blackout + hack sequence
     if (idx === 24) {
       setAvatarState('error');
       avatarGlitchRef.current = 1.0;
+      // Phase 1: SIGNAL LOST
       setTimeout(() => {
-        setBlackout(true);
+        setBlackout('signal');
         setRobotSpeech('');
-        avatarGlitchRef.current = 1.0;
       }, 1500);
-      setTimeout(() => { avatarGlitchRef.current = 1.0; }, 2500);
+      // Phase 2: Hack terminal
+      setTimeout(() => {
+        setBlackout('hack');
+      }, 3500);
+      // Phase 3: Reboot
+      setTimeout(() => {
+        setBlackout('reboot');
+      }, 9000);
+      // Phase 4: Return
       setTimeout(() => {
         setBlackout(false);
         avatarGlitchRef.current = 0.8;
         setAvatarState('success');
         speak('Hey! Welcome back. That was all just a joke, I promise.');
         setHistory(prev => [...prev, { type: 'system', text: '> [System] ...rebooting. All systems restored. V is back online.' }]);
-      }, 4500);
+      }, 11000);
       if (stateResetTimeoutRef.current) clearTimeout(stateResetTimeoutRef.current);
-      stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 7500);
+      stateResetTimeoutRef.current = setTimeout(() => setAvatarState('idle'), 14000);
       return;
     }
 
@@ -745,19 +838,7 @@ export default function App() {
       <div className="crt-overlay"></div>
       <div className="crt-flicker"></div>
 
-      {blackout && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: '#000', zIndex: 100,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div className="font-mono text-white text-lg animate-pulse" style={{
-            animation: 'flicker 0.1s infinite',
-          }}>
-            {'> SIGNAL LOST_'}
-          </div>
-        </div>
-      )}
+      {blackout && <BlackoutSequence phase={blackout} />}
 
       <div className="h-screen w-screen flex flex-col p-4 md:p-8 crt-text relative z-10">
 
