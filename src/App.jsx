@@ -104,13 +104,27 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       oCtx.fillStyle = 'rgb(10, 10, 10)';
       oCtx.fillRect(0, 0, 1000, 800);
 
+      // Creep posture: robot leans forward (scale up) + head drops (menacing)
+      const cl = creepRef.current;
+      const lean = cl * 0.04; // scale increase per level
+      const headDrop = cl * 15; // head moves down = looking up at you
+      const headLean = cl * 8; // head comes forward
+
+      // Apply scale transform for "leaning in" effect
+      if (cl > 0) {
+        oCtx.save();
+        const s = 1 + lean;
+        oCtx.translate(500 * (1 - s), 800 * (1 - s)); // scale from bottom-center
+        oCtx.scale(s, s);
+      }
+
       // Multi-plane parallax (amplified for stronger 3D)
       const nX = mx * 12;   const nY = my * 6;
       const aX = mx * 28;   const aY = my * 14;
       const earX = mx * 35;  const earY = my * 20;
-      const hX = mx * 65;   const hY = my * 35;
-      const vX = mx * 50;   const vY = my * 28;
-      const oX = mx * 18;   const oY = my * 12;
+      const hX = mx * 65;   const hY = my * 35 + headDrop;
+      const vX = mx * 50;   const vY = my * 28 + headDrop;
+      const oX = mx * 18;   const oY = my * 12 + headDrop;
       const refX = mx * -35; const refY = my * -20;
 
       // 1. Body Armor
@@ -261,98 +275,29 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       // Eye state animations
       const isBlink = avatarState === 'idle' && (frameCount % 250 > 240);
       const proximity = hoverProximityRef.current;
-      const cl = creepRef.current;
 
       eyes.forEach(ex => {
         if (avatarState === 'error') {
-          if (cl >= 2) {
-            // I AM EVERYWHERE: extreme narrowed eyes, flickering pinpoint
-            const twitch = (Math.random() - 0.5) * 8;
-            const flicker = Math.random() > 0.15 ? 1 : 0;
-            // White eye glow base
-            oCtx.fillStyle = `rgba(255, 255, 255, ${0.6 * flicker})`;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, 38, 0, Math.PI*2); oCtx.fill();
-            // Heavy eyelids almost shut — V-shaped angry brow angle
-            oCtx.fillStyle = 'rgb(0, 0, 0)';
-            // Top eyelid — angled inward (angry)
-            oCtx.beginPath();
-            oCtx.moveTo(ex - 44, eyeY - 42); oCtx.lineTo(ex + 44, eyeY - 42);
-            oCtx.lineTo(ex + 36 + twitch * 0.5, eyeY - 4);
-            oCtx.lineTo(ex - 36 + twitch * 0.5, eyeY - 8);
-            oCtx.fill();
-            // Bottom eyelid
-            oCtx.beginPath();
-            oCtx.moveTo(ex - 44, eyeY + 42); oCtx.lineTo(ex + 44, eyeY + 42);
-            oCtx.lineTo(ex + 36 - twitch * 0.3, eyeY + 6);
-            oCtx.lineTo(ex - 36 - twitch * 0.3, eyeY + 10);
-            oCtx.fill();
-            // Tiny burning pinpoint — the last thing you see
-            oCtx.fillStyle = `rgba(255, 255, 255, ${flicker})`;
-            oCtx.beginPath(); oCtx.arc(ex + twitch * 0.5, eyeY + 1, 3, 0, Math.PI*2); oCtx.fill();
-            // Faint ring
-            oCtx.strokeStyle = `rgba(255, 255, 255, ${0.3 * flicker})`; oCtx.lineWidth = 1;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, 20 + Math.random() * 5, 0, Math.PI*2); oCtx.stroke();
-          } else {
-            // Normal error: X eyes
-            oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 6;
-            oCtx.beginPath(); oCtx.moveTo(ex-18, eyeY-18); oCtx.lineTo(ex+18, eyeY+18); oCtx.stroke();
-            oCtx.beginPath(); oCtx.moveTo(ex+18, eyeY-18); oCtx.lineTo(ex-18, eyeY+18); oCtx.stroke();
-            if (Math.floor(frameCount / 4) % 2 === 0) {
-              oCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; oCtx.lineWidth = 3;
-              oCtx.beginPath(); oCtx.arc(ex, eyeY, 40, 0, Math.PI*2); oCtx.stroke();
-            }
+          // Keep original eye structure, intensify glow
+          const intensity = cl >= 2 ? 1.0 : 0.6;
+          const ringR = cl >= 2 ? 25 : 18;
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${intensity})`; oCtx.lineWidth = cl >= 2 ? 6 : 4;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringR, 0, Math.PI*2); oCtx.stroke();
+          oCtx.fillStyle = `rgba(255, 255, 255, ${intensity})`;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, cl >= 2 ? 12 : 8, 0, Math.PI*2); oCtx.fill();
+          if (cl >= 2 && Math.random() > 0.4) {
+            oCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; oCtx.lineWidth = 1;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, 32 + Math.random() * 5, 0, Math.PI*2); oCtx.stroke();
           }
         } else if (avatarState === 'success') {
-          if (cl >= 2) {
-            // Madness: predator lock-on — tiny pinpoint pupil + narrowed eyelids
-            const twitch = (Math.random() - 0.5) * 4;
-            const pulse = 0.85 + Math.sin(frameCount * 0.1) * 0.15;
-            // Narrowed eyelids — top and bottom bars closing in
-            oCtx.fillStyle = `rgba(255, 255, 255, ${pulse * 0.5})`;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, 35, 0, Math.PI*2); oCtx.fill();
-            // Eyelid top
-            oCtx.fillStyle = 'rgb(0, 0, 0)';
-            oCtx.beginPath();
-            oCtx.moveTo(ex - 40, eyeY - 38); oCtx.lineTo(ex + 40, eyeY - 38);
-            oCtx.lineTo(ex + 38 + twitch, eyeY - 8); oCtx.lineTo(ex - 38 + twitch, eyeY - 12);
-            oCtx.fill();
-            // Eyelid bottom
-            oCtx.beginPath();
-            oCtx.moveTo(ex - 40, eyeY + 38); oCtx.lineTo(ex + 40, eyeY + 38);
-            oCtx.lineTo(ex + 38 - twitch, eyeY + 10); oCtx.lineTo(ex - 38 - twitch, eyeY + 14);
-            oCtx.fill();
-            // Tiny pinpoint pupil — hyper-focused
-            oCtx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + 1, 4, 0, Math.PI*2); oCtx.fill();
-            // Sharp glint
-            oCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            oCtx.beginPath(); oCtx.arc(ex + twitch + 2, eyeY - 1, 1.5, 0, Math.PI*2); oCtx.fill();
-          } else if (cl >= 1) {
-            // Creepy: slightly narrowed, unwavering stare
-            const twitch = (Math.random() - 0.5) * 1.5;
-            // Visible eye area
-            oCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, 30, 0, Math.PI*2); oCtx.fill();
-            // Slight eyelid droop from top
-            oCtx.fillStyle = 'rgb(0, 0, 0)';
-            oCtx.beginPath();
-            oCtx.moveTo(ex - 36, eyeY - 34); oCtx.lineTo(ex + 36, eyeY - 34);
-            oCtx.lineTo(ex + 34 + twitch, eyeY - 16); oCtx.lineTo(ex - 34 + twitch, eyeY - 18);
-            oCtx.fill();
-            // Medium pupil — locked on, not pulsing much
-            oCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + 2, 8, 0, Math.PI*2); oCtx.fill();
-            // Outer ring
-            oCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; oCtx.lineWidth = 2;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, 28, 0, Math.PI*2); oCtx.stroke();
-          } else {
-            // Normal success: friendly pulsing ring
-            const ringRadius = 10 + Math.abs(Math.sin(frameCount * 0.2)) * 22;
-            oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 8;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
-            oCtx.fillStyle = 'rgb(255, 255, 255)';
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, 8, 0, Math.PI*2); oCtx.fill();
-          }
+          // Original eye style, scaled by creep
+          const ringRadius = 10 + Math.abs(Math.sin(frameCount * 0.2)) * (22 - cl * 6);
+          const coreR = 8 + cl * 3;
+          const alpha = Math.min(1, 0.8 + cl * 0.1);
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${alpha})`; oCtx.lineWidth = 8 - cl;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
+          oCtx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, coreR, 0, Math.PI*2); oCtx.fill();
         } else if (avatarState === 'scan') {
           // Scanning: rotating radar sweep
           const sweepAngle = (frameCount * 0.08) % (Math.PI * 2);
@@ -381,34 +326,19 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
           oCtx.fillStyle = 'rgb(255, 255, 255)';
           oCtx.beginPath(); oCtx.arc(ex, eyeY, 5, 0, Math.PI*2); oCtx.fill();
         } else {
-          // Idle: proximity-reactive glow, modified by creep level
-          const baseAlpha = 0.3 + proximity * 0.5 + cl * 0.15;
-          const coreAlpha = baseAlpha + Math.sin(frameCount * (0.05 + cl * 0.03)) * 0.2;
-          const ringSize = 18 + proximity * 8 + cl * 3;
-          const coreSize = 9 + proximity * 5 + cl * 4;
-          const eyeTwitch = cl >= 1 ? (Math.random() - 0.5) * cl * 2 : 0;
-
-          oCtx.strokeStyle = `rgba(255, 255, 255, ${Math.min(1, baseAlpha + 0.1)})`; oCtx.lineWidth = 3 + proximity * 3 + cl;
-          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, ringSize, 0, Math.PI*2); oCtx.stroke();
-          if (proximity > 0.5 || cl >= 1) {
-            oCtx.strokeStyle = `rgba(255, 255, 255, ${Math.max((proximity - 0.5) * 0.4, cl * 0.15)})`; oCtx.lineWidth = 1;
+          // Idle: proximity-reactive glow (original clean design)
+          const baseAlpha = 0.3 + proximity * 0.5;
+          const coreAlpha = baseAlpha + Math.sin(frameCount * 0.05) * 0.2;
+          const ringSize = 18 + proximity * 8;
+          const coreSize = 9 + proximity * 5;
+          oCtx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha + 0.1})`; oCtx.lineWidth = 3 + proximity * 3;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize, 0, Math.PI*2); oCtx.stroke();
+          if (proximity > 0.5) {
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${(proximity - 0.5) * 0.4})`; oCtx.lineWidth = 1;
             oCtx.beginPath(); oCtx.arc(ex, eyeY, ringSize + 10, 0, Math.PI*2); oCtx.stroke();
           }
-          oCtx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, coreAlpha)})`;
-          oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, coreSize, 0, Math.PI*2); oCtx.fill();
-
-          // Creep level 2: narrowed eyelids
-          if (cl >= 2) {
-            oCtx.fillStyle = 'rgb(0, 0, 0)';
-            oCtx.beginPath();
-            oCtx.moveTo(ex - 38, eyeY - 36); oCtx.lineTo(ex + 38, eyeY - 36);
-            oCtx.lineTo(ex + 35, eyeY - 10); oCtx.lineTo(ex - 35, eyeY - 13);
-            oCtx.fill();
-            oCtx.beginPath();
-            oCtx.moveTo(ex - 38, eyeY + 36); oCtx.lineTo(ex + 38, eyeY + 36);
-            oCtx.lineTo(ex + 35, eyeY + 12); oCtx.lineTo(ex - 35, eyeY + 15);
-            oCtx.fill();
-          }
+          oCtx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
+          oCtx.beginPath(); oCtx.arc(ex, eyeY, coreSize, 0, Math.PI*2); oCtx.fill();
         }
       });
 
@@ -466,6 +396,9 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
             oCtx.beginPath(); oCtx.roundRect(710+fX, 720+fY, 40, 100, 10); oCtx.fill(); oCtx.strokeRect(710+fX, 720+fY, 40, 100);
         }
       }
+
+      // Restore lean scale
+      if (cl > 0) oCtx.restore();
 
       // 9. Bayer Dithering
       const imgData = oCtx.getImageData(0, 0, 1000, 800);
@@ -576,8 +509,12 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
         style={{ imageRendering: 'pixelated' }}
         title="Click to interact with the Cyber-Unit"
       />
-      <div className="absolute top-4 right-4 text-sm text-gray-400 font-mono animate-pulse bg-black px-2 py-1 rounded border border-gray-800">
-        [ UNIT_STATUS: {avatarState.toUpperCase()} ]
+      <div className={`absolute top-4 right-4 text-sm font-mono bg-black px-2 py-1 rounded border ${creepLevel >= 2 ? 'text-white border-white animate-pulse' : creepLevel >= 1 ? 'text-gray-300 border-gray-600 animate-pulse' : 'text-gray-400 border-gray-800 animate-pulse'}`}>
+        {creepLevel >= 2
+          ? '[ WARNING: CONTAINMENT FAILING ]'
+          : creepLevel >= 1
+          ? '[ STATUS: WATCHING YOU ]'
+          : `[ UNIT_STATUS: ${avatarState.toUpperCase()} ]`}
       </div>
       <SpeechBubble text={speech} />
     </div>
