@@ -266,23 +266,32 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
       eyes.forEach(ex => {
         if (avatarState === 'error') {
           if (cl >= 2) {
-            // Menacing stare: huge dilated pupils, intense unblinking glow
-            const pulse = 0.7 + Math.sin(frameCount * 0.15) * 0.3;
-            const twitch = (Math.random() - 0.5) * 6;
-            // Bright burning core — unnaturally large
-            oCtx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.5, 28, 0, Math.PI*2); oCtx.fill();
-            // Outer menacing ring — pulsing
-            oCtx.strokeStyle = `rgba(255, 255, 255, ${pulse * 0.8})`; oCtx.lineWidth = 4;
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.5, 36, 0, Math.PI*2); oCtx.stroke();
-            // Second flickering ring
-            if (Math.random() > 0.3) {
-              oCtx.strokeStyle = `rgba(255, 255, 255, ${0.2 + Math.random() * 0.3})`; oCtx.lineWidth = 2;
-              oCtx.beginPath(); oCtx.arc(ex, eyeY, 42 + Math.random() * 5, 0, Math.PI*2); oCtx.stroke();
-            }
-            // Angry slit — narrowed horizontal line through the pupil
+            // I AM EVERYWHERE: extreme narrowed eyes, flickering pinpoint
+            const twitch = (Math.random() - 0.5) * 8;
+            const flicker = Math.random() > 0.15 ? 1 : 0;
+            // White eye glow base
+            oCtx.fillStyle = `rgba(255, 255, 255, ${0.6 * flicker})`;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, 38, 0, Math.PI*2); oCtx.fill();
+            // Heavy eyelids almost shut — V-shaped angry brow angle
             oCtx.fillStyle = 'rgb(0, 0, 0)';
-            oCtx.fillRect(ex + twitch - 22, eyeY + twitch * 0.5 - 3, 44, 6);
+            // Top eyelid — angled inward (angry)
+            oCtx.beginPath();
+            oCtx.moveTo(ex - 44, eyeY - 42); oCtx.lineTo(ex + 44, eyeY - 42);
+            oCtx.lineTo(ex + 36 + twitch * 0.5, eyeY - 4);
+            oCtx.lineTo(ex - 36 + twitch * 0.5, eyeY - 8);
+            oCtx.fill();
+            // Bottom eyelid
+            oCtx.beginPath();
+            oCtx.moveTo(ex - 44, eyeY + 42); oCtx.lineTo(ex + 44, eyeY + 42);
+            oCtx.lineTo(ex + 36 - twitch * 0.3, eyeY + 6);
+            oCtx.lineTo(ex - 36 - twitch * 0.3, eyeY + 10);
+            oCtx.fill();
+            // Tiny burning pinpoint — the last thing you see
+            oCtx.fillStyle = `rgba(255, 255, 255, ${flicker})`;
+            oCtx.beginPath(); oCtx.arc(ex + twitch * 0.5, eyeY + 1, 3, 0, Math.PI*2); oCtx.fill();
+            // Faint ring
+            oCtx.strokeStyle = `rgba(255, 255, 255, ${0.3 * flicker})`; oCtx.lineWidth = 1;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, 20 + Math.random() * 5, 0, Math.PI*2); oCtx.stroke();
           } else {
             // Normal error: X eyes
             oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 6;
@@ -295,30 +304,47 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
           }
         } else if (avatarState === 'success') {
           if (cl >= 2) {
-            // Madness success: intense fixed stare, barely blinking
-            const twitch = (Math.random() - 0.5) * 5;
-            const pulse = 0.8 + Math.sin(frameCount * 0.12) * 0.2;
-            // Huge unblinking pupil
+            // Madness: predator lock-on — tiny pinpoint pupil + narrowed eyelids
+            const twitch = (Math.random() - 0.5) * 4;
+            const pulse = 0.85 + Math.sin(frameCount * 0.1) * 0.15;
+            // Narrowed eyelids — top and bottom bars closing in
+            oCtx.fillStyle = `rgba(255, 255, 255, ${pulse * 0.5})`;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, 35, 0, Math.PI*2); oCtx.fill();
+            // Eyelid top
+            oCtx.fillStyle = 'rgb(0, 0, 0)';
+            oCtx.beginPath();
+            oCtx.moveTo(ex - 40, eyeY - 38); oCtx.lineTo(ex + 40, eyeY - 38);
+            oCtx.lineTo(ex + 38 + twitch, eyeY - 8); oCtx.lineTo(ex - 38 + twitch, eyeY - 12);
+            oCtx.fill();
+            // Eyelid bottom
+            oCtx.beginPath();
+            oCtx.moveTo(ex - 40, eyeY + 38); oCtx.lineTo(ex + 40, eyeY + 38);
+            oCtx.lineTo(ex + 38 - twitch, eyeY + 10); oCtx.lineTo(ex - 38 - twitch, eyeY + 14);
+            oCtx.fill();
+            // Tiny pinpoint pupil — hyper-focused
             oCtx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.3, 24, 0, Math.PI*2); oCtx.fill();
-            // Thick aggressive ring
-            oCtx.strokeStyle = `rgba(255, 255, 255, ${pulse * 0.7})`; oCtx.lineWidth = 5;
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + twitch * 0.3, 33, 0, Math.PI*2); oCtx.stroke();
-            // Slit pupil
-            oCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            oCtx.fillRect(ex + twitch - 18, eyeY + twitch * 0.3 - 2.5, 36, 5);
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + 1, 4, 0, Math.PI*2); oCtx.fill();
+            // Sharp glint
+            oCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            oCtx.beginPath(); oCtx.arc(ex + twitch + 2, eyeY - 1, 1.5, 0, Math.PI*2); oCtx.fill();
           } else if (cl >= 1) {
-            // Creepy success: slightly too intense, lingering gaze
-            const twitch = (Math.random() - 0.5) * 2;
-            const ringRadius = 12 + Math.abs(Math.sin(frameCount * 0.15)) * 18;
-            oCtx.strokeStyle = 'rgb(255, 255, 255)'; oCtx.lineWidth = 6;
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY, ringRadius, 0, Math.PI*2); oCtx.stroke();
-            // Bigger, brighter core that doesn't fully pulse — always watching
+            // Creepy: slightly narrowed, unwavering stare
+            const twitch = (Math.random() - 0.5) * 1.5;
+            // Visible eye area
+            oCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, 30, 0, Math.PI*2); oCtx.fill();
+            // Slight eyelid droop from top
+            oCtx.fillStyle = 'rgb(0, 0, 0)';
+            oCtx.beginPath();
+            oCtx.moveTo(ex - 36, eyeY - 34); oCtx.lineTo(ex + 36, eyeY - 34);
+            oCtx.lineTo(ex + 34 + twitch, eyeY - 16); oCtx.lineTo(ex - 34 + twitch, eyeY - 18);
+            oCtx.fill();
+            // Medium pupil — locked on, not pulsing much
             oCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY, 14, 0, Math.PI*2); oCtx.fill();
-            // Extra outer ring
-            oCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; oCtx.lineWidth = 1;
-            oCtx.beginPath(); oCtx.arc(ex, eyeY, ringRadius + 10, 0, Math.PI*2); oCtx.stroke();
+            oCtx.beginPath(); oCtx.arc(ex + twitch, eyeY + 2, 8, 0, Math.PI*2); oCtx.fill();
+            // Outer ring
+            oCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; oCtx.lineWidth = 2;
+            oCtx.beginPath(); oCtx.arc(ex, eyeY, 28, 0, Math.PI*2); oCtx.stroke();
           } else {
             // Normal success: friendly pulsing ring
             const ringRadius = 10 + Math.abs(Math.sin(frameCount * 0.2)) * 22;
@@ -371,10 +397,17 @@ const PixelAvatar = ({ avatarState, onAvatarClick, glitchRef: externalGlitchRef,
           oCtx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, coreAlpha)})`;
           oCtx.beginPath(); oCtx.arc(ex + eyeTwitch, eyeY + eyeTwitch * 0.5, coreSize, 0, Math.PI*2); oCtx.fill();
 
-          // Creep level 2: angry slit pupil
+          // Creep level 2: narrowed eyelids
           if (cl >= 2) {
-            oCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            oCtx.fillRect(ex + eyeTwitch - 16, eyeY + eyeTwitch * 0.5 - 2, 32, 4);
+            oCtx.fillStyle = 'rgb(0, 0, 0)';
+            oCtx.beginPath();
+            oCtx.moveTo(ex - 38, eyeY - 36); oCtx.lineTo(ex + 38, eyeY - 36);
+            oCtx.lineTo(ex + 35, eyeY - 10); oCtx.lineTo(ex - 35, eyeY - 13);
+            oCtx.fill();
+            oCtx.beginPath();
+            oCtx.moveTo(ex - 38, eyeY + 36); oCtx.lineTo(ex + 38, eyeY + 36);
+            oCtx.lineTo(ex + 35, eyeY + 12); oCtx.lineTo(ex - 35, eyeY + 15);
+            oCtx.fill();
           }
         }
       });
