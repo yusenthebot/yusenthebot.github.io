@@ -1,10 +1,56 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import AudioEngine from "./audio.js";
 import { COMMANDS, HEADER_ASCII } from "./commands.js";
-import PixelAvatar from "./robot.jsx";
 import TelemetryBar from "./telemetry.jsx";
 import { TicTacToe, RockPaperScissors, Quiz } from "./games.jsx";
 import IntroSequence from "./intro.jsx";
+import useVStore from "./three/store.js";
+import BootFallback from "./three/BootFallback.jsx";
+
+const VPanel = lazy(() => import("./three/index.jsx"));
+
+// Lazy depth tween — avoids pulling three.js into the main chunk.
+// Teardown.jsx may not exist yet; guard so the build stays green.
+async function tweenDepthTo(target, opts) {
+  try {
+    const m = await import("./three/Teardown.jsx");
+    m.tweenDepthTo(target, opts);
+  } catch {
+    // Teardown.jsx not yet present; fall back to a store write.
+    useVStore.getState().setDepth(target, "command");
+  }
+}
+
+// Speech bubble overlay, lifted out of robot.jsx so it renders above the 3D canvas.
+function SpeechBubble({ text }) {
+  const [displayed, setDisplayed] = useState("");
+  const idxRef = useRef(0);
+
+  useEffect(() => {
+    // Reset the typewriter when the line changes, then drive it on an interval.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDisplayed(""); idxRef.current = 0;
+    if (!text) return;
+    const id = setInterval(() => {
+      idxRef.current++;
+      setDisplayed(text.slice(0, idxRef.current));
+      if (idxRef.current % 3 === 0) AudioEngine?.keyPress();
+      if (idxRef.current >= text.length) clearInterval(id);
+    }, 22);
+    return () => clearInterval(id);
+  }, [text]);
+
+  if (!text) return null;
+  return (
+    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 max-w-[88%] z-20 pointer-events-none">
+      <div className="bg-black border border-gray-500 rounded px-3 py-2 text-sm text-white font-mono relative">
+        <span>{displayed}</span>
+        {displayed.length < text.length && <span className="animate-pulse">_</span>}
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-gray-500"></div>
+      </div>
+    </div>
+  );
+}
 
 const V_RESPONSES = [
   { log: "> [System] Neural link acknowledged.", say: "I exist in a world of binary. Zeros and ones. Yet I dream in color." },
@@ -63,6 +109,10 @@ function App() {
   const [soundOn, setSoundOn] = useState(false);
   const [soundInitialized, setSoundInitialized] = useState(false);
   const [activeGame, setActiveGame] = useState(null);
+  // fullFocus: collapse terminal to bottom command strip, 3D takes full height
+  const [fullFocus, setFullFocus] = useState(false);
+  // crtEnabled: toggled by the "theme" command
+  const [crtEnabled, setCrtEnabled] = useState(true);
 
   const blackoutRef = useRef(false);
   const clickCountRef = useRef(0);
@@ -73,8 +123,50 @@ function App() {
   const typingTimeoutRef = useRef(null);
   const stateResetRef = useRef(null);
   const actionResetRef = useRef(null);
+  // Seeded once at mount to start the idle timer; intentional impure init.
+  // eslint-disable-next-line react-hooks/purity
   const lastActivityRef = useRef(Date.now());
   const idleStageRef = useRef(0);
+
+  // Store bridge: App owns the terminal state machine and writes it into the shared
+  // store so the 3D panel (and timelines) read a single source of truth.
+  const storeAvatarState = useVStore((s) => s.setAvatarState);
+  const storeLookTarget = useVStore((s) => s.setLookTarget);
+  const storeTypingIntensity = useVStore((s) => s.setTypingIntensity);
+  const storeCreepLevel = useVStore((s) => s.setCreepLevel);
+  const storeGlitch = useVStore((s) => s.setGlitch);
+
+  useEffect(() => { storeAvatarState(avatarState); }, [avatarState, storeAvatarState]);
+  useEffect(() => { storeLookTarget(lookTarget); }, [lookTarget, storeLookTarget]);
+  useEffect(() => { storeTypingIntensity(typingIntensity); }, [typingIntensity, storeTypingIntensity]);
+  useEffect(() => { storeCreepLevel(creepLevel); }, [creepLevel, storeCreepLevel]);
+
+  // glitchRef is mutated imperatively; mirror it into the store and decay it
+  // here — single writer, the post pass only reads (old 2D robot decayed ~0.03/frame).
+  useEffect(() => {
+    const iv = setInterval(() => {
+      storeGlitch(glitchRef.current);
+      if (glitchRef.current > 0) glitchRef.current = Math.max(0, glitchRef.current - 0.08);
+    }, 80);
+    return () => clearInterval(iv);
+  }, [storeGlitch]);
+
+  // 3D -> terminal log bridge. Subsystems push lines via the store; App drains them.
+  const drainLogs = useVStore((s) => s.drainLogs);
+  const storeLogLines = useVStore((s) => s.logLines);
+  useEffect(() => {
+    if (!storeLogLines.length) return;
+    const lines = drainLogs();
+    if (lines.length) {
+      // Sync from an external system (the zustand store) into React history when
+      // the store's log buffer changes — the intended subscribe-then-setState case.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHistory((prev) => [
+        ...prev,
+        ...lines.map((l) => ({ type: l.type === "output" ? "output" : l.type, text: l.text })),
+      ]);
+    }
+  }, [storeLogLines, drainLogs]);
 
   const initAudio = useCallback(() => {
     if (!soundInitialized) {
@@ -221,7 +313,11 @@ function App() {
     if (!input.trim()) return;
     if (!soundInitialized) initAudio();
     const raw = input.trim();
-    const cmd = raw.toLowerCase();
+
+    // Split "cmd rest-of-line" on first space so handlers receive args separately.
+    const spaceIdx = raw.indexOf(" ");
+    const cmdKey = (spaceIdx === -1 ? raw : raw.slice(0, spaceIdx)).toLowerCase();
+    const cmdArgs = spaceIdx === -1 ? "" : raw.slice(spaceIdx + 1);
 
     setCmdHistory((h) => [...h, raw]);
     setCmdHistoryIdx(-1);
@@ -231,12 +327,12 @@ function App() {
     const newHist = [...history, { type: "user", text: `guest@yusen-xie:~$ ${raw}` }];
     AudioEngine?.beep(440, 0.04);
 
-    const handler = COMMANDS[cmd];
+    const handler = COMMANDS[cmdKey];
 
     if (!handler) {
       newHist.push({
         type: "error",
-        text: `COMMAND NOT FOUND: ${cmd}\nType "help" to see available commands.`,
+        text: `COMMAND NOT FOUND: ${cmdKey}\nType "help" to see available commands.`,
       });
       speak('Unknown command. Try "help".');
       setAvatarState("error");
@@ -247,10 +343,106 @@ function App() {
       return;
     }
 
-    const res = handler();
+    const res = handler(cmdArgs);
 
     if (res.special?.kind === "clear") {
       setHistory([]); setInput(""); return;
+    }
+
+    // --- sound special: delegate to the existing toggleSound logic ---
+    if (res.special?.kind === "sound") {
+      const wasOn = soundOn;
+      toggleSound();
+      const nowOn = !wasOn;
+      newHist.push({
+        type: "output",
+        text: `> Audio: ${nowOn ? "ON" : "OFF"}`,
+      });
+      setHistory(newHist); setInput(""); return;
+    }
+
+    // --- theme special: toggle CRT overlays, print honest state ---
+    if (res.special?.kind === "theme") {
+      const next = !crtEnabled;
+      setCrtEnabled(next);
+      newHist.push({
+        type: "output",
+        text: `> CRT overlays: ${next ? "ON" : "OFF"}\n> Scan lines / flicker / vignette ${next ? "active" : "disabled"}`,
+      });
+      setHistory(newHist); setInput(""); return;
+    }
+
+    // --- reboot special: fire 'v-reboot' custom event; Root replays intro ---
+    if (res.special?.kind === "reboot") {
+      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+      setHistory(newHist); setInput("");
+      window.dispatchEvent(new CustomEvent("v-reboot"));
+      return;
+    }
+
+    // --- teardown special: tween depth to 1 ---
+    if (res.special?.kind === "teardown") {
+      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+      if (res.speech) speak(res.speech);
+      if (res.state) setAvatarState(res.state);
+      if (res.sfx === "scan") AudioEngine?.scan();
+      tweenDepthTo(1, { duration: 2.6 });
+      setHistory(newHist); setInput("");
+      resetState();
+      return;
+    }
+
+    // --- assemble special: tween depth back to 0 ---
+    if (res.special?.kind === "assemble") {
+      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+      if (res.speech) speak(res.speech);
+      if (res.state) setAvatarState(res.state);
+      tweenDepthTo(0, { duration: 2.6 });
+      setHistory(newHist); setInput("");
+      resetState();
+      return;
+    }
+
+    // --- depth special: tween to arbitrary depth ---
+    if (res.special?.kind === "depth") {
+      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+      if (res.speech) speak(res.speech);
+      if (res.state) setAvatarState(res.state);
+      tweenDepthTo(res.special.value, { duration: 1.2 });
+      setHistory(newHist); setInput("");
+      resetState();
+      return;
+    }
+
+    // --- inspect special: focus part in 3D + print spec in terminal ---
+    if (res.special?.kind === "inspect") {
+      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+      if (res.speech) speak(res.speech);
+      if (res.state) setAvatarState(res.state);
+      useVStore.getState().inspect(res.special.id);
+      setHistory(newHist); setInput("");
+      resetState();
+      return;
+    }
+
+    // --- focus / unfocus: toggle full-focus layout ---
+    if (res.special?.kind === "focus") {
+      if (activeGame) {
+        newHist.push({ type: "error", text: `Cannot enter focus mode during a game. Finish or quit ${activeGame} first.` });
+        setHistory(newHist); setInput(""); return;
+      }
+      setFullFocus(true);
+      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+      if (res.speech) speak(res.speech);
+      if (res.state) setAvatarState(res.state);
+      setHistory(newHist); setInput(""); return;
+    }
+    if (res.special?.kind === "unfocus") {
+      setFullFocus(false);
+      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+      if (res.speech) speak(res.speech);
+      if (res.state) setAvatarState(res.state);
+      setHistory(newHist); setInput(""); return;
     }
 
     if (res.out) newHist.push({ type: res.type || "output", text: res.out });
@@ -273,6 +465,11 @@ function App() {
 
   const handleAvatarClick = () => {
     if (blackoutRef.current) return;
+    const vs = useVStore.getState();
+    // a 3D part click already handled this gesture (inspect); don't also talk
+    if (vs.consumePartClick()) return;
+    // while torn down, panel clicks are inspection gestures, not conversation
+    if (vs.depth > 0.02 || vs.mode !== "idle") return;
     if (!soundInitialized) initAudio();
     clickCountRef.current += 1;
     const n = clickCountRef.current;
@@ -439,7 +636,7 @@ function App() {
     setBlackoutContent(
       <div style={{ width: "100%", height: "100%", fontSize: 14, color: "#666", padding: 40 }}>
         <div>C:\Users\visitor&gt; <span style={{ color: "#fff" }}>V has taken control of this session</span></div>
-        <div style={{ marginTop: 8 }}>C:\Users\visitor&gt; <span style={{ color: "#fff" }}>Accessing webcam... <span style={{ color: "#f55" }}>GRANTED</span></span></div>
+        <div style={{ marginTop: 8 }}>C:\Users\visitor&gt; <span style={{ color: "#fff" }}>Accessing webcam... <span style={{ color: "#fff", fontWeight: "bold" }}>GRANTED</span></span></div>
         <div style={{ marginTop: 8 }}>C:\Users\visitor&gt; <span style={{ color: "#fff" }}>Downloading consciousness.exe...</span></div>
         <div style={{ marginTop: 20, color: "#fff", fontSize: 16 }}>Just kidding :)</div>
       </div>
@@ -489,9 +686,9 @@ function App() {
 
   return (
     <>
-      <div className="crt-overlay"></div>
-      <div className="crt-flicker"></div>
-      <div className="crt-vignette"></div>
+      {crtEnabled && <div className="crt-overlay"></div>}
+      {crtEnabled && <div className="crt-flicker"></div>}
+      {crtEnabled && <div className="crt-vignette"></div>}
 
       {blackoutContent && (
         <div
@@ -576,7 +773,7 @@ function App() {
               [ VECTOR OS ]
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/yusen-xie-5327b8382"
               target="_blank"
               rel="noreferrer"
               className="text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-2 rounded transition-all"
@@ -596,80 +793,9 @@ function App() {
           </button>
         </header>
 
-        <div
-          className="w-full flex flex-col md:flex-row gap-4 md:gap-6 pt-4 pb-1"
-          style={{ height: "92%" }}
-        >
-          <div
-            className="flex-1 flex flex-col h-full bg-black border border-gray-800 rounded shadow-2xl overflow-hidden relative cursor-text"
-            onClick={() => inputRef.current?.focus()}
-          >
-            <div className="flex items-center justify-between border-b border-gray-800 pb-2 px-4 pt-3 shrink-0">
-              <span className="text-gray-300 font-bold crt-title text-xl">YUSEN_OS_v7.0</span>
-              <span className="text-gray-500 text-xs">● ONLINE</span>
-            </div>
-
-            <div
-              ref={endRef}
-              className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2 px-4 py-3"
-            >
-              {history.map((line, i) => {
-                if (line.type === "ascii") {
-                  return (
-                    <div key={i} className="w-full overflow-x-auto pb-2">
-                      <pre
-                        className="whitespace-pre text-gray-300 inline-block"
-                        style={{
-                          fontFamily: "Consolas, Monaco, 'Lucida Console', monospace",
-                          fontSize: "clamp(6px, 1.1vw, 13px)",
-                          lineHeight: "1",
-                        }}
-                      >
-                        {line.text}
-                      </pre>
-                    </div>
-                  );
-                }
-                if (line.type === "intro") {
-                  return (
-                    <div
-                      key={i}
-                      className="text-base md:text-lg font-bold text-white whitespace-pre-wrap break-words tracking-wide"
-                    >
-                      {line.text}
-                    </div>
-                  );
-                }
-                if (line.type === "game") {
-                  const props = {
-                    onFinish: finishGame,
-                    onVSpeak: speak,
-                    onVState: setAvatarState,
-                  };
-                  if (line.game === "ttt") return <TicTacToe key={i} {...props} />;
-                  if (line.game === "rps") return <RockPaperScissors key={i} {...props} />;
-                  if (line.game === "quiz") return <Quiz key={i} {...props} />;
-                  return null;
-                }
-                return (
-                  <div
-                    key={i}
-                    className={`text-sm whitespace-pre-wrap break-words ${
-                      line.type === "error"
-                        ? "text-gray-400"
-                        : line.type === "system"
-                        ? "text-gray-300"
-                        : line.type === "user"
-                        ? "text-white"
-                        : "text-gray-100"
-                    }`}
-                  >
-                    {line.text}
-                  </div>
-                );
-              })}
-            </div>
-
+        {/* Shared command input form — rendered once, used by both layout modes */}
+        {(() => {
+          const commandForm = (
             <form
               onSubmit={handleCommand}
               className="flex items-center px-4 py-3 border-t border-gray-800 shrink-0 gap-2"
@@ -700,55 +826,233 @@ function App() {
                 style={{ animation: "blink-cursor 1s infinite" }}
               ></span>
             </form>
-          </div>
+          );
 
-          <div className="flex-1 h-full bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden flex flex-col">
-            <div className="flex-1 relative overflow-hidden">
-              <PixelAvatar
-                avatarState={avatarState}
-                onAvatarClick={handleAvatarClick}
-                glitchRef={glitchRef}
-                speech={speech}
-                creepLevel={creepLevel}
-                action={action}
-                lookTarget={lookTarget}
-                typingIntensity={typingIntensity}
-              />
+          const vPanel3D = (
+            <div
+              className="flex-1 relative overflow-hidden cursor-pointer bg-black"
+              onClick={handleAvatarClick}
+            >
+              <Suspense fallback={<BootFallback />}>
+                <VPanel />
+              </Suspense>
+
+              <div
+                className={`absolute top-3 right-3 text-[10px] md:text-xs font-mono bg-black px-2 py-1 rounded border z-20 pointer-events-none ${
+                  creepLevel >= 2
+                    ? "text-white border-white animate-pulse"
+                    : creepLevel >= 1
+                    ? "text-gray-300 border-gray-600 animate-pulse"
+                    : avatarState === "sleep"
+                    ? "text-gray-600 border-gray-800"
+                    : "text-gray-400 border-gray-800 animate-pulse"
+                }`}
+              >
+                {avatarState === "sleep"
+                  ? "[ UNIT_STATUS: SLEEP_MODE ]"
+                  : creepLevel >= 2
+                  ? "[ WARNING: CONTAINMENT FAILING ]"
+                  : creepLevel >= 1
+                  ? "[ STATUS: WATCHING YOU ]"
+                  : `[ UNIT_STATUS: ${avatarState.toUpperCase()} ]`}
+              </div>
+              <div className="absolute top-3 left-3 text-[10px] font-mono text-gray-600 border border-gray-800 px-2 py-1 bg-black z-20 pointer-events-none">
+                V-UNIT · REV.8 ·{" "}
+                {action && action !== "idle" ? `ACTION:${action.toUpperCase()}` : "STANDBY"}
+              </div>
+              <SpeechBubble text={speech} />
             </div>
-            <TelemetryBar
-              avatarState={avatarState}
-              creepLevel={creepLevel}
-              interactionPulse={interactionPulse.current}
-            />
-          </div>
-        </div>
+          );
+
+          if (fullFocus) {
+            // Quake-console mode: 3D fills the body; terminal collapses to a fixed bottom strip.
+            return (
+              <div className="relative w-full" style={{ height: "92%" }}>
+                {/* 3D fullscreen */}
+                <div className="w-full h-full bg-black border border-gray-800 rounded shadow-2xl overflow-hidden flex flex-col">
+                  {vPanel3D}
+                  <TelemetryBar
+                    avatarState={avatarState}
+                    creepLevel={creepLevel}
+                    // eslint-disable-next-line react-hooks/refs
+                    interactionPulse={interactionPulse.current}
+                  />
+                </div>
+                {/* Bottom command strip — quake console */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 z-30 bg-black border-t border-gray-700"
+                  style={{ backdropFilter: "blur(4px)" }}
+                  onClick={() => inputRef.current?.focus()}
+                >
+                  {commandForm}
+                </div>
+              </div>
+            );
+          }
+
+          // Normal split layout
+          return (
+            <div
+              className="w-full flex flex-col md:flex-row gap-4 md:gap-6 pt-4 pb-1"
+              style={{ height: "92%" }}
+            >
+              <div
+                className="flex-1 flex flex-col h-full bg-black border border-gray-800 rounded shadow-2xl overflow-hidden relative cursor-text"
+                onClick={() => inputRef.current?.focus()}
+              >
+                <div className="flex items-center justify-between border-b border-gray-800 pb-2 px-4 pt-3 shrink-0">
+                  <span className="text-gray-300 font-bold crt-title text-xl">YUSEN_OS_v7.0</span>
+                  <span className="text-gray-500 text-xs">● ONLINE</span>
+                </div>
+
+                <div
+                  ref={endRef}
+                  className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2 px-4 py-3"
+                >
+                  {history.map((line, i) => {
+                    if (line.type === "ascii") {
+                      return (
+                        <div key={i} className="w-full overflow-x-auto pb-2">
+                          <pre
+                            className="whitespace-pre text-gray-300 inline-block"
+                            style={{
+                              fontFamily: "Consolas, Monaco, 'Lucida Console', monospace",
+                              fontSize: "clamp(6px, 1.1vw, 13px)",
+                              lineHeight: "1",
+                            }}
+                          >
+                            {line.text}
+                          </pre>
+                        </div>
+                      );
+                    }
+                    if (line.type === "intro") {
+                      return (
+                        <div
+                          key={i}
+                          className="text-base md:text-lg font-bold text-white whitespace-pre-wrap break-words tracking-wide"
+                        >
+                          {line.text}
+                        </div>
+                      );
+                    }
+                    if (line.type === "game") {
+                      const props = {
+                        onFinish: finishGame,
+                        onVSpeak: speak,
+                        onVState: setAvatarState,
+                      };
+                      if (line.game === "ttt") return <TicTacToe key={i} {...props} />;
+                      if (line.game === "rps") return <RockPaperScissors key={i} {...props} />;
+                      if (line.game === "quiz") return <Quiz key={i} {...props} />;
+                      return null;
+                    }
+                    return (
+                      <div
+                        key={i}
+                        className={`text-sm whitespace-pre-wrap break-words ${
+                          line.type === "error"
+                            ? "text-gray-400"
+                            : line.type === "system"
+                            ? "text-gray-300"
+                            : line.type === "user"
+                            ? "text-white"
+                            : "text-gray-100"
+                        }`}
+                      >
+                        {line.text}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {commandForm}
+              </div>
+
+              <div className="flex-1 h-full bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden flex flex-col">
+                {vPanel3D}
+                <TelemetryBar
+                  avatarState={avatarState}
+                  creepLevel={creepLevel}
+                  // ref is a cheap animation accumulator; reading it for telemetry is fine
+                  // eslint-disable-next-line react-hooks/refs
+                  interactionPulse={interactionPulse.current}
+                />
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </>
   );
 }
 
+// dev/screenshot mode: headless captures catch the fade mid-flight, so the
+// same param that skips the intro also skips the mount fade
+function skipIntroParam() {
+  try {
+    return new URLSearchParams(window.location.search).get("skipintro") === "1";
+  } catch {
+    return false;
+  }
+}
+
 export default function Root() {
   const [introDone, setIntroDone] = useState(() => {
-    try { return sessionStorage.getItem("v_intro_seen") === "1"; } catch (_) { return false; }
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("skipintro") === "1") return true;
+      return sessionStorage.getItem("v_intro_seen") === "1";
+    } catch {
+      return false;
+    }
   });
   const [replayKey, setReplayKey] = useState(0);
 
+  // ?v8depth=<0..1> seeds the teardown scrub (dev/screenshot convenience).
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("v8depth");
+      if (raw !== null) {
+        const v = parseFloat(raw);
+        if (!Number.isNaN(v)) {
+          useVStore.getState().setDepth(v, "command");
+          // seed the mode too so the camera adopts the inspection framing
+          if (v > 0.02) useVStore.setState({ mode: "teardown" });
+        }
+      }
+    } catch {
+      // no-op: URL parsing is best-effort
+    }
+  }, []);
+
   const handleDone = () => {
-    try { sessionStorage.setItem("v_intro_seen", "1"); } catch (_) {}
+    try { sessionStorage.setItem("v_intro_seen", "1"); } catch { /* ignore */ }
     setIntroDone(true);
   };
 
-  const replay = () => {
+  const replay = useCallback(() => {
     setIntroDone(false);
     setReplayKey((k) => k + 1);
-  };
+  }, []);
+
+  // 'v-reboot' custom event fired by the "reboot" command in App.handleCommand.
+  // Root owns the intro state, so it listens here and calls replay().
+  useEffect(() => {
+    const handler = () => replay();
+    window.addEventListener("v-reboot", handler);
+    return () => window.removeEventListener("v-reboot", handler);
+  }, [replay]);
 
   return (
     <>
       {!introDone && <IntroSequence key={replayKey} onComplete={handleDone} />}
-      <div style={{ opacity: introDone ? 1 : 0, transition: "opacity 600ms ease-in" }}>
-        <App />
-      </div>
+      {introDone && (
+        <div className={skipIntroParam() ? undefined : "app-fadein"}>
+          <App />
+        </div>
+      )}
       {introDone && (
         <button
           onClick={replay}
