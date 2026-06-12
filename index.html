@@ -1,19 +1,72 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="background:#050505">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050505" />
     <title>Yusen Xie | Terminal Portfolio v7</title>
+    <meta name="description" content="Yusen Xie — Robotics &amp; AI Engineer at CMU, co-founder of Vector Robotics, building Vector OS Nano." />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yusenthebot.github.io/" />
+    <meta property="og:site_name" content="Yusen Terminal" />
+    <meta property="og:title" content="Yusen Xie | Terminal Portfolio v7" />
+    <meta property="og:description" content="Yusen Xie — Robotics &amp; AI Engineer at CMU, co-founder of Vector Robotics, building Vector OS Nano." />
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Yusen Xie | Terminal Portfolio v7" />
+    <meta name="twitter:description" content="Yusen Xie — Robotics &amp; AI Engineer at CMU, co-founder of Vector Robotics, building Vector OS Nano." />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://yusenthebot.github.io/" />
+
+    <!-- JSON-LD Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Yusen Xie",
+      "url": "https://yusenthebot.github.io/",
+      "jobTitle": "Robotics & AI Engineer",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Carnegie Mellon University"
+      },
+      "sameAs": [
+        "https://github.com/yusenthebot",
+        "https://www.linkedin.com/in/yusen-xie-5327b8382"
+      ]
+    }
+    </script>
+
+    <!-- Fonts: JetBrains Mono full range, VT323 subset to characters used in the banner -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=optional"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&text=YUSEN_OSv7.0&display=optional"
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body style="background:#050505">
     <div id="root"></div>
+    <noscript>
+      <style>body { background: #050505; color: #e0e0e0; font-family: monospace; padding: 2rem; }</style>
+      <h1>Yusen Xie — Robotics &amp; AI Engineer</h1>
+      <p>CMU graduate student. Co-founder of Vector Robotics. Building Vector OS Nano — an autonomous robot operating system.</p>
+      <ul>
+        <li><a href="https://github.com/yusenthebot" style="color:#e0e0e0">GitHub: github.com/yusenthebot</a></li>
+        <li><a href="https://www.linkedin.com/in/yusen-xie-5327b8382" style="color:#e0e0e0">LinkedIn: Yusen Xie</a></li>
+        <li><a href="mailto:yusenthebot@outlook.com" style="color:#e0e0e0">Email: yusenthebot@outlook.com</a></li>
+      </ul>
+      <p>JavaScript is required to run the interactive terminal portfolio.</p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

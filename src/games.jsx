@@ -237,11 +237,11 @@ export function RockPaperScissors({ onFinish, onVSpeak, onVState }) {
 // QUIZ
 // ========================================================================
 const QUIZ = [
-  { q: "What does ROS stand for?", choices: ["Robot Operating System", "Remote Observation Suite", "Runtime Object Scheduler", "Really Old Software"], a: 0 },
-  { q: "Which of these is Yusen's primary project?", choices: ["Vector OS Nano", "SkynetGPT", "BotForge", "PixelPilot"], a: 0 },
-  { q: "SLAM =", choices: ["Simultaneous Localization and Mapping", "Stochastic Learning Algorithm Model", "Synchronous Linked Actuator Mesh", "Self-Locating Autonomous Machine"], a: 0 },
-  { q: "Which simulator does V train in?", choices: ["MuJoCo / Isaac Sim", "Unity XR", "Blender Physics", "Roblox Studio"], a: 0 },
-  { q: "What is V, really?", choices: ["200 KB of JavaScript", "A sentient AGI", "A Unitree Go2 firmware", "Your overlord"], a: 0 },
+  { q: "What does ROS stand for?", choices: ["Remote Observation Suite", "Runtime Object Scheduler", "Robot Operating System", "Really Old Software"], a: 2 },
+  { q: "Which of these is Yusen's primary project?", choices: ["SkynetGPT", "BotForge", "PixelPilot", "Vector OS Nano"], a: 3 },
+  { q: "SLAM =", choices: ["Stochastic Learning Algorithm Model", "Simultaneous Localization and Mapping", "Synchronous Linked Actuator Mesh", "Self-Locating Autonomous Machine"], a: 1 },
+  { q: "Which simulator does V train in?", choices: ["Unity XR", "Blender Physics", "MuJoCo / Isaac Sim", "Roblox Studio"], a: 2 },
+  { q: "What is V, really?", choices: ["A sentient AGI", "200 KB of JavaScript", "Your overlord", "A Unitree Go2 firmware"], a: 1 },
 ];
 
 export function Quiz({ onFinish, onVSpeak, onVState }) {
