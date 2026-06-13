@@ -2,10 +2,18 @@ import { useEffect, useMemo } from "react";
 import { Uniform } from "three";
 import { BlendFunction, Effect } from "postprocessing";
 
-// 8x8 Bayer ordered dithering — the site's visual signature. Everything is
-// thresholded to pure 1-bit black/white except pixels whose pre-dither luma
-// exceeds uBypassLuma: bloom pushes the emissive core/eye rings over that
-// line, so they alone keep smooth grayscale ("breaking the dither").
+// 8x8 Bayer ordered dithering — the site's visual signature. Three tone zones:
+//   luma <= uFloor          -> pure black. The void stays void: no dot lattice
+//                              over the background, dither is shading only.
+//   uFloor..uBypassLuma     -> 1-bit Bayer. Luma is renormalized above the
+//                              floor and gamma-lifted (uGamma < 1) so midtones
+//                              spread across the threshold range — flat areas
+//                              read as density gradients, not a 50% checker.
+//   luma > uBypassLuma      -> smooth grayscale. Bloom pushes the emissive
+//                              core/eye rings over that line, so they alone
+//                              keep smooth gradients ("breaking the dither").
+// The Bayer cell is gl_FragCoord-space: buffers are device-pixel sized, so
+// uScale=1 keeps the cell at ~1 device pixel — film grain, not mosaic tiles.
 // uGlitch adds horizontal slice offsets + bright scan bars, mirroring the
 // 2D canvas glitch (random slices, white bars at high intensity).
 const fragmentShader = /* glsl */ `
@@ -13,6 +21,8 @@ const fragmentShader = /* glsl */ `
   uniform float uBypassLuma;
   uniform float uMix;
   uniform float uGlitch;
+  uniform float uFloor;
+  uniform float uGamma;
 
   const float DITHER_BAYER_8X8[64] = float[64](
      0.0, 32.0,  8.0, 40.0,  2.0, 34.0, 10.0, 42.0,
@@ -53,16 +63,25 @@ const fragmentShader = /* glsl */ `
       return;
     }
 
+    // shadow floor: the background/void renders solid black, no dots
+    if (luma <= uFloor) {
+      outputColor = vec4(vec3(0.0), inputColor.a);
+      return;
+    }
+
+    // tone shaping: renormalize above the floor, lift midtones
+    float shaped = pow((luma - uFloor) / (1.0 - uFloor), uGamma);
+
     ivec2 cell = ivec2(mod(gl_FragCoord.xy / uScale, 8.0));
     float threshold = (DITHER_BAYER_8X8[cell.y * 8 + cell.x] + 0.5) / 64.0;
-    float bw = luma > threshold ? 1.0 : 0.0;
+    float bw = shaped > threshold ? 1.0 : 0.0;
     outputColor = vec4(vec3(mix(luma, bw, uMix)), inputColor.a);
   }
 `;
 
 // kept un-exported so this module only exports a component (react-refresh)
 class DitherEffectImpl extends Effect {
-  constructor({ scale = 1, bypassLuma = 0.92, mix = 1 } = {}) {
+  constructor({ scale = 1, bypassLuma = 0.97, mix = 1, floor = 0.05, gamma = 0.78 } = {}) {
     super("DitherEffect", fragmentShader, {
       blendFunction: BlendFunction.NORMAL,
       uniforms: new Map([
@@ -70,6 +89,8 @@ class DitherEffectImpl extends Effect {
         ["uBypassLuma", new Uniform(bypassLuma)],
         ["uMix", new Uniform(mix)],
         ["uGlitch", new Uniform(0)],
+        ["uFloor", new Uniform(floor)],
+        ["uGamma", new Uniform(gamma)],
       ]),
     });
   }
@@ -77,10 +98,10 @@ class DitherEffectImpl extends Effect {
 
 // ref resolves to the Effect instance; drive per-frame uniforms through it
 // (effect.uniforms.get('uGlitch').value = ...) instead of prop churn.
-export default function DitherEffect({ ref, scale = 1, bypassLuma = 0.92, mix = 1 }) {
+export default function DitherEffect({ ref, scale = 1, bypassLuma = 0.97, mix = 1, floor = 0.05, gamma = 0.78 }) {
   const effect = useMemo(
-    () => new DitherEffectImpl({ scale, bypassLuma, mix }),
-    [scale, bypassLuma, mix],
+    () => new DitherEffectImpl({ scale, bypassLuma, mix, floor, gamma }),
+    [scale, bypassLuma, mix, floor, gamma],
   );
   useEffect(() => () => effect.dispose(), [effect]);
   return <primitive ref={ref} object={effect} dispose={null} />;

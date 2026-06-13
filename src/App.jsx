@@ -3,11 +3,13 @@ import AudioEngine from "./audio.js";
 import { COMMANDS, HEADER_ASCII } from "./commands.js";
 import TelemetryBar from "./telemetry.jsx";
 import { TicTacToe, RockPaperScissors, Quiz } from "./games.jsx";
-import IntroSequence from "./intro.jsx";
 import useVStore from "./three/store.js";
 import BootFallback from "./three/BootFallback.jsx";
 
 const VPanel = lazy(() => import("./three/index.jsx"));
+// 3D intro pulls three.js — lazy so it stays out of the entry chunk; a minimal
+// DOM boot line covers the chunk fetch with no layout shift.
+const IntroSequence = lazy(() => import("./intro3d.jsx"));
 
 // Lazy depth tween — avoids pulling three.js into the main chunk.
 // Teardown.jsx may not exist yet; guard so the build stays green.
@@ -900,6 +902,9 @@ function App() {
                 className="flex-1 flex flex-col h-full bg-black border border-gray-800 rounded shadow-2xl overflow-hidden relative cursor-text"
                 onClick={() => inputRef.current?.focus()}
               >
+                {/* terminal-only scanline boost: keeps the CRT identity here while
+                    the global overlay stays light over the dithered 3D panel */}
+                {crtEnabled && <div className="crt-scanlines-strong"></div>}
                 <div className="flex items-center justify-between border-b border-gray-800 pb-2 px-4 pt-3 shrink-0">
                   <span className="text-gray-300 font-bold crt-title text-xl">YUSEN_OS_v7.0</span>
                   <span className="text-gray-500 text-xs">● ONLINE</span>
@@ -1047,7 +1052,11 @@ export default function Root() {
 
   return (
     <>
-      {!introDone && <IntroSequence key={replayKey} onComplete={handleDone} />}
+      {!introDone && (
+        <Suspense fallback={<BootFallback />}>
+          <IntroSequence key={replayKey} onComplete={handleDone} />
+        </Suspense>
+      )}
       {introDone && (
         <div className={skipIntroParam() ? undefined : "app-fadein"}>
           <App />

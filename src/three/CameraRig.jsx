@@ -11,11 +11,11 @@ import { focusCameraTargetFor, smoothstep } from "./Teardown.jsx";
 // dolly fades out instead of fighting the tween.
 
 // Hero framing matches the Canvas default in Scene.jsx so mount never jumps.
-const HERO_POS = new THREE.Vector3(3.2, 2.6, 4.4);
-const HERO_LOOK = new THREE.Vector3(0, 1.05, 0);
+const HERO_POS = new THREE.Vector3(2.7, 2.1, 3.7);
+const HERO_LOOK = new THREE.Vector3(0, 1.1, 0);
 // Inspection framing: dolly-in + slight crane-down onto the opened chassis.
-const INSPECT_POS = new THREE.Vector3(2.05, 2.05, 2.85);
-const INSPECT_LOOK = new THREE.Vector3(0, 0.9, 0);
+const INSPECT_POS = new THREE.Vector3(2.0, 1.95, 2.75);
+const INSPECT_LOOK = new THREE.Vector3(0, 0.85, 0);
 
 const BREATH_PERIOD = 7.2; // s, slow sinusoidal dolly
 const BREATH_AMP = 0.02; // ±2% of camera distance

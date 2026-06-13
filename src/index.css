@@ -20,12 +20,23 @@ body {
 .crt-title {
   font-family: "VT323", monospace;
 }
+/* Global scanlines kept light so they don't moire against the 3D panel's
+   device-pixel Bayer dither; the terminal panel layers .crt-scanlines-strong
+   on top to keep its CRT identity. */
 .crt-overlay {
   pointer-events: none;
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+  background-size: 100% 4px;
+}
+.crt-scanlines-strong {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.18) 50%);
   background-size: 100% 4px;
 }
 .crt-flicker {

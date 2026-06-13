@@ -8,17 +8,18 @@ export function gray(v) {
 
 // Brushed subframe / hinges / pistons. Reads as tight ordered shimmer in dither.
 export const brushedMetal = new THREE.MeshStandardMaterial({
-  color: gray(0.62),
+  color: gray(0.66),
   metalness: 0.9,
-  roughness: 0.35,
+  roughness: 0.32,
 });
 
 // Outer armor shells. DoubleSide so the inner face stays readable when a
-// panel hinges open.
+// panel hinges open. Roughness low enough for real highlight masses — the
+// dither needs bright regions to sculpt the form.
 export const mattePolymer = new THREE.MeshStandardMaterial({
-  color: gray(0.604),
+  color: gray(0.64),
   metalness: 0.08,
-  roughness: 0.8,
+  roughness: 0.62,
   side: THREE.DoubleSide,
 });
 
@@ -36,7 +37,7 @@ export const darkPolymer = new THREE.MeshStandardMaterial({
 export const darkGlass = new THREE.MeshPhysicalMaterial({
   color: gray(0.02),
   metalness: 0.25,
-  roughness: 0.08,
+  roughness: 0.05,
   clearcoat: 1.0,
   clearcoatRoughness: 0.06,
   transparent: true,

@@ -17,11 +17,11 @@ function Lights() {
   return (
     <>
       {/* ambient floor of light, dim and neutral */}
-      <ambientLight intensity={0.18} color="#ffffff" />
-      {/* white key light, upper-left */}
+      <ambientLight intensity={0.22} color="#ffffff" />
+      {/* strong white key, upper-left — the dither needs bright masses to sculpt */}
       <directionalLight
-        position={[-4, 6, 4]}
-        intensity={2.1}
+        position={[-4, 6, 5]}
+        intensity={2.8}
         color="#ffffff"
         castShadow
         shadow-mapSize-width={1024}
@@ -34,18 +34,26 @@ function Lights() {
         shadow-camera-bottom={-6}
       />
       {/* dim fill from camera-right to keep shadows readable, not flat */}
-      <directionalLight position={[5, 2, 4]} intensity={0.35} color="#cccccc" />
+      <directionalLight position={[5, 2, 4]} intensity={0.45} color="#cccccc" />
       {/* hard rim from behind-right to carve the silhouette */}
-      <directionalLight position={[4, 3, -5]} intensity={1.4} color="#ffffff" />
+      <directionalLight position={[4, 3.5, -5]} intensity={2.4} color="#ffffff" />
+      {/* second rim, behind-left and lower — picks out the far shoulder line */}
+      <directionalLight position={[-5, 2.5, -4]} intensity={1.1} color="#eeeeee" />
+      {/* near point for the visor specular streak + chest highlight */}
+      <pointLight position={[0.9, 2.6, 2.6]} intensity={2.2} distance={7} decay={2} color="#ffffff" />
     </>
   );
 }
 
+// Unlit pure black on purpose: the void renders solid black under the dither's
+// shadow floor (no grazing-angle specular band, no dot lattice — the owner's
+// "mosaic" complaint) and the CRADLE is what grounds V. Still a mesh so clicks
+// on the ground keep resolving as pointer-missed for the robot group.
 function Floor() {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
       <planeGeometry args={[40, 40]} />
-      <meshStandardMaterial color="#0a0a0a" metalness={0.1} roughness={0.95} />
+      <meshBasicMaterial color="#000000" />
     </mesh>
   );
 }
@@ -77,7 +85,7 @@ export default function Scene({ children }) {
       dpr={[1, 2]}
       shadows
       frameloop={frameloop}
-      camera={{ position: [3.2, 2.6, 4.4], fov: 38 }}
+      camera={{ position: [2.7, 2.1, 3.7], fov: 38 }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       style={{ width: "100%", height: "100%", background: "#050505" }}
     >

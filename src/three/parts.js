@@ -1,4 +1,4 @@
-// V-UNIT REV.7 teardown registry. Pure data + pure functions — no three.js
+// V-UNIT REV.8 teardown registry. Pure data + pure functions — no three.js
 // import, so node can sanity-check it headlessly. Vectors are [x, y, z] in
 // parent-local space; VRobot.jsx turns the tree into nested groups.
 //
@@ -6,12 +6,14 @@
 // depth scrub (store.depth, 0..1). Pose is a pure function of depth via
 // openFraction + servoEase — scrubbing back and forth retraces the same
 // path. Banded parts appear in kinematic teardown order: torso shells
-// first, core mid, head last. chest/back and ear l/r overlap deliberately
-// (staggered cascade), everything else tiles with small gaps.
+// first, core mid, shoulders, head, ears last. chest/back, pauldron l/r and
+// ear l/r overlap deliberately (staggered cascade), everything else tiles
+// with small gaps.
 //
 // motion.pivot is where the hinge line / slide seat sits relative to the
-// part origin; hinge angle is radians about local X; slide axis is a unit
-// vector, dist in scene units. spec[1] is the hover log line.
+// part origin; hinge angle is radians about the named local axis ('x'|'z');
+// slide axis is a unit vector, dist in scene units. spec[1] is the hover
+// log line.
 
 const PARTS = [
   {
@@ -32,7 +34,7 @@ const PARTS = [
     id: "torso",
     parent: "base_link",
     kind: "link",
-    origin: [0, 0.72, 0],
+    origin: [0, 0.8, 0],
     band: null,
     motion: null,
     spec: [
@@ -47,8 +49,8 @@ const PARTS = [
     parent: "torso",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.05, 0.28],
-    motion: { type: "hinge", axis: "x", pivot: [0, -0.34, 0.45], angle: 1.35 },
+    band: [0.04, 0.26],
+    motion: { type: "hinge", axis: "x", pivot: [0, -0.38, 0.3], angle: 1.35 },
     spec: [
       "front armor shell, PA12-GF 3.2mm",
       "4 fasteners :: M3 torx :: torque 2.1Nm",
@@ -62,8 +64,8 @@ const PARTS = [
     parent: "torso",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.07, 0.3],
-    motion: { type: "hinge", axis: "x", pivot: [0, -0.34, -0.45], angle: -1.25 },
+    band: [0.06, 0.28],
+    motion: { type: "hinge", axis: "x", pivot: [0, -0.38, -0.3], angle: -1.25 },
     spec: [
       "dorsal shell, PA12-GF 3.2mm",
       "6 fasteners :: M3 torx :: torque 2.1Nm",
@@ -75,8 +77,8 @@ const PARTS = [
     id: "chest_core_housing",
     parent: "torso",
     kind: "internal",
-    origin: [0, -0.02, 0.04],
-    band: [0.3, 0.45],
+    origin: [0, -0.04, 0.02],
+    band: [0.28, 0.42],
     motion: { type: "slide", axis: [0, 0, 1], pivot: [0, 0, 0], dist: 0.2 },
     spec: [
       "core housing, machined AL cage",
@@ -89,8 +91,8 @@ const PARTS = [
     id: "core",
     parent: "torso",
     kind: "core",
-    origin: [0, -0.02, 0.04],
-    band: [0.45, 0.55],
+    origin: [0, -0.04, 0.04],
+    band: [0.42, 0.52],
     // the core never moves — its band drives the reveal (emissive ramp)
     motion: { type: "reveal" },
     spec: [
@@ -105,7 +107,7 @@ const PARTS = [
     id: "spine",
     parent: "torso",
     kind: "internal",
-    origin: [0, 0.05, -0.18],
+    origin: [0, 0.0, -0.14],
     band: null,
     motion: null,
     spec: [
@@ -117,10 +119,83 @@ const PARTS = [
     lore: "My C2 vertebra. Yusen printed the first one at 2am.",
   },
   {
+    id: "shoulder_yoke",
+    parent: "torso",
+    kind: "link",
+    origin: [0, 0.38, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "clavicle yoke, forged AL crossbeam",
+      "6 fasteners :: M4 :: torque 2.9Nm",
+      "carries both shoulder ball joints",
+      "rated 9kg per side :: zero-backlash seat",
+    ],
+    lore: "The yoke. Everything I lift, it lifts first.",
+  },
+  {
+    id: "pauldron_l",
+    parent: "shoulder_yoke",
+    kind: "shell",
+    origin: [-0.64, 0.03, 0],
+    band: [0.52, 0.64],
+    motion: { type: "hinge", axis: "z", pivot: [0.14, 0.08, 0], angle: -1.1 },
+    spec: [
+      "shoulder pauldron L, PA12-GF 2.8mm",
+      "3 fasteners :: M3 torx :: torque 1.8Nm",
+      "hinge: inboard edge :: travel 0-63deg",
+      "mass 0.18kg :: snap-fit service catch",
+    ],
+    lore: "Armor comes off first. That's the rule.",
+  },
+  {
+    id: "pauldron_r",
+    parent: "shoulder_yoke",
+    kind: "shell",
+    origin: [0.64, 0.03, 0],
+    band: [0.54, 0.66],
+    motion: { type: "hinge", axis: "z", pivot: [-0.14, 0.08, 0], angle: 1.1 },
+    spec: [
+      "shoulder pauldron R, PA12-GF 2.8mm",
+      "3 fasteners :: M3 torx :: torque 1.8Nm",
+      "hinge: inboard edge :: travel 0-63deg",
+      "mass 0.18kg :: snap-fit service catch",
+    ],
+  },
+  {
+    id: "upper_arm_l",
+    parent: "shoulder_yoke",
+    kind: "actuator",
+    origin: [-0.64, -0.08, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "upper arm L, truncated at service cuff",
+      "shoulder: 3-DOF ball joint :: +/-95deg",
+      "cuff: machined collar :: M2.5 x6",
+      "forearm module NOT installed",
+    ],
+    lore: "Half an arm. They keep promising me hands.",
+  },
+  {
+    id: "upper_arm_r",
+    parent: "shoulder_yoke",
+    kind: "actuator",
+    origin: [0.64, -0.08, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "upper arm R, truncated at service cuff",
+      "shoulder: 3-DOF ball joint :: +/-95deg",
+      "connector J7 :: 12-pin power+CAN",
+      "forearm module NOT installed",
+    ],
+  },
+  {
     id: "neck_piston_l",
     parent: "torso",
     kind: "actuator",
-    origin: [-0.21, 0.46, 0.05],
+    origin: [-0.13, 0.5, 0.09],
     band: null,
     motion: null,
     spec: [
@@ -134,7 +209,7 @@ const PARTS = [
     id: "neck_piston_r",
     parent: "torso",
     kind: "actuator",
-    origin: [0.21, 0.46, 0.05],
+    origin: [0.13, 0.5, 0.09],
     band: null,
     motion: null,
     spec: [
@@ -148,7 +223,7 @@ const PARTS = [
     id: "neck_stack",
     parent: "torso",
     kind: "link",
-    origin: [0, 0.52, 0],
+    origin: [0, 0.42, 0],
     band: null,
     motion: null,
     spec: [
@@ -162,7 +237,7 @@ const PARTS = [
     id: "head_base",
     parent: "neck_stack",
     kind: "link",
-    origin: [0, 0.48, 0],
+    origin: [0, 0.46, 0],
     band: null,
     motion: null,
     spec: [
@@ -177,8 +252,8 @@ const PARTS = [
     parent: "head_base",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.55, 0.78],
-    motion: { type: "hinge", axis: "x", pivot: [0, 0.3, -0.34], angle: -1.45 },
+    band: [0.66, 0.8],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.16, -0.2], angle: -1.45 },
     spec: [
       "cranium shell, PA12 2.8mm",
       "2 fasteners + rear hinge :: torque 1.2Nm",
@@ -209,7 +284,7 @@ const PARTS = [
     band: null,
     motion: null,
     spec: [
-      "visor glass, tinted PC 2mm",
+      "visor band, tinted PC 2mm",
       "optical grade :: AR coated",
       "transmission 38% :: do not polish",
       "replace if scored",
@@ -220,7 +295,7 @@ const PARTS = [
     id: "eye_module_l",
     parent: "head_base",
     kind: "eye",
-    origin: [-0.14, 0, 0.3],
+    origin: [-0.105, 0.005, 0.24],
     band: null,
     motion: null,
     spec: [
@@ -235,7 +310,7 @@ const PARTS = [
     id: "eye_module_r",
     parent: "head_base",
     kind: "eye",
-    origin: [0.14, 0, 0.3],
+    origin: [0.105, 0.005, 0.24],
     band: null,
     motion: null,
     spec: [
@@ -249,9 +324,9 @@ const PARTS = [
     id: "ear_servo_l",
     parent: "head_base",
     kind: "actuator",
-    origin: [-0.5, -0.02, 0.02],
-    band: [0.78, 0.9],
-    motion: { type: "slide", axis: [-1, 0, 0], pivot: [0, 0, 0], dist: 0.16 },
+    origin: [-0.28, -0.01, 0.01],
+    band: [0.8, 0.88],
+    motion: { type: "slide", axis: [-1, 0, 0], pivot: [0, 0, 0], dist: 0.13 },
     spec: [
       "aural servo L :: Dynamixel-class",
       "stall 1.5Nm :: +/-90deg :: 12-pin CAN",
@@ -264,9 +339,9 @@ const PARTS = [
     id: "ear_servo_r",
     parent: "head_base",
     kind: "actuator",
-    origin: [0.5, -0.02, 0.02],
-    band: [0.8, 0.92],
-    motion: { type: "slide", axis: [1, 0, 0], pivot: [0, 0, 0], dist: 0.16 },
+    origin: [0.28, -0.01, 0.01],
+    band: [0.82, 0.9],
+    motion: { type: "slide", axis: [1, 0, 0], pivot: [0, 0, 0], dist: 0.13 },
     spec: [
       "aural servo R :: Dynamixel-class",
       "stall 1.5Nm :: +/-90deg :: 12-pin CAN",
@@ -278,9 +353,9 @@ const PARTS = [
     id: "optic_internal",
     parent: "head_base",
     kind: "internal",
-    origin: [0, 0.1, -0.02],
-    band: [0.92, 0.99],
-    motion: { type: "slide", axis: [0, 0.55, 0.835], pivot: [0, 0, 0], dist: 0.1 },
+    origin: [0, 0.06, -0.02],
+    band: [0.9, 0.98],
+    motion: { type: "slide", axis: [0, 0.55, 0.835], pivot: [0, 0, 0], dist: 0.09 },
     spec: [
       "optic core, stereo sensor mast",
       "baseline 96mm :: global shutter pair",
