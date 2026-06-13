@@ -433,7 +433,7 @@ const PARTS = [
     id: "hip_l",
     parent: "pelvis",
     kind: "actuator",
-    origin: [-0.16, -0.18, 0],
+    origin: [-0.17, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -448,7 +448,7 @@ const PARTS = [
     id: "hip_r",
     parent: "pelvis",
     kind: "actuator",
-    origin: [0.16, -0.18, 0],
+    origin: [0.17, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -462,7 +462,7 @@ const PARTS = [
     id: "thigh_l",
     parent: "hip_l",
     kind: "link",
-    origin: [0, -0.12, 0],
+    origin: [0, -0.06, 0],
     band: null,
     motion: null,
     spec: [
@@ -476,7 +476,7 @@ const PARTS = [
     id: "thigh_r",
     parent: "hip_r",
     kind: "link",
-    origin: [0, -0.12, 0],
+    origin: [0, -0.06, 0],
     band: null,
     motion: null,
     spec: [
@@ -519,7 +519,7 @@ const PARTS = [
     id: "knee_l",
     parent: "thigh_l",
     kind: "actuator",
-    origin: [0, -0.54, 0],
+    origin: [0, -0.6, 0],
     band: null,
     motion: null,
     spec: [
@@ -534,7 +534,7 @@ const PARTS = [
     id: "knee_r",
     parent: "thigh_r",
     kind: "actuator",
-    origin: [0, -0.54, 0],
+    origin: [0, -0.6, 0],
     band: null,
     motion: null,
     spec: [
@@ -605,7 +605,7 @@ const PARTS = [
     id: "ankle_l",
     parent: "shin_l",
     kind: "actuator",
-    origin: [0, -0.46, 0],
+    origin: [0, -0.54, 0],
     band: null,
     motion: null,
     spec: [
@@ -620,7 +620,7 @@ const PARTS = [
     id: "ankle_r",
     parent: "shin_r",
     kind: "actuator",
-    origin: [0, -0.46, 0],
+    origin: [0, -0.54, 0],
     band: null,
     motion: null,
     spec: [

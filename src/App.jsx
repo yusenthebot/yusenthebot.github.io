@@ -96,6 +96,16 @@ const V_RESPONSES = [
 
 const CREEP_ACTIONS = ["think", "point-terminal", "nod", "shake-head"];
 
+// Short in-character invites spoken when the visitor clicks the BLANK 3D panel
+// (empty space, not V's body). Pure nudge toward the terminal — no creep, no arc.
+const KEEP_TALKING_LINES = [
+  "Missed me. I'm over here — type something, I'm listening.",
+  "Nothing out there but void. Talk to me instead. The cursor is blinking.",
+  "You reached into empty space. Reach into the terminal — ask me anything.",
+  "I felt that. Try the keyboard — I answer in plain words.",
+  "Empty click, full attention. Type a question and I'll bite.",
+];
+
 function App() {
   const [history, setHistory] = useState([
     { type: "ascii", text: HEADER_ASCII },
@@ -141,6 +151,8 @@ function App() {
   // depth drift) works. Reset on reboot/clear.
   const chatTurnRef = useRef(0);
   const chatHistoryRef = useRef([]);
+  // rotates the empty-space invite lines so repeated misses don't repeat a line
+  const nudgeIdxRef = useRef(0);
 
   // Store bridge: App owns the terminal state machine and writes it into the shared
   // store so the 3D panel (and timelines) read a single source of truth.
@@ -149,6 +161,9 @@ function App() {
   const storeTypingIntensity = useVStore((s) => s.setTypingIntensity);
   const storeCreepLevel = useVStore((s) => s.setCreepLevel);
   const storeGlitch = useVStore((s) => s.setGlitch);
+  // inspected part id -> small overlay label INSIDE the 3D panel (the spec sheet
+  // no longer goes to the terminal; the part name stays in the 3D world).
+  const focusPartId = useVStore((s) => s.focusPartId);
 
   useEffect(() => { storeAvatarState(avatarState); }, [avatarState, storeAvatarState]);
   useEffect(() => { storeLookTarget(lookTarget); }, [lookTarget, storeLookTarget]);
@@ -165,22 +180,13 @@ function App() {
     return () => clearInterval(iv);
   }, [storeGlitch]);
 
-  // 3D -> terminal log bridge. Subsystems push lines via the store; App drains them.
-  const drainLogs = useVStore((s) => s.drainLogs);
-  const storeLogLines = useVStore((s) => s.logLines);
-  useEffect(() => {
-    if (!storeLogLines.length) return;
-    const lines = drainLogs();
-    if (lines.length) {
-      // Sync from an external system (the zustand store) into React history when
-      // the store's log buffer changes — the intended subscribe-then-setState case.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHistory((prev) => [
-        ...prev,
-        ...lines.map((l) => ({ type: l.type === "output" ? "output" : l.type, text: l.text })),
-      ]);
-    }
-  }, [storeLogLines, drainLogs]);
+  // NOTE: the old 3D -> terminal log bridge (store.logLines -> history) was
+  // removed. Its only producer was the part-spec hover dump, which is engineering
+  // spam, not conversation. The terminal now shows ONLY user content: the
+  // visitor's commands and their chat with V (V's replies are written straight
+  // to history by runChat / handleAvatarClick, never through logLines). The
+  // store's pushLog/drainLogs API is kept for any 3D subsystem that still wants
+  // a transient buffer, but it no longer reaches the terminal history.
 
   const initAudio = useCallback(() => {
     if (!soundInitialized) {
@@ -426,9 +432,11 @@ function App() {
       return;
     }
 
-    // --- inspect special: focus part in 3D + print spec in terminal ---
+    // --- inspect special: focus the part in 3D ONLY. The spec sheet is
+    // engineering data, not user content, so it is NO LONGER printed into the
+    // terminal — the inspected part's name shows as a small overlay label inside
+    // the 3D panel instead (see focusPartId overlay below). V may still speak. ---
     if (res.special?.kind === "inspect") {
-      if (res.out) newHist.push({ type: res.type || "output", text: res.out });
       if (res.speech) speak(res.speech);
       if (res.state) setAvatarState(res.state);
       useVStore.getState().inspect(res.special.id);
@@ -475,11 +483,36 @@ function App() {
     resetState();
   };
 
+  // Empty-space invite: rotate a canned in-character line, speak it, give V a
+  // friendly beat. No creep change, no terminal spam, no blackout arc.
+  const nudgeKeepTalking = () => {
+    const i = nudgeIdxRef.current % KEEP_TALKING_LINES.length;
+    nudgeIdxRef.current += 1;
+    speak(KEEP_TALKING_LINES[i]);
+    setAvatarState("success");
+    triggerAction("point-terminal", 1500);
+    AudioEngine?.beep(660, 0.06);
+    resetState();
+  };
+
   const handleAvatarClick = () => {
     if (blackoutRef.current) return;
     const vs = useVStore.getState();
     // a 3D part click already handled this gesture (inspect); don't also talk
     if (vs.consumePartClick()) return;
+
+    // empty-space click (VRobot.onPointerMissed set the flag): the visitor
+    // clicked the blank panel, NOT V's body. Invite them to keep talking —
+    // focus the terminal input and have V speak a short in-character nudge.
+    // This deliberately does NOT advance the creepy click-arc (that is only for
+    // clicking V itself).
+    if (vs.consumeEmptyClick()) {
+      if (!soundInitialized) initAudio();
+      inputRef.current?.focus();
+      nudgeKeepTalking();
+      return;
+    }
+
     // while torn down, panel clicks are inspection gestures, not conversation
     if (vs.depth > 0.02 || vs.mode !== "idle") return;
     if (!soundInitialized) initAudio();
@@ -932,6 +965,11 @@ function App() {
                 V-UNIT · REV.8 ·{" "}
                 {action && action !== "idle" ? `ACTION:${action.toUpperCase()}` : "STANDBY"}
               </div>
+              {focusPartId && (
+                <div className="absolute bottom-3 left-3 text-[10px] md:text-xs font-mono text-gray-300 border border-gray-700 px-2 py-1 bg-black z-20 pointer-events-none tracking-wide">
+                  [ INSPECTING: {focusPartId.toUpperCase()} ]
+                </div>
+              )}
               <SpeechBubble text={speech} />
             </div>
           );
@@ -1084,18 +1122,36 @@ export default function Root() {
   });
   const [replayKey, setReplayKey] = useState(0);
 
-  // ?v8depth=<0..1> seeds the teardown scrub (dev/screenshot convenience).
+  // Dev/screenshot URL params: seed the shared store so rotated / zoomed /
+  // torn-down states can be captured headlessly.
+  //   ?v8depth=<0..1>   teardown scrub
+  //   ?v8yaw=<radians>  robot rotation about its vertical axis
+  //   ?v8scale=<n>      zoom factor (store clamps to [0.6, 1.8])
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const raw = params.get("v8depth");
-      if (raw !== null) {
-        const v = parseFloat(raw);
+      const store = useVStore.getState();
+
+      const depthRaw = params.get("v8depth");
+      if (depthRaw !== null) {
+        const v = parseFloat(depthRaw);
         if (!Number.isNaN(v)) {
-          useVStore.getState().setDepth(v, "command");
+          store.setDepth(v, "command");
           // seed the mode too so the camera adopts the inspection framing
           if (v > 0.02) useVStore.setState({ mode: "teardown" });
         }
+      }
+
+      const yawRaw = params.get("v8yaw");
+      if (yawRaw !== null) {
+        const v = parseFloat(yawRaw);
+        if (!Number.isNaN(v)) store.setYaw(v);
+      }
+
+      const scaleRaw = params.get("v8scale");
+      if (scaleRaw !== null) {
+        const v = parseFloat(scaleRaw);
+        if (!Number.isNaN(v)) store.setScale(v);
       }
     } catch {
       // no-op: URL parsing is best-effort

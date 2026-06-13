@@ -203,14 +203,10 @@ export const COMMANDS = {
         type: 'error', state: 'error',
       };
     }
-    const chain = mod.kinematicChain(id);
-    const breadcrumb = chain.join(' -> ');
-    const specLines = part.spec ? part.spec.join('\n  ') : '(no spec)';
-    const bandStr = part.band
-      ? `[${part.band[0].toFixed(2)}, ${part.band[1].toFixed(2)}]`
-      : '(static link)';
+    // No spec-sheet `out`: the terminal stays user-content only. The inspect
+    // gesture focuses the part in 3D and shows its name as an overlay label
+    // inside the panel; V speaks the part's lore. (App ignores `out` here.)
     return {
-      out: `INSPECT: ${part.label || id}\n\n  Chain:  ${breadcrumb}\n  Kind:   ${part.kind}\n  Depth:  ${bandStr}\n\n  SPEC:\n  ${specLines}`,
       speech: part.lore || `Inspecting ${part.label || id}.`,
       state: 'scan',
       special: { kind: 'inspect', id },

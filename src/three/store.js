@@ -20,6 +20,19 @@ const useVStore = create((set, get) => ({
     }));
   },
 
+  // free-look transforms applied to the robot's root group (NOT the camera —
+  // CameraRig keeps its no-orbit rule). The geometry agent reads these each
+  // frame with safe defaults; the interaction layer is the single writer.
+  yaw: 0, // radians, rotation about the figure's vertical axis (drag-to-turn)
+  setYaw(v) {
+    set({ yaw: Number.isFinite(v) ? v : 0 });
+  },
+  scale: 1, // zoom factor for the figure (wheel / pinch), clamped to a sane band
+  setScale(v) {
+    const n = Number.isFinite(v) ? v : 1;
+    set({ scale: Math.min(1.8, Math.max(0.6, n)) });
+  },
+
   // focus / mode arbitration
   focusPartId: null,
   mode: "idle", // 'idle' | 'teardown' | 'focus'
@@ -42,6 +55,21 @@ const useVStore = create((set, get) => ({
   consumePartClick() {
     const was = get().partClickFlag;
     if (was) set({ partClickFlag: false });
+    return was;
+  },
+
+  // empty-space gate: VRobot.onPointerMissed should call emptyClick() when a
+  // click hits the blank 3D panel (no part). r3f fires onPointerMissed during
+  // the pointer event, BEFORE the DOM click bubbles to the panel wrapper, so
+  // App's wrapper handler can consume this flag to tell "clicked empty space"
+  // (-> focus terminal + invite line) apart from "clicked V's body" (-> talk arc).
+  emptyClickFlag: false,
+  emptyClick() {
+    set({ emptyClickFlag: true });
+  },
+  consumeEmptyClick() {
+    const was = get().emptyClickFlag;
+    if (was) set({ emptyClickFlag: false });
     return was;
   },
 
