@@ -5,6 +5,13 @@ import TelemetryBar from "./telemetry.jsx";
 import { TicTacToe, RockPaperScissors, Quiz } from "./games.jsx";
 import useVStore from "./three/store.js";
 import BootFallback from "./three/BootFallback.jsx";
+import { createResponder } from "./conversation/index.js";
+
+// V's conversation engine: any input that isn't a known command (and isn't an
+// active game) routes here instead of "COMMAND NOT FOUND". The scripted adapter
+// is the always-on offline floor; a future LLM adapter drops in behind the same
+// seam (see conversation/engine.js CONTRACT) without touching this file.
+const responder = createResponder();
 
 const VPanel = lazy(() => import("./three/index.jsx"));
 // 3D intro pulls three.js — lazy so it stays out of the entry chunk; a minimal
@@ -129,6 +136,11 @@ function App() {
   // eslint-disable-next-line react-hooks/purity
   const lastActivityRef = useRef(Date.now());
   const idleStageRef = useRef(0);
+  // Conversation engine bookkeeping: a monotonic turn counter + a rolling
+  // history of {role, text, intent} so multi-turn escalation (repeat-probing,
+  // depth drift) works. Reset on reboot/clear.
+  const chatTurnRef = useRef(0);
+  const chatHistoryRef = useRef([]);
 
   // Store bridge: App owns the terminal state machine and writes it into the shared
   // store so the 3D panel (and timelines) read a single source of truth.
@@ -331,24 +343,21 @@ function App() {
 
     const handler = COMMANDS[cmdKey];
 
+    // No matching command -> talk to V. The raw line goes to the conversation
+    // engine behind its adapter seam; the reply drives the same speech bubble,
+    // terminal log, avatar action/state and creep arc that click-to-talk uses.
     if (!handler) {
-      newHist.push({
-        type: "error",
-        text: `COMMAND NOT FOUND: ${cmdKey}\nType "help" to see available commands.`,
-      });
-      speak('Unknown command. Try "help".');
-      setAvatarState("error");
-      triggerAction("shake-head", 1500);
-      AudioEngine?.error();
-      resetState();
       setHistory(newHist); setInput("");
+      runChat(raw);
       return;
     }
 
     const res = handler(cmdArgs);
 
     if (res.special?.kind === "clear") {
-      setHistory([]); setInput(""); return;
+      setHistory([]); setInput("");
+      resetChat();
+      return;
     }
 
     // --- sound special: delegate to the existing toggleSound logic ---
@@ -378,6 +387,7 @@ function App() {
     if (res.special?.kind === "reboot") {
       if (res.out) newHist.push({ type: res.type || "output", text: res.out });
       setHistory(newHist); setInput("");
+      resetChat();
       window.dispatchEvent(new CustomEvent("v-reboot"));
       return;
     }
@@ -669,6 +679,66 @@ function App() {
     ]);
     await wait(4000);
     setAvatarState("idle");
+  };
+
+  // Wipe conversation state so multi-turn escalation can't bleed across a
+  // reboot or a cleared terminal (matches the design's reset-on-reboot/clear).
+  const resetChat = () => {
+    chatTurnRef.current = 0;
+    chatHistoryRef.current = [];
+    responder.reset();
+  };
+
+  // Route an unknown command line to V's conversation engine and apply the
+  // reply across the existing avatar/terminal/creep machinery. Async because an
+  // LLM adapter may be (the scripted floor resolves immediately). Kept behind
+  // the responder seam — no conversation logic lives here.
+  const runChat = async (raw) => {
+    const turn = chatTurnRef.current++;
+    const ctx = {
+      creepLevel,
+      turn,
+      history: chatHistoryRef.current,
+    };
+
+    let res;
+    try {
+      res = await responder.respond(raw, ctx);
+    } catch {
+      // The engine guarantees a scripted fallback, but never let a thrown
+      // promise break the terminal — degrade to a safe in-character line.
+      res = { say: "Something in me glitched. Ask me again?", intent: "error" };
+    }
+
+    // Record both sides so multi-turn escalation (repeat/depth) can read it.
+    chatHistoryRef.current.push({ role: "user", text: raw, intent: res.intent });
+    chatHistoryRef.current.push({ role: "v", text: res.say, intent: res.intent });
+
+    // Terminal log line (engine supplies one; default to a system-style line).
+    const logText = res.log || `> [V] ${res.intent || "//"}`;
+    setHistory((prev) => [...prev, { type: "system", text: logText }]);
+
+    if (res.say) speak(res.say);
+    if (res.action) triggerAction(res.action, 1800);
+
+    // Apply the creep nudge against the SAME 0..2 arc the click-to-talk path
+    // uses, then honor the engine's earned-blackout flag at saturation.
+    const delta = Number.isFinite(res.creepDelta) ? res.creepDelta : 0;
+    const next = Math.max(0, Math.min(2, creepLevel + delta));
+    setCreepLevel(next);
+
+    if (res.blackout) {
+      // The engine decided this turn earns the blackout (containment at the cap).
+      // Reuse the existing sequence; it resets creep + chat recovery tone after.
+      runBlackoutSequence();
+      responder.reset();
+      return;
+    }
+
+    setAvatarState(res.state || "success");
+    if (res.state === "error") AudioEngine?.error();
+    else AudioEngine?.success();
+    resetState();
   };
 
   const finishGame = () => {

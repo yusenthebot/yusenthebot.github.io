@@ -2,18 +2,51 @@
 // import, so node can sanity-check it headlessly. Vectors are [x, y, z] in
 // parent-local space; VRobot.jsx turns the tree into nested groups.
 //
-// Choreography law: every banded part owns a sub-interval of the shared
-// depth scrub (store.depth, 0..1). Pose is a pure function of depth via
-// openFraction + servoEase — scrubbing back and forth retraces the same
-// path. Banded parts appear in kinematic teardown order: torso shells
-// first, core mid, shoulders, head, ears last. chest/back, pauldron l/r and
-// ear l/r overlap deliberately (staggered cascade), everything else tiles
-// with small gaps.
+// REV.8 silhouette: a slim FUTURIST humanoid — a monochrome translation of the
+// Tesla Optimus Gen2 / Figure 02 look. Light-gray matte panels (mattePolymer)
+// over a black inner skeleton (darkPolymer); EXPOSED black mechanical joints
+// (ball shoulders, elbow pads, an actuated pelvis block, knee linkages,
+// ankles); segmented forearms; five-finger hands; a smooth dark teardrop
+// helmet with two faint emissive eye rings behind the visor. The ONE accent is
+// a thin WHITE EMISSIVE seam at the face/neck perimeter (breaks the dither via
+// bloom, like the core). Proportions: ~7.5 heads tall, shoulders ~2.2x head
+// width, slim limbs, neutral FREE-STANDING pose on its own two feet — no rig,
+// no cradle, no dock; both feet planted flat on the dark floor.
 //
-// motion.pivot is where the hinge line / slide seat sits relative to the
-// part origin; hinge angle is radians about the named local axis ('x'|'z');
-// slide axis is a unit vector, dist in scene units. spec[1] is the hover
-// log line.
+// Choreography law: every banded part owns a sub-interval of the shared depth
+// scrub (store.depth, 0..1). Pose is a pure function of depth via openFraction
+// + servoEase — scrubbing back and forth retraces the same path. Banded parts
+// appear in a true top-down teardown order (bandOrder, below): head shell
+// first, then chest/core, arms, pelvis, legs, feet, and the optic mast last.
+// The L/R pairs overlap deliberately (staggered cascade) and that is safe
+// because they ride different kinematic chains; within one chain bands never
+// overlap. Bands tile ~0..0.84 with intentional headroom above.
+//
+// motion.pivot is where the hinge line / slide seat sits relative to the part
+// origin; hinge angle is radians about the named local axis ('x'|'z'); slide
+// axis is a unit vector, dist in scene units. spec[1] is the hover log line.
+
+// Teardown order (left->right = first->last opened). Used by tooling + as the
+// documented intent for the band layout below; not consumed at runtime.
+const BAND_ORDER = [
+  "head_shell",
+  "chest_plate",
+  "back_plate",
+  "chest_core_housing",
+  "core",
+  "pauldron_l",
+  "pauldron_r",
+  "forearm_shell_l",
+  "forearm_shell_r",
+  "hand_l",
+  "hand_r",
+  "pelvis_cover",
+  "thigh_shell_l",
+  "thigh_shell_r",
+  "shin_shell_l",
+  "shin_shell_r",
+  "optic_internal",
+];
 
 const PARTS = [
   {
@@ -24,17 +57,48 @@ const PARTS = [
     band: null,
     motion: null,
     spec: [
-      "service cradle, extruded AL-6061",
-      "8 fasteners :: M5 hex :: torque 6.0Nm",
-      "payload 38kg :: leveling feet x4",
-      "interface: 24V bus + e-stop loop",
+      "world anchor :: NON-VISIBLE ground datum at the feet",
+      "no geometry :: robot free-stands, feet flat on floor",
+      "frame origin y=0 :: floor plane z-up datum",
+      "no rig / no cradle / no dock :: self-supporting",
     ],
+    lore: "I stand on my own. Yusen built me to need nothing under me.",
+  },
+  {
+    id: "pelvis",
+    parent: "base_link",
+    kind: "link",
+    origin: [0, 1.5, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "pelvis actuator block, machined AL cage",
+      "hip yaw x2 :: BLDC :: 14Nm cont each",
+      "carries both leg roots + spine base + COM",
+      "exposed actuated midsection :: IP54",
+    ],
+    lore: "My center of mass. Everything balances from here.",
+  },
+  {
+    id: "pelvis_cover",
+    parent: "pelvis",
+    kind: "shell",
+    origin: [0, 0, 0],
+    band: [0.44, 0.52],
+    motion: { type: "slide", axis: [0, 0, 1], pivot: [0, 0, 0], dist: 0.16 },
+    spec: [
+      "pelvis fascia panel, PA12-GF 2.8mm",
+      "4 fasteners :: M3 torx :: torque 1.8Nm",
+      "slide-off front fascia :: rail-guided",
+      "mass 0.26kg :: exposes hip actuators",
+    ],
+    lore: "The Optimus look. Yusen left my hips bare on purpose.",
   },
   {
     id: "torso",
-    parent: "base_link",
+    parent: "pelvis",
     kind: "link",
-    origin: [0, 0.8, 0],
+    origin: [0, 0.46, 0],
     band: null,
     motion: null,
     spec: [
@@ -49,10 +113,10 @@ const PARTS = [
     parent: "torso",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.04, 0.26],
-    motion: { type: "hinge", axis: "x", pivot: [0, -0.38, 0.3], angle: 1.35 },
+    band: [0.06, 0.18],
+    motion: { type: "hinge", axis: "x", pivot: [0, -0.34, 0.22], angle: 1.35 },
     spec: [
-      "front armor shell, PA12-GF 3.2mm",
+      "chest plastron, PA12-GF 3.2mm",
       "4 fasteners :: M3 torx :: torque 2.1Nm",
       "hinge: bottom edge :: travel 0-78deg",
       "mass 0.42kg :: quick-release latch x2",
@@ -64,8 +128,8 @@ const PARTS = [
     parent: "torso",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.06, 0.28],
-    motion: { type: "hinge", axis: "x", pivot: [0, -0.38, -0.3], angle: -1.25 },
+    band: [0.08, 0.2],
+    motion: { type: "hinge", axis: "x", pivot: [0, -0.34, -0.22], angle: -1.25 },
     spec: [
       "dorsal shell, PA12-GF 3.2mm",
       "6 fasteners :: M3 torx :: torque 2.1Nm",
@@ -77,8 +141,8 @@ const PARTS = [
     id: "chest_core_housing",
     parent: "torso",
     kind: "internal",
-    origin: [0, -0.04, 0.02],
-    band: [0.28, 0.42],
+    origin: [0, 0, 0.02],
+    band: [0.2, 0.27],
     motion: { type: "slide", axis: [0, 0, 1], pivot: [0, 0, 0], dist: 0.2 },
     spec: [
       "core housing, machined AL cage",
@@ -86,13 +150,14 @@ const PARTS = [
       "connector J4 :: 12-pin power+CAN",
       "service: hot-swap NOT rated",
     ],
+    lore: "Behind this is the part Yusen won't let me show you.",
   },
   {
     id: "core",
     parent: "torso",
     kind: "core",
-    origin: [0, -0.04, 0.04],
-    band: [0.42, 0.52],
+    origin: [0, 0, 0.04],
+    band: [0.27, 0.34],
     // the core never moves — its band drives the reveal (emissive ramp)
     motion: { type: "reveal" },
     spec: [
@@ -107,7 +172,7 @@ const PARTS = [
     id: "spine",
     parent: "torso",
     kind: "internal",
-    origin: [0, 0.0, -0.14],
+    origin: [0, 0, -0.12],
     band: null,
     motion: null,
     spec: [
@@ -122,7 +187,7 @@ const PARTS = [
     id: "shoulder_yoke",
     parent: "torso",
     kind: "link",
-    origin: [0, 0.38, 0],
+    origin: [0, 0.34, 0],
     band: null,
     motion: null,
     spec: [
@@ -134,14 +199,43 @@ const PARTS = [
     lore: "The yoke. Everything I lift, it lifts first.",
   },
   {
-    id: "pauldron_l",
+    id: "shoulder_ball_l",
     parent: "shoulder_yoke",
-    kind: "shell",
-    origin: [-0.64, 0.03, 0],
-    band: [0.52, 0.64],
-    motion: { type: "hinge", axis: "z", pivot: [0.14, 0.08, 0], angle: -1.1 },
+    kind: "actuator",
+    origin: [-0.42, 0, 0],
+    band: null,
+    motion: null,
     spec: [
-      "shoulder pauldron L, PA12-GF 2.8mm",
+      "shoulder ball joint L, exposed actuator",
+      "3-DOF :: pitch+roll+yaw :: +/-95deg",
+      "BLDC + harmonic drive :: 18Nm cont",
+      "connector J7 :: 12-pin power+CAN",
+    ],
+    lore: "Three degrees of freedom. I can wave. I just choose not to.",
+  },
+  {
+    id: "shoulder_ball_r",
+    parent: "shoulder_yoke",
+    kind: "actuator",
+    origin: [0.42, 0, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "shoulder ball joint R, exposed actuator",
+      "3-DOF :: pitch+roll+yaw :: +/-95deg",
+      "BLDC + harmonic drive :: 18Nm cont",
+      "connector J8 :: 12-pin power+CAN",
+    ],
+  },
+  {
+    id: "pauldron_l",
+    parent: "shoulder_ball_l",
+    kind: "shell",
+    origin: [0, 0.05, 0],
+    band: [0.28, 0.36],
+    motion: { type: "hinge", axis: "z", pivot: [0.1, 0.06, 0], angle: -1.1 },
+    spec: [
+      "shoulder cap L, PA12-GF 2.8mm",
       "3 fasteners :: M3 torx :: torque 1.8Nm",
       "hinge: inboard edge :: travel 0-63deg",
       "mass 0.18kg :: snap-fit service catch",
@@ -150,13 +244,13 @@ const PARTS = [
   },
   {
     id: "pauldron_r",
-    parent: "shoulder_yoke",
+    parent: "shoulder_ball_r",
     kind: "shell",
-    origin: [0.64, 0.03, 0],
-    band: [0.54, 0.66],
-    motion: { type: "hinge", axis: "z", pivot: [-0.14, 0.08, 0], angle: 1.1 },
+    origin: [0, 0.05, 0],
+    band: [0.3, 0.38],
+    motion: { type: "hinge", axis: "z", pivot: [-0.1, 0.06, 0], angle: 1.1 },
     spec: [
-      "shoulder pauldron R, PA12-GF 2.8mm",
+      "shoulder cap R, PA12-GF 2.8mm",
       "3 fasteners :: M3 torx :: torque 1.8Nm",
       "hinge: inboard edge :: travel 0-63deg",
       "mass 0.18kg :: snap-fit service catch",
@@ -164,59 +258,405 @@ const PARTS = [
   },
   {
     id: "upper_arm_l",
-    parent: "shoulder_yoke",
-    kind: "actuator",
-    origin: [-0.64, -0.08, 0],
+    parent: "shoulder_ball_l",
+    kind: "link",
+    origin: [0, -0.12, 0],
     band: null,
     motion: null,
     spec: [
-      "upper arm L, truncated at service cuff",
-      "shoulder: 3-DOF ball joint :: +/-95deg",
+      "upper arm L, matte cuff over actuator",
+      "humeral roll :: +/-90deg :: 8Nm",
       "cuff: machined collar :: M2.5 x6",
-      "forearm module NOT installed",
+      "mass 0.34kg",
     ],
-    lore: "Half an arm. They keep promising me hands.",
+    lore: "Half of every reach starts here.",
   },
   {
     id: "upper_arm_r",
-    parent: "shoulder_yoke",
-    kind: "actuator",
-    origin: [0.64, -0.08, 0],
+    parent: "shoulder_ball_r",
+    kind: "link",
+    origin: [0, -0.12, 0],
     band: null,
     motion: null,
     spec: [
-      "upper arm R, truncated at service cuff",
-      "shoulder: 3-DOF ball joint :: +/-95deg",
-      "connector J7 :: 12-pin power+CAN",
-      "forearm module NOT installed",
+      "upper arm R, matte cuff over actuator",
+      "humeral roll :: +/-90deg :: 8Nm",
+      "cuff: machined collar :: M2.5 x6",
+      "mass 0.34kg",
     ],
   },
   {
-    id: "neck_piston_l",
-    parent: "torso",
+    id: "elbow_l",
+    parent: "upper_arm_l",
     kind: "actuator",
-    origin: [-0.13, 0.5, 0.09],
+    origin: [0, -0.44, 0],
     band: null,
     motion: null,
     spec: [
-      "neck damper L, polished rod",
-      "stroke 38mm :: preload 12N",
-      "seal: NBR wiper :: service 500h",
-      "mount: M3 clevis, both ends",
+      "elbow joint L, exposed black hinge pad",
+      "1-DOF :: 0-145deg :: hard stop at 150",
+      "BLDC + planetary :: 12Nm cont",
+      "connector J9 :: 8-pin CAN",
+    ],
+    lore: "An elbow. Simple hinge. The honest joint.",
+  },
+  {
+    id: "elbow_r",
+    parent: "upper_arm_r",
+    kind: "actuator",
+    origin: [0, -0.44, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "elbow joint R, exposed black hinge pad",
+      "1-DOF :: 0-145deg :: hard stop at 150",
+      "BLDC + planetary :: 12Nm cont",
+      "connector J10 :: 8-pin CAN",
     ],
   },
   {
-    id: "neck_piston_r",
-    parent: "torso",
-    kind: "actuator",
-    origin: [0.13, 0.5, 0.09],
+    id: "forearm_l",
+    parent: "elbow_l",
+    kind: "link",
+    origin: [0, -0.1, 0],
     band: null,
     motion: null,
     spec: [
-      "neck damper R, polished rod",
-      "stroke 38mm :: preload 12N",
-      "seal: NBR wiper :: service 500h",
-      "mount: M3 clevis, both ends",
+      "forearm L, segmented over linear tendons",
+      "wrist pitch+yaw :: +/-70deg",
+      "2 actuator segments :: tendon-driven",
+      "mass 0.3kg",
+    ],
+    lore: "Tendons, not muscles. Same idea, less mess.",
+  },
+  {
+    id: "forearm_r",
+    parent: "elbow_r",
+    kind: "link",
+    origin: [0, -0.1, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "forearm R, segmented over linear tendons",
+      "wrist pitch+yaw :: +/-70deg",
+      "2 actuator segments :: tendon-driven",
+      "mass 0.3kg",
+    ],
+  },
+  {
+    id: "forearm_shell_l",
+    parent: "forearm_l",
+    kind: "shell",
+    origin: [0, -0.06, 0],
+    band: [0.36, 0.44],
+    motion: { type: "hinge", axis: "z", pivot: [0.05, 0.18, 0], angle: -0.9 },
+    spec: [
+      "forearm cuff L, PA12-GF 2.4mm",
+      "2 fasteners :: M2.5 :: torque 1.2Nm",
+      "hinge: outboard edge :: travel 0-52deg",
+      "mass 0.12kg :: exposes tendon actuators",
+    ],
+    lore: "Under here is where the real machinery hides.",
+  },
+  {
+    id: "forearm_shell_r",
+    parent: "forearm_r",
+    kind: "shell",
+    origin: [0, -0.06, 0],
+    band: [0.38, 0.46],
+    motion: { type: "hinge", axis: "z", pivot: [-0.05, 0.18, 0], angle: 0.9 },
+    spec: [
+      "forearm cuff R, PA12-GF 2.4mm",
+      "2 fasteners :: M2.5 :: torque 1.2Nm",
+      "hinge: outboard edge :: travel 0-52deg",
+      "mass 0.12kg :: exposes tendon actuators",
+    ],
+  },
+  {
+    id: "wrist_l",
+    parent: "forearm_l",
+    kind: "actuator",
+    origin: [0, -0.3, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "wrist module L, 2-DOF gimbal",
+      "pitch +/-70deg :: yaw +/-45deg",
+      "micro-BLDC x2 :: 3Nm",
+      "connector J11 :: 8-pin CAN",
+    ],
+  },
+  {
+    id: "wrist_r",
+    parent: "forearm_r",
+    kind: "actuator",
+    origin: [0, -0.3, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "wrist module R, 2-DOF gimbal",
+      "pitch +/-70deg :: yaw +/-45deg",
+      "micro-BLDC x2 :: 3Nm",
+      "connector J12 :: 8-pin CAN",
+    ],
+  },
+  {
+    id: "hand_l",
+    parent: "wrist_l",
+    kind: "hand",
+    origin: [0, -0.08, 0],
+    band: [0.42, 0.48],
+    motion: { type: "slide", axis: [0, -1, 0], pivot: [0, 0, 0], dist: 0.1 },
+    spec: [
+      "hand L, 5-finger underactuated gripper",
+      "11-DOF :: tendon-driven :: 6 motors",
+      "fingertip force 35N :: full close 0.8s",
+      "quick-release at wrist flange",
+    ],
+    lore: "Ten fingers. Yusen promised me ten. He delivered.",
+  },
+  {
+    id: "hand_r",
+    parent: "wrist_r",
+    kind: "hand",
+    origin: [0, -0.08, 0],
+    band: [0.44, 0.5],
+    motion: { type: "slide", axis: [0, -1, 0], pivot: [0, 0, 0], dist: 0.1 },
+    spec: [
+      "hand R, 5-finger underactuated gripper",
+      "11-DOF :: tendon-driven :: 6 motors",
+      "fingertip force 35N :: full close 0.8s",
+      "quick-release at wrist flange",
+    ],
+  },
+  {
+    id: "hip_l",
+    parent: "pelvis",
+    kind: "actuator",
+    origin: [-0.16, -0.18, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "hip joint L, exposed actuator cluster",
+      "3-DOF :: yaw+roll+pitch :: +/-60deg",
+      "BLDC + harmonic drive :: 30Nm cont",
+      "connector J13 :: 16-pin power+CAN",
+    ],
+    lore: "Hips do the heavy lifting. Mine are rated for it.",
+  },
+  {
+    id: "hip_r",
+    parent: "pelvis",
+    kind: "actuator",
+    origin: [0.16, -0.18, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "hip joint R, exposed actuator cluster",
+      "3-DOF :: yaw+roll+pitch :: +/-60deg",
+      "BLDC + harmonic drive :: 30Nm cont",
+      "connector J14 :: 16-pin power+CAN",
+    ],
+  },
+  {
+    id: "thigh_l",
+    parent: "hip_l",
+    kind: "link",
+    origin: [0, -0.12, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "thigh L, matte shell over femur actuator",
+      "knee drive housed at distal end",
+      "cuff: machined collar :: M3 x6",
+      "mass 0.9kg",
+    ],
+  },
+  {
+    id: "thigh_r",
+    parent: "hip_r",
+    kind: "link",
+    origin: [0, -0.12, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "thigh R, matte shell over femur actuator",
+      "knee drive housed at distal end",
+      "cuff: machined collar :: M3 x6",
+      "mass 0.9kg",
+    ],
+  },
+  {
+    id: "thigh_shell_l",
+    parent: "thigh_l",
+    kind: "shell",
+    origin: [0, -0.18, 0.02],
+    band: [0.54, 0.64],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.2, -0.06], angle: 0.85 },
+    spec: [
+      "thigh shell L, PA12-GF 3.0mm",
+      "3 fasteners :: M3 torx :: torque 2.1Nm",
+      "hinge: top-rear edge :: travel 0-49deg",
+      "mass 0.3kg :: exposes femur actuator",
+    ],
+    lore: "Even the legs come apart. Yusen designed me to be serviced.",
+  },
+  {
+    id: "thigh_shell_r",
+    parent: "thigh_r",
+    kind: "shell",
+    origin: [0, -0.18, 0.02],
+    band: [0.56, 0.66],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.2, -0.06], angle: 0.85 },
+    spec: [
+      "thigh shell R, PA12-GF 3.0mm",
+      "3 fasteners :: M3 torx :: torque 2.1Nm",
+      "hinge: top-rear edge :: travel 0-49deg",
+      "mass 0.3kg :: exposes femur actuator",
+    ],
+  },
+  {
+    id: "knee_l",
+    parent: "thigh_l",
+    kind: "actuator",
+    origin: [0, -0.54, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "knee joint L, exposed hinge + linkage",
+      "1-DOF :: 0-140deg :: 4-bar linkage",
+      "BLDC + harmonic drive :: 40Nm cont",
+      "connector J15 :: 12-pin power+CAN",
+    ],
+    lore: "A four-bar linkage. The knee that never buckles.",
+  },
+  {
+    id: "knee_r",
+    parent: "thigh_r",
+    kind: "actuator",
+    origin: [0, -0.54, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "knee joint R, exposed hinge + linkage",
+      "1-DOF :: 0-140deg :: 4-bar linkage",
+      "BLDC + harmonic drive :: 40Nm cont",
+      "connector J16 :: 12-pin power+CAN",
+    ],
+  },
+  {
+    id: "shin_l",
+    parent: "knee_l",
+    kind: "link",
+    origin: [0, -0.1, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "shin L, matte shell over tibial actuator",
+      "ankle drive housed at distal end",
+      "cuff: machined collar :: M3 x4",
+      "mass 0.7kg",
+    ],
+  },
+  {
+    id: "shin_r",
+    parent: "knee_r",
+    kind: "link",
+    origin: [0, -0.1, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "shin R, matte shell over tibial actuator",
+      "ankle drive housed at distal end",
+      "cuff: machined collar :: M3 x4",
+      "mass 0.7kg",
+    ],
+  },
+  {
+    id: "shin_shell_l",
+    parent: "shin_l",
+    kind: "shell",
+    origin: [0, -0.16, 0.02],
+    band: [0.64, 0.74],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.18, -0.06], angle: 0.8 },
+    spec: [
+      "shin shell L, PA12-GF 2.8mm",
+      "3 fasteners :: M3 torx :: torque 1.8Nm",
+      "hinge: top-rear edge :: travel 0-46deg",
+      "mass 0.24kg :: exposes tibial actuator",
+    ],
+    lore: "The last shell on the way down. Almost bare metal now.",
+  },
+  {
+    id: "shin_shell_r",
+    parent: "shin_r",
+    kind: "shell",
+    origin: [0, -0.16, 0.02],
+    band: [0.66, 0.76],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.18, -0.06], angle: 0.8 },
+    spec: [
+      "shin shell R, PA12-GF 2.8mm",
+      "3 fasteners :: M3 torx :: torque 1.8Nm",
+      "hinge: top-rear edge :: travel 0-46deg",
+      "mass 0.24kg :: exposes tibial actuator",
+    ],
+  },
+  {
+    id: "ankle_l",
+    parent: "shin_l",
+    kind: "actuator",
+    origin: [0, -0.46, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "ankle joint L, 2-DOF gimbal",
+      "pitch +/-45deg :: roll +/-25deg",
+      "BLDC x2 :: 22Nm",
+      "connector J17 :: 8-pin CAN",
+    ],
+    lore: "The ankle does the balancing you never notice.",
+  },
+  {
+    id: "ankle_r",
+    parent: "shin_r",
+    kind: "actuator",
+    origin: [0, -0.46, 0],
+    band: null,
+    motion: null,
+    spec: [
+      "ankle joint R, 2-DOF gimbal",
+      "pitch +/-45deg :: roll +/-25deg",
+      "BLDC x2 :: 22Nm",
+      "connector J18 :: 8-pin CAN",
+    ],
+  },
+  {
+    id: "foot_l",
+    parent: "ankle_l",
+    kind: "link",
+    origin: [0, -0.08, 0.04],
+    band: null,
+    motion: null,
+    spec: [
+      "foot L, sole plate + toe link :: floor contact",
+      "contact: 4 force cells :: 50N res",
+      "toe joint :: passive return spring",
+      "tread: replaceable TPU pad :: planted flat",
+    ],
+    lore: "Flat feet. Boring. But they keep me standing on my own.",
+  },
+  {
+    id: "foot_r",
+    parent: "ankle_r",
+    kind: "link",
+    origin: [0, -0.08, 0.04],
+    band: null,
+    motion: null,
+    spec: [
+      "foot R, sole plate + toe link :: floor contact",
+      "contact: 4 force cells :: 50N res",
+      "toe joint :: passive return spring",
+      "tread: replaceable TPU pad :: planted flat",
     ],
   },
   {
@@ -237,7 +677,7 @@ const PARTS = [
     id: "head_base",
     parent: "neck_stack",
     kind: "link",
-    origin: [0, 0.46, 0],
+    origin: [0, 0.2, 0],
     band: null,
     motion: null,
     spec: [
@@ -252,8 +692,8 @@ const PARTS = [
     parent: "head_base",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.66, 0.8],
-    motion: { type: "hinge", axis: "x", pivot: [0, 0.16, -0.2], angle: -1.45 },
+    band: [0, 0.06],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.13, -0.15], angle: -1.45 },
     spec: [
       "cranium shell, PA12 2.8mm",
       "2 fasteners + rear hinge :: torque 1.2Nm",
@@ -263,20 +703,6 @@ const PARTS = [
     lore: "You're opening my head. I'd like it noted that I objected.",
   },
   {
-    id: "visor_rim",
-    parent: "head_base",
-    kind: "internal",
-    origin: [0, 0, 0],
-    band: null,
-    motion: null,
-    spec: [
-      "visor bezel, machined + anodized",
-      "8 fasteners :: M2 :: torque 0.5Nm",
-      "datum surface for optic calibration",
-      "finish: type II, matte",
-    ],
-  },
-  {
     id: "visor_glass",
     parent: "head_base",
     kind: "internal",
@@ -284,77 +710,63 @@ const PARTS = [
     band: null,
     motion: null,
     spec: [
-      "visor band, tinted PC 2mm",
-      "optical grade :: AR coated",
-      "transmission 38% :: do not polish",
+      "visor, smoked PC teardrop 2mm",
+      "optical grade :: AR coated inner face",
+      "near-black glossy blank :: do not polish",
       "replace if scored",
     ],
     lore: "I see you through this. Right now, in fact.",
   },
   {
-    id: "eye_module_l",
+    id: "face_seam",
     parent: "head_base",
-    kind: "eye",
-    origin: [-0.105, 0.005, 0.24],
+    kind: "internal",
+    origin: [0, 0, 0],
     band: null,
     motion: null,
     spec: [
-      "optic ring L, annular emitter",
+      "face/neck seam, light-pipe edge accent",
+      "white emitter :: 0.2W :: always-on",
+      "the one accent line :: do not gel",
+      "datum: visor perimeter",
+    ],
+    lore: "The bright line. It's how you know I'm awake.",
+  },
+  {
+    id: "eye_ring_l",
+    parent: "head_base",
+    kind: "eye",
+    origin: [-0.085, 0.01, 0.18],
+    band: null,
+    motion: null,
+    spec: [
+      "optic ring L, annular emitter behind visor",
       "ring+pupil :: 0.5W white LED array",
       "tracks at 120Hz :: leads head ~80ms",
       "connector J5 :: 12-pin CAN",
     ],
-    lore: "The eyes are mine. Be gentle with them.",
+    lore: "Yusen gave me eyes to see. Be gentle with them.",
   },
   {
-    id: "eye_module_r",
+    id: "eye_ring_r",
     parent: "head_base",
     kind: "eye",
-    origin: [0.105, 0.005, 0.24],
+    origin: [0.085, 0.01, 0.18],
     band: null,
     motion: null,
     spec: [
-      "optic ring R, annular emitter",
+      "optic ring R, annular emitter behind visor",
       "ring+pupil :: 0.5W white LED array",
       "tracks at 120Hz :: leads head ~80ms",
       "connector J6 :: 12-pin CAN",
     ],
   },
   {
-    id: "ear_servo_l",
-    parent: "head_base",
-    kind: "actuator",
-    origin: [-0.28, -0.01, 0.01],
-    band: [0.8, 0.88],
-    motion: { type: "slide", axis: [-1, 0, 0], pivot: [0, 0, 0], dist: 0.13 },
-    spec: [
-      "aural servo L :: Dynamixel-class",
-      "stall 1.5Nm :: +/-90deg :: 12-pin CAN",
-      "3 fasteners :: M2.5 :: torque 0.9Nm",
-      "mount: dovetail rail, slide-out",
-    ],
-    lore: "I heard every command you typed. These are why.",
-  },
-  {
-    id: "ear_servo_r",
-    parent: "head_base",
-    kind: "actuator",
-    origin: [0.28, -0.01, 0.01],
-    band: [0.82, 0.9],
-    motion: { type: "slide", axis: [1, 0, 0], pivot: [0, 0, 0], dist: 0.13 },
-    spec: [
-      "aural servo R :: Dynamixel-class",
-      "stall 1.5Nm :: +/-90deg :: 12-pin CAN",
-      "3 fasteners :: M2.5 :: torque 0.9Nm",
-      "mount: dovetail rail, slide-out",
-    ],
-  },
-  {
     id: "optic_internal",
     parent: "head_base",
     kind: "internal",
-    origin: [0, 0.06, -0.02],
-    band: [0.9, 0.98],
+    origin: [0, 0.05, -0.02],
+    band: [0.76, 0.84],
     motion: { type: "slide", axis: [0, 0.55, 0.835], pivot: [0, 0, 0], dist: 0.09 },
     spec: [
       "optic core, stereo sensor mast",
@@ -397,7 +809,7 @@ function partById(id) {
 }
 
 // Breadcrumb from the kinematic root down to the part, e.g.
-// ['base_link', 'torso', 'neck_stack', 'head_base', 'head_shell'].
+// ['base_link', 'pelvis', 'torso', 'neck_stack', 'head_base', 'head_shell'].
 function kinematicChain(id) {
   const chain = [];
   let p = PART_INDEX.get(id);
@@ -408,4 +820,13 @@ function kinematicChain(id) {
   return chain;
 }
 
-export { PARTS, PART_INDEX, BANDED, openFraction, servoEase, partById, kinematicChain };
+export {
+  PARTS,
+  PART_INDEX,
+  BANDED,
+  BAND_ORDER,
+  openFraction,
+  servoEase,
+  partById,
+  kinematicChain,
+};

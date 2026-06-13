@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import useVStore from "./store.js";
 import VRobot from "./VRobot.jsx";
 import CameraRig from "./CameraRig.jsx";
@@ -13,47 +14,91 @@ function InputBridge() {
   return null;
 }
 
+// Lit for a ~7.5-head FREE-STANDING figure (no cradle): feet flat on the floor
+// at y~0, crown at y~2.8, mid-body ~y1.4. The rig is raised and spread up the
+// full height so the light-gray panels read as bright highlight masses head-to-
+// shin while the black skeleton/joints stay in shadow — the 8x8 dither needs
+// that bright/dark separation to sculpt. Grayscale lights only.
 function Lights() {
   return (
     <>
       {/* ambient floor of light, dim and neutral */}
       <ambientLight intensity={0.22} color="#ffffff" />
-      {/* strong white key, upper-left — the dither needs bright masses to sculpt */}
+      {/* strong white key, high upper-left — aimed down the full standing height
+          so the chest/thigh/shin panels carry the bright mass; shadow frustum
+          spans the floor up past the crown */}
       <directionalLight
-        position={[-4, 6, 5]}
-        intensity={2.8}
+        position={[-4.6, 6.5, 5.2]}
+        intensity={3.0}
         color="#ffffff"
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-camera-near={0.5}
-        shadow-camera-far={20}
-        shadow-camera-left={-6}
-        shadow-camera-right={6}
-        shadow-camera-top={6}
-        shadow-camera-bottom={-6}
+        shadow-camera-far={22}
+        shadow-camera-left={-3.5}
+        shadow-camera-right={3.5}
+        shadow-camera-top={3.6}
+        shadow-camera-bottom={-0.4}
+        shadow-bias={-0.0005}
       />
-      {/* dim fill from camera-right to keep shadows readable, not flat */}
-      <directionalLight position={[5, 2, 4]} intensity={0.45} color="#cccccc" />
-      {/* hard rim from behind-right to carve the silhouette */}
-      <directionalLight position={[4, 3.5, -5]} intensity={2.4} color="#ffffff" />
-      {/* second rim, behind-left and lower — picks out the far shoulder line */}
-      <directionalLight position={[-5, 2.5, -4]} intensity={1.1} color="#eeeeee" />
-      {/* near point for the visor specular streak + chest highlight */}
-      <pointLight position={[0.9, 2.6, 2.6]} intensity={2.2} distance={7} decay={2} color="#ffffff" />
+      {/* dim fill from camera-right, mid-body height — keeps the shaded side
+          readable without flattening the panel highlights */}
+      <directionalLight position={[5.2, 2.6, 4.2]} intensity={0.42} color="#cccccc" />
+      {/* hard rim from behind-right, high — carves the full silhouette edge from
+          helmet down the arm and thigh shells */}
+      <directionalLight position={[4.2, 4.6, -5.0]} intensity={2.6} color="#ffffff" />
+      {/* second rim, behind-left and lower — picks out the far shoulder + shin line */}
+      <directionalLight position={[-5.0, 2.4, -4.2]} intensity={1.1} color="#eeeeee" />
+      {/* near point at chest height — visor specular streak + chest plastron highlight */}
+      <pointLight position={[1.0, 2.2, 3.0]} intensity={2.2} distance={8} decay={2} color="#ffffff" />
     </>
   );
 }
 
-// Unlit pure black on purpose: the void renders solid black under the dither's
-// shadow floor (no grazing-angle specular band, no dot lattice — the owner's
-// "mosaic" complaint) and the CRADLE is what grounds V. Still a mesh so clicks
-// on the ground keep resolving as pointer-missed for the robot group.
+// A painted RADIAL contact shadow instead of a lit ground plane. The old lit
+// plane caught the directional/fill lights at grazing angle across its whole
+// recede, lifting a wide swath just above the dither's shadow floor — that read
+// as a hard horizontal dithered BAND across the mid-panel. Here the floor is an
+// UNLIT (basic) disc textured with a canvas radial gradient: a soft dark blob
+// directly under the planted feet that falls off to PURE BLACK well within the
+// frame. Result: a subtle under-foot grounding shadow, solid black everywhere
+// else, no band. The gradient is generated in-JS (no network asset). Still a
+// mesh at y=0 so ground clicks resolve as pointer-missed for the robot group.
+function makeContactGradient() {
+  const size = 256;
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d");
+  // solid black base so the disc's outer ring is pure void
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, size, size);
+  // an ELLIPTICAL grounding pool: a faint gray core (the soft shadow / floor
+  // contact glow under the feet) fading to black. Kept dim so the lit core
+  // sits low — a whisper of grounding, never a panel-wide gray field.
+  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  g.addColorStop(0.0, "rgba(40,40,40,1)");
+  g.addColorStop(0.35, "rgba(20,20,20,1)");
+  g.addColorStop(0.7, "rgba(5,5,5,1)");
+  g.addColorStop(1.0, "rgba(0,0,0,1)");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function Floor() {
+  const tex = useMemo(() => makeContactGradient(), []);
+  useEffect(() => () => tex.dispose(), [tex]);
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      <planeGeometry args={[40, 40]} />
-      <meshBasicMaterial color="#000000" />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
+      {/* a compact disc under the feet — wide enough to read as ground, small
+          enough that its faded black edge stays inside the void, not a band */}
+      <planeGeometry args={[6, 6]} />
+      <meshBasicMaterial map={tex} toneMapped={false} depthWrite={false} transparent />
     </mesh>
   );
 }
@@ -85,7 +130,7 @@ export default function Scene({ children }) {
       dpr={[1, 2]}
       shadows
       frameloop={frameloop}
-      camera={{ position: [2.7, 2.1, 3.7], fov: 38 }}
+      camera={{ position: [3.2, 1.95, 6.6], fov: 38 }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       style={{ width: "100%", height: "100%", background: "#050505" }}
     >

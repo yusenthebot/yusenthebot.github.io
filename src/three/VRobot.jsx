@@ -10,8 +10,10 @@ import {
   brushedMetal,
   mattePolymer,
   darkPolymer,
+  darkHelmet,
   darkGlass,
   emissiveCore,
+  brightEmissiveSeam,
   makeLip,
   makeEmissive,
 } from "./materials.js";
@@ -29,9 +31,10 @@ const scanMat = makeEmissive(2.2);
 scanMat.transparent = true;
 scanMat.opacity = 0.7;
 
-// Sympathetic lift: the registry's shells have no kinematic children, so the
-// "machine is one connected body" law maps to the internals each shell covers —
-// they float up ~0.015 in the tail of their cover's band and stay lifted.
+// Sympathetic lift: the registry's shells have no kinematic children of their
+// own, so the "machine is one connected body" law maps to the internals each
+// shell covers — they float up ~0.015 in the tail of their cover's band and
+// stay lifted once the cover is open.
 const REVEAL_LIFT = { chest_core_housing: "chest_plate", optic_internal: "head_shell" };
 const LIFT = 0.015;
 const LIFT_TAIL = 0.7;
@@ -58,55 +61,109 @@ function neg(v) {
   return [-v[0], -v[1], -v[2]];
 }
 
+// A simplified five-finger hand: four fingers + an offset thumb, each a slim
+// dark capsule with a machined knuckle. sgn flips the thumb to the inboard side.
+function Hand({ sgn, lip }) {
+  const fingerX = [-0.024, -0.008, 0.008, 0.024];
+  const fingerLen = [0.07, 0.082, 0.078, 0.062];
+  return (
+    <>
+      {/* palm block */}
+      <RoundedBox args={[0.085, 0.075, 0.03]} radius={0.012} position={[0, -0.03, 0]} material={darkPolymer} castShadow />
+      <RoundedBox args={[0.075, 0.02, 0.026]} radius={0.006} position={[0, 0.012, 0]} material={mattePolymer} castShadow />
+      {/* four fingers */}
+      {fingerX.map((x, i) => (
+        <group key={x} position={[x, -0.07, 0]}>
+          <mesh position={[0, -fingerLen[i] / 2, 0]} material={darkPolymer} castShadow>
+            <capsuleGeometry args={[0.008, fingerLen[i], 4, 8]} />
+          </mesh>
+          <mesh position={[0, 0, 0]} rotation-x={HPI} material={lip}>
+            <cylinderGeometry args={[0.009, 0.009, 0.014, 8]} />
+          </mesh>
+        </group>
+      ))}
+      {/* thumb — offset to the inboard side, angled down */}
+      <group position={[sgn * 0.045, -0.02, 0.012]} rotation-z={sgn * 0.7}>
+        <mesh position={[0, -0.028, 0]} material={darkPolymer} castShadow>
+          <capsuleGeometry args={[0.009, 0.05, 4, 8]} />
+        </mesh>
+        <mesh rotation-z={HPI} material={lip}>
+          <cylinderGeometry args={[0.01, 0.01, 0.016, 8]} />
+        </mesh>
+      </group>
+    </>
+  );
+}
+
 // All geometry is authored relative to the part origin (parts.js), so hinge
 // pivots in the registry line up with the visible pivot cylinders here.
-// Silhouette law (REV.8): semi-humanoid bust — shoulder line ~3x head width,
-// chamfered chest (octagonal frustums, never spheres), helmet head on a
-// mechanical neck, short truncated arms ending in machined service cuffs.
+// Silhouette law (REV.8): a slim FUTURIST humanoid (Optimus/Figure 02 in
+// monochrome) — light matte panels OVER a visible black skeleton, EXPOSED
+// black mechanical joints, segmented forearms, five-finger hands, a smooth
+// dark teardrop helmet with two faint eye rings behind it and a thin white
+// emissive seam at the face/neck perimeter. ~7.5 heads tall, slim limbs,
+// neutral FREE-STANDING pose on its own two feet — no rig, no cradle, no
+// dock; both feet planted flat on the Scene floor.
 function PartMesh({ id, lip, ctx }) {
   switch (id) {
     case "base_link":
+      // Free-standing: base_link is a NON-VISIBLE world/ground datum at the
+      // feet. No cradle, no rig posts, no dock collar, no leveling feet — V
+      // stands on its own two feet, planted flat on the Scene floor (y=0).
+      return null;
+    case "pelvis":
       return (
         <>
-          <RoundedBox args={[2.0, 0.14, 1.15]} radius={0.03} smoothness={2} position={[0, 0.2, 0]} material={darkPolymer} castShadow receiveShadow />
-          <mesh position={[0, 0.29, 0.44]} rotation-z={HPI} material={lip} castShadow>
-            <cylinderGeometry args={[0.025, 0.025, 1.85, 12]} />
-          </mesh>
-          <mesh position={[0, 0.29, -0.44]} rotation-z={HPI} material={lip} castShadow>
-            <cylinderGeometry args={[0.025, 0.025, 1.85, 12]} />
-          </mesh>
-          {/* dock riser the waist seats into */}
-          <mesh position={[0, 0.32, 0]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.3, 0.36, 0.18, 16]} />
-          </mesh>
-          <mesh position={[0, 0.41, 0]} rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.31, 0.012, 8, 32]} />
-          </mesh>
-          {[[-0.85, 0.45], [0.85, 0.45], [-0.85, -0.45], [0.85, -0.45]].map(([x, z]) => (
-            <mesh key={`${x}:${z}`} position={[x, 0.065, z]} material={brushedMetal} castShadow>
-              <cylinderGeometry args={[0.05, 0.06, 0.13, 16]} />
+          {/* the exposed actuated midsection — boxy black block, Optimus-style */}
+          <RoundedBox args={[0.34, 0.26, 0.24]} radius={0.03} material={darkPolymer} castShadow />
+          {/* visible side actuator drums (hip yaw) */}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.18, -0.02, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
+              <cylinderGeometry args={[0.07, 0.07, 0.06, 20]} />
             </mesh>
           ))}
+          {/* exposed harness / actuator detail on the front */}
+          {[-0.07, 0.07].map((x) => (
+            <RoundedBox key={x} args={[0.05, 0.18, 0.04]} radius={0.012} position={[x, 0, 0.11]} material={brushedMetal} />
+          ))}
+          {/* lumbar joint cylinder up into the torso */}
+          <mesh position={[0, 0.16, 0]} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.1, 0.11, 0.1, 20]} />
+          </mesh>
+          <mesh position={[0, 0.21, 0]} rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.105, 0.01, 8, 32]} />
+          </mesh>
+        </>
+      );
+    case "pelvis_cover":
+      return (
+        <>
+          {/* light front fascia that slides off to expose the actuators */}
+          <RoundedBox args={[0.36, 0.28, 0.06]} radius={0.03} position={[0, 0, 0.15]} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.18, 0.1, 0.02]} radius={0.01} position={[0, 0.02, 0.18]} material={darkPolymer} />
+          {/* machined edge framing the fascia */}
+          <RoundedBox args={[0.36, 0.02, 0.02]} radius={0.006} position={[0, 0.14, 0.15]} material={lip} />
+          <RoundedBox args={[0.36, 0.02, 0.02]} radius={0.006} position={[0, -0.14, 0.15]} material={lip} />
         </>
       );
     case "torso":
       return (
         <>
           {/* chamfered chest frustum — wide at the clavicle, tapering to the waist */}
-          <mesh position={[0, 0.06, 0]} rotation-y={OCT} scale={[1, 1, 0.6]} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.5, 0.33, 0.64, 8]} />
+          <mesh position={[0, 0.08, 0]} rotation-y={OCT} scale={[1, 1, 0.62]} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.42, 0.27, 0.6, 8]} />
           </mesh>
-          <mesh position={[0, -0.42, 0]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.24, 0.3, 0.3, 16]} />
+          {/* waist barrel */}
+          <mesh position={[0, -0.3, 0]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.2, 0.24, 0.24, 16]} />
           </mesh>
           {/* guts that read when the shells open */}
-          <RoundedBox args={[0.3, 0.2, 0.16]} radius={0.02} position={[-0.18, -0.1, 0.02]} material={darkPolymer} />
-          <RoundedBox args={[0.26, 0.16, 0.14]} radius={0.02} position={[0.2, -0.16, 0.02]} material={darkPolymer} />
-          {/* machined seam ring at the clavicle line — tucked inside the
-              frustum face so it reads in the shell gaps, not as a collar */}
-          <group position={[0, 0.36, 0]} rotation={[HPI, 0, 0]}>
+          <RoundedBox args={[0.26, 0.18, 0.14]} radius={0.02} position={[-0.14, -0.08, 0.02]} material={darkPolymer} />
+          <RoundedBox args={[0.22, 0.14, 0.12]} radius={0.02} position={[0.16, -0.14, 0.02]} material={darkPolymer} />
+          {/* machined seam ring at the clavicle line, tucked inside the frustum */}
+          <group position={[0, 0.32, 0]} rotation={[HPI, 0, 0]}>
             <mesh scale={[1, 0.55, 1]} material={lip}>
-              <torusGeometry args={[0.44, 0.01, 8, 48]} />
+              <torusGeometry args={[0.38, 0.009, 8, 48]} />
             </mesh>
           </group>
         </>
@@ -114,71 +171,69 @@ function PartMesh({ id, lip, ctx }) {
     case "chest_plate":
       return (
         <>
-          <RoundedBox args={[0.88, 0.46, 0.09]} radius={0.04} position={[0, 0.12, 0.3]} rotation-x={-0.06} material={mattePolymer} castShadow />
-          <RoundedBox args={[0.64, 0.3, 0.08]} radius={0.03} position={[0, -0.24, 0.26]} rotation-x={0.12} material={mattePolymer} castShadow />
-          <RoundedBox args={[0.3, 0.18, 0.04]} radius={0.01} position={[0, 0.12, 0.345]} material={darkPolymer} />
+          {/* plastron — two stacked matte panels with a chest seam */}
+          <RoundedBox args={[0.76, 0.4, 0.08]} radius={0.04} position={[0, 0.12, 0.24]} rotation-x={-0.06} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.56, 0.26, 0.07]} radius={0.03} position={[0, -0.2, 0.21]} rotation-x={0.12} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.26, 0.16, 0.04]} radius={0.01} position={[0, 0.12, 0.285]} material={darkPolymer} />
+          {/* white emissive chest seam — used sparingly, the second accent line */}
+          <RoundedBox args={[0.012, 0.3, 0.012]} radius={0.004} position={[0, 0.1, 0.29]} material={brightEmissiveSeam} />
           {/* status dot trio — same chest lights as the 2D V */}
-          {[-0.07, 0, 0.07].map((x) => (
-            <mesh key={x} position={[x, -0.06, 0.325]} material={eyeMat}>
-              <sphereGeometry args={[0.016, 12, 12]} />
+          {[-0.06, 0, 0.06].map((x) => (
+            <mesh key={x} position={[x, -0.08, 0.27]} material={eyeMat}>
+              <sphereGeometry args={[0.014, 12, 12]} />
             </mesh>
           ))}
           {/* machined inner lip along the top + side opening edges */}
-          <RoundedBox args={[0.78, 0.025, 0.025]} radius={0.008} position={[0, 0.345, 0.27]} material={lip} />
-          {[-0.43, 0.43].map((x) => (
-            <RoundedBox key={x} args={[0.025, 0.38, 0.025]} radius={0.008} position={[x, 0.12, 0.27]} material={lip} />
+          <RoundedBox args={[0.68, 0.022, 0.022]} radius={0.007} position={[0, 0.31, 0.22]} material={lip} />
+          {[-0.37, 0.37].map((x) => (
+            <RoundedBox key={x} args={[0.022, 0.34, 0.022]} radius={0.007} position={[x, 0.12, 0.22]} material={lip} />
           ))}
           {/* visible hinge pivot along the bottom edge */}
-          <mesh position={[0, -0.38, 0.3]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.024, 0.024, 0.56, 12]} />
+          <mesh position={[0, -0.34, 0.22]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.022, 0.022, 0.5, 12]} />
           </mesh>
-          {[[-0.36, 0.3, 0.35], [0.36, 0.3, 0.35], [-0.25, -0.28, 0.315], [0.25, -0.28, 0.315]].map(([x, y, z]) => (
-            <mesh key={`${x}:${y}`} position={[x, y, z]} rotation-x={HPI} material={lip}>
-              <cylinderGeometry args={[0.015, 0.015, 0.014, 10]} />
-            </mesh>
-          ))}
         </>
       );
     case "back_plate":
       return (
         <>
-          <RoundedBox args={[0.88, 0.5, 0.09]} radius={0.04} position={[0, 0.1, -0.3]} rotation-x={0.06} material={mattePolymer} castShadow />
-          <RoundedBox args={[0.64, 0.28, 0.08]} radius={0.03} position={[0, -0.25, -0.26]} rotation-x={-0.12} material={mattePolymer} castShadow />
-          {[-0.14, 0, 0.14].map((x) => (
-            <RoundedBox key={x} args={[0.05, 0.34, 0.04]} radius={0.012} position={[x, 0.1, -0.355]} material={darkPolymer} />
+          <RoundedBox args={[0.76, 0.44, 0.08]} radius={0.04} position={[0, 0.1, -0.24]} rotation-x={0.06} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.56, 0.24, 0.07]} radius={0.03} position={[0, -0.22, -0.21]} rotation-x={-0.12} material={mattePolymer} castShadow />
+          {[-0.12, 0, 0.12].map((x) => (
+            <RoundedBox key={x} args={[0.04, 0.3, 0.04]} radius={0.01} position={[x, 0.1, -0.285]} material={darkPolymer} />
           ))}
-          <RoundedBox args={[0.78, 0.025, 0.025]} radius={0.008} position={[0, 0.36, -0.27]} material={lip} />
-          <mesh position={[0, -0.38, -0.3]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.024, 0.024, 0.56, 12]} />
+          <RoundedBox args={[0.68, 0.022, 0.022]} radius={0.007} position={[0, 0.32, -0.22]} material={lip} />
+          <mesh position={[0, -0.34, -0.22]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.022, 0.022, 0.5, 12]} />
           </mesh>
         </>
       );
     case "chest_core_housing":
       return (
         <>
-          {[[-0.16, -0.11], [0.16, -0.11], [-0.16, 0.11], [0.16, 0.11]].map(([x, z]) => (
+          {[[-0.14, -0.1], [0.14, -0.1], [-0.14, 0.1], [0.14, 0.1]].map(([x, z]) => (
             <mesh key={`${x}:${z}`} position={[x, 0, z]} material={brushedMetal}>
-              <cylinderGeometry args={[0.018, 0.018, 0.34, 10]} />
+              <cylinderGeometry args={[0.016, 0.016, 0.3, 10]} />
             </mesh>
           ))}
-          <RoundedBox args={[0.4, 0.03, 0.26]} radius={0.01} position={[0, 0.18, 0]} material={darkPolymer} />
-          <RoundedBox args={[0.4, 0.03, 0.26]} radius={0.01} position={[0, -0.18, 0]} material={darkPolymer} />
-          <RoundedBox args={[0.36, 0.32, 0.02]} radius={0.01} position={[0, 0, -0.12]} material={darkPolymer} />
+          <RoundedBox args={[0.34, 0.03, 0.24]} radius={0.01} position={[0, 0.16, 0]} material={darkPolymer} />
+          <RoundedBox args={[0.34, 0.03, 0.24]} radius={0.01} position={[0, -0.16, 0]} material={darkPolymer} />
+          <RoundedBox args={[0.3, 0.28, 0.02]} radius={0.01} position={[0, 0, -0.1]} material={darkPolymer} />
           {/* J4 connector block */}
-          <RoundedBox args={[0.07, 0.045, 0.035]} radius={0.005} position={[0.12, 0.1, -0.125]} material={lip} />
+          <RoundedBox args={[0.06, 0.04, 0.03]} radius={0.005} position={[0.1, 0.08, -0.105]} material={lip} />
         </>
       );
     case "core":
       return (
         <>
           <mesh ref={(m) => ctx.setExtra("coreMesh", m)} material={emissiveCore}>
-            <sphereGeometry args={[0.12, 32, 32]} />
+            <sphereGeometry args={[0.11, 32, 32]} />
           </mesh>
           <mesh rotation-x={HPI} material={brushedMetal}>
-            <torusGeometry args={[0.15, 0.016, 10, 40]} />
+            <torusGeometry args={[0.14, 0.015, 10, 40]} />
           </mesh>
-          <mesh position={[0, -0.155, 0]} material={lip}>
-            <cylinderGeometry args={[0.05, 0.07, 0.05, 16]} />
+          <mesh position={[0, -0.14, 0]} material={lip}>
+            <cylinderGeometry args={[0.045, 0.065, 0.045, 16]} />
           </mesh>
         </>
       );
@@ -186,33 +241,51 @@ function PartMesh({ id, lip, ctx }) {
       return (
         <>
           <mesh material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.05, 0.05, 0.72, 16]} />
+            <cylinderGeometry args={[0.045, 0.045, 0.62, 16]} />
           </mesh>
-          {[-0.27, -0.09, 0.09, 0.27].map((y) => (
+          {[-0.22, -0.07, 0.07, 0.22].map((y) => (
             <mesh key={y} position={[0, y, 0]} rotation-x={HPI} material={darkPolymer}>
-              <torusGeometry args={[0.065, 0.013, 8, 24]} />
+              <torusGeometry args={[0.058, 0.012, 8, 24]} />
             </mesh>
           ))}
-          <mesh position={[0, 0.38, 0]} material={lip}>
-            <cylinderGeometry args={[0.08, 0.08, 0.03, 16]} />
+          <mesh position={[0, 0.33, 0]} material={lip}>
+            <cylinderGeometry args={[0.07, 0.07, 0.028, 16]} />
           </mesh>
         </>
       );
     case "shoulder_yoke":
       return (
         <>
-          {/* clavicle bar — the shoulder line, ~3x the helmet width */}
-          <RoundedBox args={[1.36, 0.16, 0.26]} radius={0.06} material={brushedMetal} castShadow />
-          {[-0.69, 0.69].map((x) => (
+          {/* clavicle yoke — shoulder line ~2.2x the helmet width */}
+          <RoundedBox args={[0.9, 0.13, 0.22]} radius={0.05} material={brushedMetal} castShadow />
+          {/* defined clavicle ridges sweeping to the shoulders */}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.3, 0.02, 0.06]} rotation-z={s * 0.25} material={mattePolymer} castShadow>
+              <capsuleGeometry args={[0.035, 0.18, 4, 10]} />
+            </mesh>
+          ))}
+          {[-0.42, 0.42].map((x) => (
             <mesh key={x} position={[x, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-              <cylinderGeometry args={[0.095, 0.095, 0.07, 16]} />
+              <cylinderGeometry args={[0.08, 0.08, 0.06, 16]} />
             </mesh>
           ))}
-          {[[-0.45, 0.125], [0.45, 0.125]].map(([x, z]) => (
-            <mesh key={`${x}:${z}`} position={[x, 0, z]} rotation-x={HPI} material={lip}>
-              <cylinderGeometry args={[0.014, 0.014, 0.012, 10]} />
-            </mesh>
-          ))}
+        </>
+      );
+    case "shoulder_ball_l":
+    case "shoulder_ball_r":
+      return (
+        <>
+          {/* exposed black ball joint — the deltoid actuator */}
+          <mesh material={darkPolymer} castShadow>
+            <sphereGeometry args={[0.105, 24, 18]} />
+          </mesh>
+          <mesh rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.075, 0.075, 0.12, 20]} />
+          </mesh>
+          {/* machined gimbal ring */}
+          <mesh rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.095, 0.012, 8, 24]} />
+          </mesh>
         </>
       );
     case "pauldron_l":
@@ -220,82 +293,267 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* low wide dome hugging the yoke end — armor, not a body mass */}
-          <mesh scale={[1.3, 0.78, 1.1]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.235, 32, 24, 0, Math.PI * 2, 0, 1.5]} />
+          {/* deltoid cap — low wide dome over the ball joint */}
+          <mesh scale={[1.2, 0.85, 1.05]} material={mattePolymer} castShadow>
+            <sphereGeometry args={[0.13, 32, 24, 0, Math.PI * 2, 0, 1.6]} />
           </mesh>
-          {/* machined rim under the dome edge */}
-          <group position={[0, -0.035, 0]} rotation={[HPI, 0, 0]}>
-            <mesh scale={[1.3, 1.1, 1]} material={lip}>
-              <torusGeometry args={[0.215, 0.012, 8, 36]} />
+          {/* machined rim under the cap edge */}
+          <group position={[0, -0.02, 0]} rotation={[HPI, 0, 0]}>
+            <mesh scale={[1.2, 1.05, 1]} material={lip}>
+              <torusGeometry args={[0.13, 0.01, 8, 36]} />
             </mesh>
           </group>
-          <mesh position={[0, 0.15, 0]} material={lip}>
-            <cylinderGeometry args={[0.025, 0.025, 0.02, 12]} />
-          </mesh>
           {/* visible hinge pivot along the inboard edge (hinge axis = z) */}
-          <mesh position={[sgn * -0.14, 0.08, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.018, 0.018, 0.14, 10]} />
+          <mesh position={[sgn * -0.1, 0.06, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.016, 0.016, 0.1, 10]} />
           </mesh>
         </>
       );
     }
     case "upper_arm_l":
-    case "upper_arm_r": {
+    case "upper_arm_r":
+      return (
+        <>
+          {/* matte cuff over the humeral actuator */}
+          <mesh position={[0, -0.18, 0]} rotation-y={OCT} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.072, 0.06, 0.34, 8]} />
+          </mesh>
+          {/* black actuator showing at the top under the cap */}
+          <mesh position={[0, 0.01, 0]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.06, 0.07, 0.08, 16]} />
+          </mesh>
+          <mesh position={[0, -0.36, 0]} material={lip}>
+            <cylinderGeometry args={[0.058, 0.058, 0.02, 16]} />
+          </mesh>
+        </>
+      );
+    case "elbow_l":
+    case "elbow_r": {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* ball joint — a JOINT, not a body mass */}
-          <mesh material={brushedMetal} castShadow>
-            <sphereGeometry args={[0.115, 24, 18]} />
+          {/* exposed black elbow pad — hinge axis runs left-right */}
+          <mesh rotation-z={HPI} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.058, 0.058, 0.1, 20]} />
           </mesh>
-          <mesh position={[0, -0.07, 0]} rotation-x={HPI} material={darkPolymer}>
-            <torusGeometry args={[0.105, 0.018, 8, 24]} />
+          <mesh position={[sgn * 0.052, 0, 0]} rotation-z={HPI} material={brushedMetal}>
+            <cylinderGeometry args={[0.032, 0.032, 0.02, 16]} />
           </mesh>
-          <group rotation-z={sgn * -0.16}>
-            <mesh position={[0, -0.28, 0]} rotation-y={OCT} material={mattePolymer} castShadow>
-              <cylinderGeometry args={[0.095, 0.082, 0.38, 8]} />
-            </mesh>
-            {/* truncated service cuff — bust-on-cradle, no forearm fitted */}
-            <mesh position={[0, -0.49, 0]} material={lip}>
-              <cylinderGeometry args={[0.092, 0.092, 0.028, 16]} />
-            </mesh>
-            <mesh position={[0, -0.52, 0]} material={darkPolymer}>
-              <cylinderGeometry args={[0.084, 0.084, 0.035, 16]} />
-            </mesh>
-          </group>
+          {/* hinge linkage plate */}
+          <RoundedBox args={[0.03, 0.08, 0.06]} radius={0.008} position={[sgn * 0.04, -0.04, 0]} material={brushedMetal} />
         </>
       );
     }
-    case "neck_piston_l":
-    case "neck_piston_r": {
+    case "forearm_l":
+    case "forearm_r":
+      return (
+        <>
+          {/* segment 1 — black actuator core (tendon-driven) */}
+          <mesh position={[0, -0.1, 0]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.05, 0.045, 0.18, 16]} />
+          </mesh>
+          {/* visible linear-actuator/tendon rods alongside the core */}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.045, -0.1, 0.01]} material={lip}>
+              <cylinderGeometry args={[0.008, 0.008, 0.2, 8]} />
+            </mesh>
+          ))}
+          {/* segment 2 — tapering toward the wrist */}
+          <mesh position={[0, -0.24, 0]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.042, 0.034, 0.12, 16]} />
+          </mesh>
+          {[0.04, -0.04].map((y, i) => (
+            <mesh key={i} position={[0, y - 0.02, 0]} rotation-x={HPI} material={brushedMetal}>
+              <torusGeometry args={[0.05, 0.008, 8, 20]} />
+            </mesh>
+          ))}
+        </>
+      );
+    case "forearm_shell_l":
+    case "forearm_shell_r": {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
-        <group rotation-z={sgn * -0.12}>
-          <mesh material={lip} castShadow>
-            <cylinderGeometry args={[0.014, 0.014, 0.26, 10]} />
+        <>
+          {/* light cuff covering the segmented forearm; hinges outboard */}
+          <mesh position={[0, -0.06, 0.01]} rotation-y={OCT} scale={[1, 1, 0.85]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.06, 0.05, 0.26, 8]} />
           </mesh>
-          <mesh position={[0, -0.08, 0]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.026, 0.026, 0.12, 12]} />
+          <mesh position={[0, 0.1, 0.01]} scale={[1, 1, 0.85]} material={lip}>
+            <cylinderGeometry args={[0.062, 0.062, 0.014, 16]} />
           </mesh>
-        </group>
+          {/* visible hinge pivot along the outboard edge (hinge axis = z) */}
+          <mesh position={[sgn * 0.05, 0.18, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.012, 0.012, 0.08, 10]} />
+          </mesh>
+        </>
       );
     }
+    case "wrist_l":
+    case "wrist_r":
+      return (
+        <>
+          {/* 2-DOF gimbal block */}
+          <mesh material={darkPolymer} castShadow>
+            <sphereGeometry args={[0.04, 18, 14]} />
+          </mesh>
+          <mesh rotation-z={HPI} material={brushedMetal}>
+            <cylinderGeometry args={[0.026, 0.026, 0.07, 14]} />
+          </mesh>
+          <mesh rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.036, 0.007, 8, 20]} />
+          </mesh>
+        </>
+      );
+    case "hand_l":
+    case "hand_r": {
+      const sgn = id.endsWith("_l") ? -1 : 1;
+      return <Hand sgn={sgn} lip={lip} />;
+    }
+    case "hip_l":
+    case "hip_r":
+      return (
+        <>
+          {/* exposed actuator cluster */}
+          <mesh rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.078, 0.078, 0.13, 20]} />
+          </mesh>
+          <mesh material={darkPolymer} castShadow>
+            <sphereGeometry args={[0.085, 20, 16]} />
+          </mesh>
+          <mesh rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.07, 0.01, 8, 24]} />
+          </mesh>
+        </>
+      );
+    case "thigh_l":
+    case "thigh_r":
+      return (
+        <>
+          {/* femur actuator core (black) under a matte shell added by thigh_shell */}
+          <mesh position={[0, -0.26, 0]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.075, 0.062, 0.52, 16]} />
+          </mesh>
+          {/* slim inner skeletal strut */}
+          <mesh position={[0, -0.26, -0.04]} material={brushedMetal}>
+            <cylinderGeometry args={[0.022, 0.022, 0.5, 10]} />
+          </mesh>
+          <mesh position={[0, -0.52, 0]} material={lip}>
+            <cylinderGeometry args={[0.061, 0.061, 0.022, 16]} />
+          </mesh>
+        </>
+      );
+    case "thigh_shell_l":
+    case "thigh_shell_r":
+      return (
+        <>
+          {/* light thigh shell — opens on a top-rear hinge */}
+          <mesh position={[0, -0.04, 0.03]} rotation-y={OCT} scale={[1, 1, 0.8]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.092, 0.072, 0.5, 8]} />
+          </mesh>
+          <mesh position={[0, 0.2, 0.02]} scale={[1, 1, 0.8]} material={lip}>
+            <cylinderGeometry args={[0.094, 0.094, 0.016, 16]} />
+          </mesh>
+          {/* visible hinge pivot at the top-rear edge (hinge axis = x) */}
+          <mesh position={[0, 0.2, -0.06]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.014, 0.014, 0.14, 10]} />
+          </mesh>
+        </>
+      );
+    case "knee_l":
+    case "knee_r": {
+      const sgn = id.endsWith("_l") ? -1 : 1;
+      return (
+        <>
+          {/* exposed knee hinge + visible 4-bar linkage */}
+          <mesh rotation-z={HPI} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.062, 0.062, 0.11, 20]} />
+          </mesh>
+          <mesh position={[sgn * 0.058, 0, 0]} rotation-z={HPI} material={brushedMetal}>
+            <cylinderGeometry args={[0.034, 0.034, 0.02, 16]} />
+          </mesh>
+          {/* linkage bars front + rear */}
+          {[0.05, -0.05].map((z) => (
+            <RoundedBox key={z} args={[0.02, 0.1, 0.018]} radius={0.005} position={[sgn * 0.03, -0.03, z]} rotation-x={z > 0 ? 0.2 : -0.2} material={brushedMetal} />
+          ))}
+        </>
+      );
+    }
+    case "shin_l":
+    case "shin_r":
+      return (
+        <>
+          {/* tibial actuator core (black) */}
+          <mesh position={[0, -0.22, 0]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.062, 0.048, 0.44, 16]} />
+          </mesh>
+          <mesh position={[0, -0.22, 0.03]} material={brushedMetal}>
+            <cylinderGeometry args={[0.018, 0.018, 0.42, 10]} />
+          </mesh>
+          <mesh position={[0, -0.44, 0]} material={lip}>
+            <cylinderGeometry args={[0.048, 0.048, 0.02, 16]} />
+          </mesh>
+        </>
+      );
+    case "shin_shell_l":
+    case "shin_shell_r":
+      return (
+        <>
+          {/* light shin shell — the calf panel */}
+          <mesh position={[0, -0.03, 0.03]} rotation-y={OCT} scale={[1, 1, 0.78]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.073, 0.05, 0.42, 8]} />
+          </mesh>
+          <mesh position={[0, 0.18, 0.02]} scale={[1, 1, 0.78]} material={lip}>
+            <cylinderGeometry args={[0.075, 0.075, 0.014, 16]} />
+          </mesh>
+          <mesh position={[0, 0.18, -0.06]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.012, 0.012, 0.12, 10]} />
+          </mesh>
+        </>
+      );
+    case "ankle_l":
+    case "ankle_r": {
+      const sgn = id.endsWith("_l") ? -1 : 1;
+      return (
+        <>
+          <mesh rotation-z={HPI} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.05, 0.05, 0.08, 18]} />
+          </mesh>
+          <mesh position={[sgn * 0.045, 0, 0]} rotation-z={HPI} material={brushedMetal}>
+            <cylinderGeometry args={[0.026, 0.026, 0.018, 14]} />
+          </mesh>
+        </>
+      );
+    }
+    case "foot_l":
+    case "foot_r":
+      return (
+        <>
+          {/* sole plate + toe link */}
+          <RoundedBox args={[0.1, 0.04, 0.24]} radius={0.015} position={[0, 0, 0.05]} material={darkPolymer} castShadow receiveShadow />
+          <RoundedBox args={[0.1, 0.022, 0.07]} radius={0.008} position={[0, -0.012, 0.18]} material={mattePolymer} castShadow />
+          {/* ankle mount block */}
+          <RoundedBox args={[0.06, 0.05, 0.07]} radius={0.012} position={[0, 0.03, 0]} material={brushedMetal} />
+          <mesh position={[0, 0.005, 0.05]} rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.04, 0.006, 8, 20]} />
+          </mesh>
+        </>
+      );
     case "neck_stack":
       return (
         <>
-          {[0, 0.08, 0.16, 0.24].map((y) => (
+          {[0, 0.06, 0.12].map((y) => (
             <mesh key={y} position={[0, y, 0]} material={darkPolymer} castShadow>
-              <cylinderGeometry args={[0.11, 0.11, 0.045, 24]} />
+              <cylinderGeometry args={[0.06, 0.06, 0.04, 24]} />
             </mesh>
           ))}
-          {[0.04, 0.12, 0.2].map((y) => (
+          {[0.03, 0.09].map((y) => (
             <mesh key={y} position={[0, y, 0]} material={brushedMetal}>
-              <cylinderGeometry args={[0.085, 0.085, 0.04, 24]} />
+              <cylinderGeometry args={[0.046, 0.046, 0.035, 24]} />
             </mesh>
           ))}
-          <mesh position={[0, 0.3, 0]} material={lip}>
-            <cylinderGeometry args={[0.125, 0.125, 0.025, 24]} />
+          {/* white emissive neck seam ring — part of the one accent line */}
+          <mesh position={[0, 0.155, 0]} rotation-x={HPI} material={brightEmissiveSeam}>
+            <torusGeometry args={[0.058, 0.005, 8, 32]} />
           </mesh>
         </>
       );
@@ -304,120 +562,104 @@ function PartMesh({ id, lip, ctx }) {
         <>
           {/* inner skull — optic core sits inside it */}
           <mesh scale={[1, 1.05, 0.95]} material={darkPolymer}>
-            <sphereGeometry args={[0.195, 32, 24]} />
+            <sphereGeometry args={[0.16, 32, 24]} />
           </mesh>
-          {/* chin shell stays put when the cranium swings open */}
-          <mesh scale={[1.02, 1, 0.96]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.245, 48, 32, 0, Math.PI * 2, 1.9, Math.PI - 1.9]} />
+          {/* smooth dark teardrop helmet shell (sides + jaw stay when cranium opens) */}
+          <mesh scale={[1.0, 1.08, 1.02]} material={darkGlass} castShadow>
+            <sphereGeometry args={[0.2, 48, 36]} />
           </mesh>
-          {/* face plate behind the visor band */}
-          <RoundedBox args={[0.32, 0.18, 0.03]} radius={0.01} position={[0, 0, 0.16]} material={darkPolymer} />
           {/* neck collar joining the stack */}
-          <mesh position={[0, -0.22, 0]} material={darkPolymer}>
-            <cylinderGeometry args={[0.09, 0.115, 0.1, 16]} />
+          <mesh position={[0, -0.18, 0]} material={darkPolymer}>
+            <cylinderGeometry args={[0.07, 0.09, 0.08, 16]} />
           </mesh>
         </>
       );
     case "head_shell":
       return (
         <>
-          {/* helmet dome — top + back + sides, open across the face */}
-          <mesh scale={[1, 1.06, 0.96]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.265, 48, 32, Math.PI * 0.8, Math.PI * 1.4, 0.12, 1.45]} />
-          </mesh>
-          {/* brow ridge over the visor */}
-          <RoundedBox args={[0.36, 0.05, 0.06]} radius={0.02} position={[0, 0.135, 0.195]} rotation-x={0.15} material={mattePolymer} castShadow />
-          {/* inner lip framing the face opening */}
-          <mesh position={[0, 0.01, 0.12]} scale={[1, 1.06, 1]} material={lip}>
-            <torusGeometry args={[0.21, 0.012, 8, 48]} />
+          {/* DARK cranium dome over the helmet — a SYMMETRIC top+back shell open
+              only at the face. darkPolymer (near-black), not the light matte:
+              the head is a dark Optimus helmet (dark dome + dark visor) with
+              only the thin seam bright — so its rim-lit edge no longer flares
+              into a pale hair-flick crescent. phiStart/phiLength centered on the
+              back so both edges are even. */}
+          <mesh scale={[1, 1.04, 1.0]} material={darkHelmet} castShadow>
+            <sphereGeometry args={[0.212, 48, 32, Math.PI * 0.74, Math.PI * 1.52, 0.0, 1.5]} />
           </mesh>
           {/* rear-top hinge: visible pivot + blocks */}
-          <mesh position={[0, 0.16, -0.2]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.02, 0.02, 0.32, 12]} />
+          <mesh position={[0, 0.13, -0.15]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.018, 0.018, 0.26, 12]} />
           </mesh>
-          {[-0.12, 0.12].map((x) => (
-            <RoundedBox key={x} args={[0.045, 0.045, 0.05]} radius={0.01} position={[x, 0.16, -0.195]} material={lip} />
-          ))}
-          {[-0.08, 0.08].map((x) => (
-            <RoundedBox key={x} args={[0.03, 0.16, 0.03]} radius={0.008} position={[x, 0.02, -0.235]} material={darkPolymer} />
-          ))}
-        </>
-      );
-    case "visor_rim":
-      return (
-        <>
-          <RoundedBox args={[0.42, 0.15, 0.045]} radius={0.02} position={[0, 0, 0.215]} material={brushedMetal} castShadow />
-          {[[-0.185, 0.055], [0.185, 0.055], [-0.185, -0.055], [0.185, -0.055]].map(([x, y]) => (
-            <mesh key={`${x}:${y}`} position={[x, y, 0.24]} rotation-x={HPI} material={lip}>
-              <cylinderGeometry args={[0.011, 0.011, 0.012, 10]} />
-            </mesh>
+          {[-0.1, 0.1].map((x) => (
+            <RoundedBox key={x} args={[0.04, 0.04, 0.045]} radius={0.01} position={[x, 0.13, -0.145]} material={lip} />
           ))}
         </>
       );
     case "visor_glass":
       return (
-        <RoundedBox args={[0.37, 0.105, 0.045]} radius={0.02} position={[0, 0, 0.225]} material={darkGlass} />
+        <>
+          {/* smoked teardrop visor — the dark glossy BLANK FACE. Sized to fill
+              the whole face opening of the cranium cap so the front of the head
+              reads as one near-black glossy mass (a blank Optimus visor), not a
+              dithered oval with features. Slightly forward + a touch wider/taller
+              than the old blank so no pale skull shows around its edge. */}
+          <mesh position={[0, 0.005, 0.085]} scale={[1.02, 1.14, 0.7]} material={darkGlass}>
+            <sphereGeometry args={[0.18, 40, 30, Math.PI * 0.82, Math.PI * 1.36, 0.42, 1.42]} />
+          </mesh>
+        </>
       );
-    case "eye_module_l":
-    case "eye_module_r": {
+    case "face_seam":
+      return (
+        <>
+          {/* the ONE accent: a thin white emissive BROW line at the top edge of
+              the visor — the Optimus temple seam rendered white. A shallow arc
+              (∩, concave-down) hugging the dome/visor boundary high on the face,
+              symmetric and OPEN at the bottom so it can never read as a chin
+              "smile" and can't curl into a hair-flick. Wide + flat = clearly a
+              brow accent, not a face outline. Sits just proud of the visor. */}
+          <mesh position={[0, 0.058, 0.2]} scale={[1, 0.5, 0.36]} rotation={[0.05, 0, Math.PI * 0.07]} material={brightEmissiveSeam}>
+            <torusGeometry args={[0.12, 0.006, 10, 80, Math.PI * 0.86]} />
+          </mesh>
+        </>
+      );
+    case "eye_ring_l":
+    case "eye_ring_r": {
       const side = id.endsWith("_l") ? "L" : "R";
       return (
         <>
+          {/* faint emissive eye ring visible THROUGH/behind the dark visor.
+              kept VERY small + thin so it reads as a whisper of optic glow
+              behind glass, not a bold cartoon eye — identity ("Yusen gave me
+              eyes") without losing the blank Optimus visor. Idle keeps these
+              near-invisible (see frame loop); they only flare on interaction. */}
           <mesh rotation-x={HPI} material={darkPolymer}>
-            <cylinderGeometry args={[0.054, 0.054, 0.025, 20]} />
-          </mesh>
-          <mesh position={[0, 0, 0.014]} material={lip}>
-            <torusGeometry args={[0.05, 0.006, 8, 24]} />
+            <cylinderGeometry args={[0.02, 0.02, 0.02, 20]} />
           </mesh>
           <group ref={(g) => ctx.setExtra(`eyeScale${side}`, g)}>
             {/* arc gap makes the ring spin readable, like the 2D scan arcs */}
-            <mesh position={[0, 0, 0.024]} ref={(m) => ctx.setExtra(`eyeRing${side}`, m)} material={eyeMat}>
-              <torusGeometry args={[0.034, 0.0095, 10, 32, Math.PI * 1.78]} />
+            <mesh position={[0, 0, 0.018]} ref={(m) => ctx.setExtra(`eyeRing${side}`, m)} material={eyeMat}>
+              <torusGeometry args={[0.012, 0.0028, 10, 32, Math.PI * 1.78]} />
             </mesh>
-            <mesh position={[0, 0, 0.024]} material={eyeMat}>
-              <sphereGeometry args={[0.013, 12, 12]} />
+            <mesh position={[0, 0, 0.018]} material={eyeMat}>
+              <sphereGeometry args={[0.0035, 12, 12]} />
             </mesh>
           </group>
-        </>
-      );
-    }
-    case "ear_servo_l":
-    case "ear_servo_r": {
-      const sgn = id.endsWith("_l") ? -1 : 1;
-      return (
-        <>
-          <mesh rotation-z={HPI} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.07, 0.07, 0.055, 24]} />
-          </mesh>
-          <mesh position={[sgn * 0.032, 0, 0]} rotation-z={HPI} material={brushedMetal}>
-            <cylinderGeometry args={[0.035, 0.035, 0.02, 16]} />
-          </mesh>
-          <mesh position={[sgn * 0.045, 0, 0]} rotation-z={HPI} material={darkPolymer}>
-            <cylinderGeometry args={[0.02, 0.02, 0.015, 12]} />
-          </mesh>
-          {/* machined mating face — reads when the servo slides off its rail */}
-          <mesh position={[sgn * -0.03, 0, 0]} rotation-y={HPI} material={lip}>
-            <torusGeometry args={[0.055, 0.008, 8, 24]} />
-          </mesh>
-          <mesh position={[sgn * -0.06, 0, 0]} rotation-z={HPI} material={brushedMetal}>
-            <cylinderGeometry args={[0.014, 0.014, 0.08, 10]} />
-          </mesh>
         </>
       );
     }
     case "optic_internal":
       return (
         <>
-          <RoundedBox args={[0.2, 0.1, 0.1]} radius={0.02} material={darkPolymer} castShadow />
-          {[-0.055, 0.055].map((x) => (
-            <mesh key={x} position={[x, 0, 0.055]} rotation-x={HPI} material={brushedMetal}>
-              <cylinderGeometry args={[0.026, 0.026, 0.04, 16]} />
+          <RoundedBox args={[0.17, 0.085, 0.085]} radius={0.018} material={darkPolymer} castShadow />
+          {[-0.048, 0.048].map((x) => (
+            <mesh key={x} position={[x, 0, 0.048]} rotation-x={HPI} material={brushedMetal}>
+              <cylinderGeometry args={[0.022, 0.022, 0.035, 16]} />
             </mesh>
           ))}
-          {[0.062, 0.078, 0.094].map((y) => (
-            <RoundedBox key={y} args={[0.16, 0.007, 0.08]} radius={0.002} position={[0, y, -0.01]} material={brushedMetal} />
+          {[0.054, 0.068, 0.082].map((y) => (
+            <RoundedBox key={y} args={[0.14, 0.006, 0.07]} radius={0.002} position={[0, y, -0.01]} material={brushedMetal} />
           ))}
-          <RoundedBox args={[0.08, 0.032, 0.005]} radius={0.002} position={[0, -0.005, 0.052]} material={lip} />
+          <RoundedBox args={[0.07, 0.028, 0.005]} radius={0.002} position={[0, -0.004, 0.045]} material={lip} />
         </>
       );
     default:
@@ -550,7 +792,7 @@ export default function VRobot(props) {
     if (X.coreMesh) X.coreMesh.scale.setScalar(1 + Math.sin(t * 2.4) * 0.02 * (1 + coreF));
 
     // breathing — torso carries the whole upper kinematic chain
-    if (R.torso) R.torso.position.y = Math.sin(t * 1.4) * 0.012;
+    if (R.torso) R.torso.position.y = 0.46 + Math.sin(t * 1.4) * 0.01;
 
     // look: eyes lead, head follows (secondary motion)
     const lt = s.lookTarget || { x: 0, y: 0 };
@@ -578,7 +820,7 @@ export default function VRobot(props) {
       R.neck_stack.rotation.y = L.yaw * 0.35;
       R.neck_stack.rotation.x = L.pitch * 0.3;
     }
-    for (const id of ["eye_module_l", "eye_module_r"]) {
+    for (const id of ["eye_ring_l", "eye_ring_r"]) {
       const g = R[id];
       if (g) {
         g.position.x = (L.eyeYaw - L.yaw) * 0.1;
@@ -595,8 +837,13 @@ export default function VRobot(props) {
       lastLook.current = { x: L.yaw, y: L.pitch, t: now };
     }
 
-    // eye expression per avatar state
-    let intensity = 1.7 + Math.sin(t * 2.1) * 0.45 + creep * 0.4;
+    // eye expression per avatar state. IDLE keeps the rings near-invisible —
+    // a faint breathing whisper of glow well under the bloom/dither-bypass
+    // threshold so the face stays a blank dark visor at hero distance (no
+    // googly eyes). The active states (typing/scan/error/success) and creep
+    // are what FLARE the eyes bright — that's when V's optics "wake up". This
+    // preserves V's identity ("Yusen gave me eyes") without a smiley at rest.
+    let intensity = 0.14 + Math.sin(t * 2.1) * 0.05 + creep * 0.9;
     let spin = 0.4;
     let ringScale = 1;
     let slit = 1;
@@ -611,7 +858,7 @@ export default function VRobot(props) {
       intensity = 2.4 + Math.sin(t * 6) * 0.4;
     } else if (mode === "sleep") {
       slit = 0.06;
-      intensity = 0.7;
+      intensity = 0.12;
     } else if (mode === "success") {
       const p = Math.min(st / 0.7, 1);
       ringScale = 1 + Math.sin(p * Math.PI) * 0.45;
@@ -628,12 +875,12 @@ export default function VRobot(props) {
       if (sc) sc.scale.y = damp(sc.scale.y, slit, 10, delta);
     }
 
-    // scan: thin emissive ring sweeps the body vertically
+    // scan: thin emissive ring sweeps the full standing body vertically
     if (X.scanRing) {
       const on = mode === "scan";
       X.scanRing.visible = on;
       if (on) {
-        X.scanRing.position.y = 0.12 + ((t * 0.55) % 1) * 1.95;
+        X.scanRing.position.y = 0.4 + ((t * 0.5) % 1) * 2.6;
         scanMat.opacity = 0.55 + Math.sin(t * 30) * 0.2;
       }
     }
@@ -647,10 +894,10 @@ export default function VRobot(props) {
         visible={false}
         position={[0, 1, 0]}
         rotation-x={HPI}
-        scale={[1, 0.85, 1]}
+        scale={[1, 0.55, 1]}
         material={scanMat}
       >
-        <torusGeometry args={[0.95, 0.01, 8, 64]} />
+        <torusGeometry args={[0.7, 0.008, 8, 64]} />
       </mesh>
     </group>
   );

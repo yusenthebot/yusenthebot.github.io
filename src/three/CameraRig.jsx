@@ -10,17 +10,28 @@ import { focusCameraTargetFor, smoothstep } from "./Teardown.jsx";
 // tweens the rig's rest framing (pos/look) and sets `tweening` so the breathing
 // dolly fades out instead of fighting the tween.
 
+// Framing is authored for the FULL FREE-STANDING figure (no cradle): feet flat
+// on the dark floor at y~0, crown at y~2.8 (~7.5 heads), so the body spans
+// y0..2.8 and its true vertical center is ~y1.4. The right panel is a tall
+// portrait, so distance is set by the body HEIGHT, not its width.
+
 // Hero framing matches the Canvas default in Scene.jsx so mount never jumps.
-const HERO_POS = new THREE.Vector3(2.7, 2.1, 3.7);
-const HERO_LOOK = new THREE.Vector3(0, 1.1, 0);
-// Inspection framing: dolly-in + slight crane-down onto the opened chassis.
-const INSPECT_POS = new THREE.Vector3(2.0, 1.95, 2.75);
-const INSPECT_LOOK = new THREE.Vector3(0, 0.85, 0);
+// Pulled back to hold the whole standing body — crown to planted feet — at a
+// slight 3/4 angle, look settled at the chest/pelvis seam (~y1.45, a touch above
+// true center so the head reads without cropping the feet). fov 38 (Canvas).
+const HERO_POS = new THREE.Vector3(3.2, 1.95, 6.6);
+const HERO_LOOK = new THREE.Vector3(0, 1.45, 0);
+// Inspection framing: dolly-in + slight crane-up onto the opened chassis. Stays
+// far enough back that panels opening from head to feet stay mostly in frame; the
+// look rises toward the torso/pelvis (the densest mid-body reveal) without
+// losing the legs as shells cascade open down to the shins.
+const INSPECT_POS = new THREE.Vector3(2.7, 2.15, 5.0);
+const INSPECT_LOOK = new THREE.Vector3(0, 1.55, 0);
 
 const BREATH_PERIOD = 7.2; // s, slow sinusoidal dolly
 const BREATH_AMP = 0.02; // ±2% of camera distance
 const INSPECT_START = 0.3; // depth where teardown framing begins to engage
-const CRANE_LIFT = 0.22; // focus flights rise then settle — slight crane
+const CRANE_LIFT = 0.28; // focus flights rise then settle — slight crane
 
 const _target = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
 const _offset = new THREE.Vector3();
@@ -59,6 +70,10 @@ export default function CameraRig() {
     }
 
     if (mode === "focus" && focusPartId) {
+      // focusCameraTargetFor resolves the part's LIVE world position via
+      // partRefRegistry, so this flight frames the head (y~2.6), a hand (y~0.9),
+      // the pelvis (y~1.5), a knee (y~0.8) or a foot (y~0.1) at the right height
+      // anywhere up the standing body — chest height is no longer assumed.
       const { position, lookAt } = focusCameraTargetFor(focusPartId);
       rig.tweening = true;
       const tl = gsap.timeline({

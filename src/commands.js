@@ -36,8 +36,17 @@ export const HEADER_ASCII = `
 
 export const COMMANDS = {
   help: () => ({
-    out: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  vectoros   - Vector OS Nano project\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  INTERACT WITH V\n  ttt        - Play tic-tac-toe vs V\n  rps        - Rock paper scissors\n  quiz       - Robot trivia\n  dance      - V performs a move\n  bow        - V bows\n\n  TEARDOWN\n  teardown         - Begin full disassembly sequence (~2.6s)\n  assemble         - Reverse-animate: close all panels\n  disassemble      - Scrub to depth: disassemble --depth 0.6\n  inspect <part>   - Focus part + print spec sheet (e.g. inspect head_shell)\n  parts            - Print kinematic tree registry\n  focus            - 3D fullscreen (terminal collapses to command strip)\n  unfocus          - Restore split layout\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT overlay effects\n  sound      - Toggle audio on/off\n  reboot     - Replay intro sequence\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???',
-    speech: 'Here are all the commands. Try "teardown" or "inspect head_shell".',
+    out: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  vectoros   - Vector OS Nano project\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  INTERACT WITH V\n  chat       - Just talk to me — type anything that is not a command\n  ttt        - Play tic-tac-toe vs V\n  rps        - Rock paper scissors\n  quiz       - Robot trivia\n  dance      - V performs a move\n  bow        - V bows\n\n  TEARDOWN\n  teardown         - Begin full disassembly sequence (~2.6s)\n  assemble         - Reverse-animate: close all panels\n  disassemble      - Scrub to depth: disassemble --depth 0.6\n  inspect <part>   - Focus part + print spec sheet (e.g. inspect head_shell)\n  parts            - Print kinematic tree registry\n  focus            - 3D fullscreen (terminal collapses to command strip)\n  unfocus          - Restore split layout\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT overlay effects\n  sound      - Toggle audio on/off\n  reboot     - Replay intro sequence\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???',
+    speech: 'Here are all the commands. Or just talk to me — type anything.',
+    action: 'nod', state: 'success',
+  }),
+
+  // chat: there is no chat handler logic here — any non-command line already
+  // routes to V's conversation engine in App.handleCommand. This entry just
+  // tells the visitor that, and keeps "chat" out of the COMMAND-NOT-FOUND path.
+  chat: () => ({
+    out: "I'm always listening. Type anything that isn't a command — ask about Yusen, his work, or me.",
+    speech: "Just talk to me. I answer in plain words.",
     action: 'nod', state: 'success',
   }),
 
