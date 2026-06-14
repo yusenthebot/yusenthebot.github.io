@@ -360,25 +360,41 @@ function PartMesh({ id, lip, ctx }) {
               centreline (seamInset, dark .20), NOT a bright bar. Sits just proud
               of the slab front so it reads as a machined panel split. */}
           <RoundedBox args={[0.018, 0.42, 0.02]} radius={0.006} smoothness={2} position={[0, 0.12, 0.082]} material={seamInset} />
-          {/* G1 WAIST JOINT — a NARROW dark actuator hub clearly pinched IN from
-              the chest slab (0.40 wide) and the pelvis. r 0.135, z-scale 0.5 so
-              it is the thinnest part of the trunk, front-to-back AND across. Dark
-              polymer so it reads as an exposed powered joint between the lit
-              chest and lit pelvis — the unmistakable pinch. */}
-          <mesh position={[0, -0.2, 0]} scale={[1, 1, 0.5]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.135, 0.14, 0.16, 22]} />
+          {/* G1 WAIST JOINT — a LIT pinched midriff (mattePolymer) bridging the
+              chest slab DOWN to the pelvis as one continuous lit column. It was
+              darkPolymer before, which went pure-black against the black panel and
+              made the upper + lower body read as SEVERED — the persistent "脱节".
+              Now the pinch reads by WIDTH only (r 0.15 => 0.30 wide vs the 0.47
+              chest), lit so the trunk never breaks; the dark mechanical actuator
+              survives as the side discs below. Tall (0.24) so it laps the chest
+              bottom AND the abdomen bridge with no gap. */}
+          <mesh position={[0, -0.2, 0]} scale={[1, 1, 0.84]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.15, 0.155, 0.24, 22]} />
           </mesh>
+          {/* LIT MIDRIFF WEDGE — the waist was a CONCAVE recess between the proud
+              chest and the receding pelvis; under the 1-bit dither that shadowed
+              recess crushed to a black band that severed upper/lower body ("脱节").
+              This is a forward-TILTED panel: its front face SLOPES from proud at
+              the chest down to flush at the pelvis, replacing the concave step with
+              a convex lit ramp that the key + front fills all reach. No horizontal
+              overhang ledge, so no shadow pocket. Pinched (0.34 < 0.47 chest). */}
+          <group position={[0, -0.26, 0.0]} rotation={[0.42, 0, 0]}>
+            <RoundedBox args={[0.34, 0.42, 0.12]} radius={0.03} smoothness={3} position={[0, 0, 0.16]} material={mattePolymer} castShadow />
+            {[-0.1, 0.08].map((dy) => (
+              <RoundedBox key={dy} args={[0.26, 0.014, 0.012]} radius={0.004} position={[0, dy, 0.221]} material={seamInset} />
+            ))}
+          </group>
           {/* waist-roll side discs — flat dark hubs on the L/R flanks, axis
               sideways, so the waist reads as a real G1 waist actuator and the
               pinch is legible from the front-3/4. */}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.12, -0.2, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-              <cylinderGeometry args={[0.052, 0.052, 0.05, 20]} />
+            <mesh key={s} position={[s * 0.16, -0.2, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
+              <cylinderGeometry args={[0.055, 0.055, 0.05, 20]} />
             </mesh>
           ))}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.145, -0.2, 0]} rotation-z={HPI} material={brushedMetal}>
-              <cylinderGeometry args={[0.024, 0.024, 0.02, 16]} />
+            <mesh key={s} position={[s * 0.188, -0.2, 0]} rotation-z={HPI} material={brushedMetal}>
+              <cylinderGeometry args={[0.026, 0.026, 0.02, 16]} />
             </mesh>
           ))}
           {/* LIT ABDOMEN BRIDGE — a broad flat front panel on the TORSO itself

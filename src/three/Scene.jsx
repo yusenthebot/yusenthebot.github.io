@@ -23,7 +23,7 @@ function Lights() {
   return (
     <>
       {/* ambient floor of light, dim and neutral */}
-      <ambientLight intensity={0.22} color="#ffffff" />
+      <ambientLight intensity={0.32} color="#ffffff" />
       {/* strong white key, high upper-left — aimed down the full standing height
           so the chest/thigh/shin panels carry the bright mass; shadow frustum
           spans the floor up past the crown */}
@@ -52,6 +52,21 @@ function Lights() {
       <directionalLight position={[-5.0, 2.4, -4.2]} intensity={1.1} color="#eeeeee" />
       {/* near point at chest height — visor specular streak + chest plastron highlight */}
       <pointLight position={[1.0, 2.2, 3.0]} intensity={2.2} distance={8} decay={2} color="#ffffff" />
+      {/* FRONT FILL at WAIST height — lifts the recessed midsection (abdomen +
+          pelvis top) out of the key light's cast shadow so the chest->pelvis front
+          reads as a continuous lit surface, NOT a black band that severs the upper
+          and lower body under the 1-bit dither. No shadow casting (fill only). */}
+      <pointLight position={[0, 1.5, 2.8]} intensity={2.0} distance={6} decay={2} color="#ffffff" />
+      {/* soft front-centre fill, low intensity, so dead-front recessed panels never
+          crush to pure black (the dither has no mid-tone there otherwise) */}
+      <directionalLight position={[0.4, 1.5, 5.5]} intensity={0.95} color="#ffffff" />
+      {/* LOW UP-FILL — a soft light from below-front aimed UP at the body, so the
+          downward-facing under-ledges (the waist step where the chest/midriff meets
+          the recessed pelvis, the chin, shell undersides) get light and don't crush
+          to black under the dither. This is what finally clears the "上下肢脱节" band:
+          the shadowed step is lit from beneath. Low intensity so it doesn't wash
+          out the dramatic top-key contrast. */}
+      <pointLight position={[0, 0.7, 3.0]} intensity={1.6} distance={7} decay={2} color="#ffffff" />
     </>
   );
 }
