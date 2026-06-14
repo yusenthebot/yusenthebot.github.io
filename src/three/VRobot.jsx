@@ -236,13 +236,16 @@ function PartMesh({ id, lip, ctx }) {
         <>
           {/* dark inner girdle structure — the hip ball joints (at x=+/-0.17,
               y=-0.1) embed in its flanks so legs + pelvis read as one continuous
-              structure. Reaches UP (top r 0.27 at y=+0.22) to firmly overlap the
+              structure. Reaches UP (top r 0.215 at y=+0.22) to firmly overlap the
               torso waist bottom (world ~1.61): the trunk and hips are bridged,
               no gap. PULLED IN at the front (scale-z 0.6) so it no longer
               protrudes past the LIGHT sleeve and turn the pelvis front dark — it
-              now only shows as exposed dark internals on the flanks/back. */}
+              now only shows as exposed dark internals on the flanks/back. SLIMMED
+              (r 0.215/0.20, was 0.27/0.25) IN STEP with the light sleeve so the
+              pelvis reads lean + humanoid, never wider than the waist, and the
+              dark core still stays tucked INSIDE the lit sleeve (front stays lit). */}
           <mesh position={[0, 0.02, 0]} scale={[1, 1, 0.6]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.27, 0.25, 0.46, 24]} />
+            <cylinderGeometry args={[0.215, 0.20, 0.46, 24]} />
           </mesh>
           {/* LIGHT matte hip girdle — a proud lit sleeve covering the front + sides
               so the pelvis reads as a SOLID LIT form (matching chest + thighs),
@@ -250,9 +253,12 @@ function PartMesh({ id, lip, ctx }) {
               frontmost surface (in front of the dark core) and catches the key
               light as a bright panel. Reaches UP to y=+0.25 (lapping the lit waist
               down to world ~1.61) and DOWN to y=-0.18 (lapping the hip sockets at
-              world ~1.33) so the lit volume is unbroken trunk->hips->legs. */}
+              world ~1.33) so the lit volume is unbroken trunk->hips->legs. SLIMMED
+              (r 0.235/0.225, was 0.29/0.275) so the hips no longer flare out wider
+              than the waist — a lean Figure-02 pelvis. Still proud of the dark core
+              (0.235 > 0.215) so its FRONT face stays the frontmost LIT surface. */}
           <mesh position={[0, 0.0, 0]} scale={[1, 1, 0.92]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.29, 0.275, 0.5, 24]} />
+            <cylinderGeometry args={[0.235, 0.225, 0.5, 24]} />
           </mesh>
           {/* lit cap closing the top of the girdle into the waist overlap —
               reaches up to world ~1.9 (well into the lit waist) so the trunk-hip
@@ -260,44 +266,49 @@ function PartMesh({ id, lip, ctx }) {
               the dimmer panel shade so it reads as a transitional bevel between
               the abdomen and the flat hip fascia, NOT a bright smooth dome. */}
           <mesh position={[0, 0.24, 0]} scale={[1, 0.42, 0.84]} material={panelShade} castShadow>
-            <sphereGeometry args={[0.285, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+            <sphereGeometry args={[0.235, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
           </mesh>
           {/* flat-topped lit hip deck plate — a broad chamfered plate capping the
               girdle so the top of the pelvis reads as a flat machined deck, not
-              a round crown. */}
-          <RoundedBox args={[0.42, 0.08, 0.34]} radius={0.03} smoothness={3} position={[0, 0.2, 0]} material={mattePolymer} castShadow />
+              a round crown. NARROWED (0.34, was 0.42) to match the slimmed girdle
+              so the deck no longer overhangs the hips as a wide shelf. */}
+          <RoundedBox args={[0.34, 0.08, 0.3]} radius={0.03} smoothness={3} position={[0, 0.2, 0]} material={mattePolymer} castShadow />
           {/* flared lit hip yokes sweeping DOWN-OUT to meet each hip socket —
-              the meat that bridges pelvis to thigh on each side. */}
+              the meat that bridges pelvis to thigh on each side. Pulled IN
+              (x s*0.125, r0.10) so they still bridge to the hip sockets at
+              x=+/-0.17 but no longer balloon the hips outward. */}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.15, -0.12, 0]} scale={[1, 1.2, 0.92]} material={mattePolymer} castShadow>
-              <sphereGeometry args={[0.115, 20, 16]} />
+            <mesh key={s} position={[s * 0.125, -0.12, 0]} scale={[1, 1.2, 0.92]} material={mattePolymer} castShadow>
+              <sphereGeometry args={[0.10, 20, 16]} />
             </mesh>
           ))}
           {/* HARD-SURFACE hip fascia — a broad flat front PLATE plus two angled
               side hip plates chamfered onto the girdle so the pelvis reads as a
               paneled hip block (Optimus pelvis), not a smooth dome. The front
-              plate is now WIDER + TALLER and brought FORWARD to z=0.2 so it is the
-              frontmost LIT surface of the pelvis (front of the dark core) and
-              reads as a bright girdle panel, not a dark void. */}
-          <RoundedBox args={[0.34, 0.36, 0.07]} radius={0.035} smoothness={3} position={[0, -0.03, 0.2]} material={mattePolymer} castShadow />
+              plate is now brought FORWARD to z=0.185 so it is the frontmost LIT
+              surface of the pelvis (front of the dark core) and reads as a bright
+              girdle panel, not a dark void. NARROWED (0.28, was 0.34) to match the
+              slimmed girdle so the front fascia is lean, not a wide slab. */}
+          <RoundedBox args={[0.28, 0.36, 0.07]} radius={0.035} smoothness={3} position={[0, -0.03, 0.185]} material={mattePolymer} castShadow />
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.14, 0.34, 0.06]}
+              args={[0.12, 0.34, 0.06]}
               radius={0.025}
               smoothness={3}
-              position={[s * 0.21, -0.04, 0.12]}
+              position={[s * 0.17, -0.04, 0.11]}
               rotation-y={s * -0.55}
               material={mattePolymer}
               castShadow
             />
           ))}
           {/* recessed center seam splitting the front fascia (hip panel break) */}
-          <RoundedBox args={[0.014, 0.3, 0.014]} radius={0.005} position={[0, -0.03, 0.238]} material={seamInset} />
+          <RoundedBox args={[0.014, 0.3, 0.014]} radius={0.005} position={[0, -0.03, 0.223]} material={seamInset} />
           {/* machined seam belt low on the girdle (hip panel break, NOT at the
-              trunk join — the trunk/hip overlap stays one unbroken lit surface) */}
+              trunk join — the trunk/hip overlap stays one unbroken lit surface).
+              Radius tracks the slimmed girdle (0.225, was 0.275). */}
           <mesh position={[0, -0.1, 0]} scale={[1, 1, 0.84]} rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.275, 0.008, 8, 40]} />
+            <torusGeometry args={[0.225, 0.008, 8, 40]} />
           </mesh>
         </>
       );
@@ -308,24 +319,26 @@ function PartMesh({ id, lip, ctx }) {
               actuators — a flat-fronted hip plate (broad front fascia + angled
               side flanks) with a recessed center seam, matching the paneled
               girdle underneath. The frontmost LIT pelvis panel at idle: WIDER +
-              TALLER and brought FORWARD to z=0.23 so the pelvis front reads as a
-              bright girdle plate (like the chest/thighs), never a dark block. It
-              slides +z on teardown to expose the pelvis fascia underneath. */}
-          <RoundedBox args={[0.36, 0.34, 0.07]} radius={0.035} smoothness={3} position={[0, -0.01, 0.23]} material={mattePolymer} castShadow />
+              brought FORWARD to z=0.215 so the pelvis front reads as a bright
+              girdle plate (like the chest/thighs), never a dark block. It slides
+              +z on teardown to expose the pelvis fascia underneath. NARROWED
+              (0.29, was 0.36) in step with the slimmed girdle so the cover is the
+              lean frontmost lit pelvis surface, never overhanging the hips. */}
+          <RoundedBox args={[0.29, 0.34, 0.07]} radius={0.035} smoothness={3} position={[0, -0.01, 0.215]} material={mattePolymer} castShadow />
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.13, 0.32, 0.06]}
+              args={[0.115, 0.32, 0.06]}
               radius={0.025}
               smoothness={3}
-              position={[s * 0.21, -0.01, 0.14]}
+              position={[s * 0.165, -0.01, 0.13]}
               rotation-y={s * -0.6}
               material={mattePolymer}
               castShadow
             />
           ))}
           {/* one recessed seam line down the fascia center */}
-          <RoundedBox args={[0.014, 0.28, 0.014]} radius={0.005} position={[0, -0.01, 0.268]} material={seamInset} />
+          <RoundedBox args={[0.014, 0.28, 0.014]} radius={0.005} position={[0, -0.01, 0.253]} material={seamInset} />
         </>
       );
     case "torso":
@@ -336,24 +349,28 @@ function PartMesh({ id, lip, ctx }) {
               void — the chest plastron (chest_plate) sits OVER this, and when it
               hinges open during teardown the lit torso underneath still reads as
               a solid convex chest, not a black cavity. Slimmer/less boxy than the
-              old wide frustum (top r 0.34, not 0.4) so the shoulders no longer
-              over-dominate. 18-gon = smooth under the dither. */}
+              old wide frustum (top r 0.30, was 0.34) so the chest reads LEAN +
+              humanoid (a Figure-02 trunk) and the shoulders frame it without the
+              torso being a wide box. 18-gon = smooth under the dither. */}
           <mesh position={[0, 0.08, 0]} scale={[1, 1, 0.74]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.34, 0.3, 0.52, 18]} />
+            <cylinderGeometry args={[0.275, 0.25, 0.52, 18]} />
           </mesh>
           {/* convex upper-chest cap so the top of the trunk domes (pectoral mass)
-              instead of reading as a flat cylinder lid under the clavicle. */}
+              instead of reading as a flat cylinder lid under the clavicle. Slimmed
+              (r 0.275, was 0.34) in step with the trunk so the chest tapers as a
+              lean inverted-trapezoid (Figure-02), not a wide box. */}
           <mesh position={[0, 0.3, 0]} scale={[1, 0.6, 0.74]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.34, 24, 18, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+            <sphereGeometry args={[0.275, 24, 18, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
           </mesh>
-          {/* SHORT solid waist — a stout lit barrel that tapers only gently from
-              the chest base (r 0.3) to the pelvis (r 0.28) and physically MEETS
-              it: its bottom sits at torso y=-0.34 (world ~1.62) and overlaps the
-              raised pelvis girdle top (which domes up to world ~1.85), so there is
-              NO thin dark neck and NO gap — chest, waist and pelvis read as one
-              continuous lit volume. */}
+          {/* SHORT solid waist — a slim lit barrel that tapers from the chest base
+              (r 0.265) to the pelvis (r 0.25) and physically MEETS it: its bottom
+              sits at torso y=-0.34 (world ~1.62) and overlaps the raised pelvis
+              girdle top (r 0.235), so there is NO thin dark neck and NO gap —
+              chest, waist and pelvis read as one continuous lit volume. The waist
+              still laps slightly proud of the girdle (0.25 > 0.235) so the join is
+              an unbroken lit taper, lean rather than barrel-stout. */}
           <mesh position={[0, -0.18, 0]} scale={[1, 1, 0.8]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.3, 0.28, 0.34, 18]} />
+            <cylinderGeometry args={[0.265, 0.25, 0.34, 18]} />
           </mesh>
           {/* LIT ABDOMEN BRIDGE — a broad flat front panel on the TORSO itself
               (not the hinged chest plate) spanning the lower waist DOWN to the
@@ -361,15 +378,16 @@ function PartMesh({ id, lip, ctx }) {
               so it laps over the raised pelvis girdle/cover top (world ~1.66) with
               a lit surface — kills the dark step between chest and abdomen even
               while the chest plate is hinged open in teardown. */}
-          <RoundedBox args={[0.34, 0.34, 0.08]} radius={0.035} smoothness={3} position={[0, -0.36, 0.2]} material={mattePolymer} castShadow />
-          {/* its angled side abdomen flanks so the bridge wraps, not a flat slab */}
+          <RoundedBox args={[0.28, 0.34, 0.08]} radius={0.035} smoothness={3} position={[0, -0.36, 0.19]} material={mattePolymer} castShadow />
+          {/* its angled side abdomen flanks so the bridge wraps, not a flat slab —
+              pulled in (x s*0.185) to track the slimmer trunk */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.14, 0.32, 0.07]}
+              args={[0.13, 0.32, 0.07]}
               radius={0.03}
               smoothness={3}
-              position={[s * 0.22, -0.34, 0.12]}
+              position={[s * 0.185, -0.34, 0.11]}
               rotation-y={s * -0.5}
               material={mattePolymer}
               castShadow
@@ -378,11 +396,12 @@ function PartMesh({ id, lip, ctx }) {
           {/* internal dark core bay — kept SMALL and recessed (z back) so it only
               reads as the exposed core once the chest plastron hinges open; it no
               longer faces the camera as a dark block at idle. */}
-          <RoundedBox args={[0.24, 0.24, 0.12]} radius={0.03} position={[0, 0.02, -0.04]} material={darkPolymer} />
-          {/* machined seam ring at the clavicle line, tucked inside the chest */}
+          <RoundedBox args={[0.22, 0.24, 0.12]} radius={0.03} position={[0, 0.02, -0.04]} material={darkPolymer} />
+          {/* machined seam ring at the clavicle line, tucked inside the chest.
+              Radius tracks the slimmed chest top (0.285, was 0.32). */}
           <group position={[0, 0.32, 0]} rotation={[HPI, 0, 0]}>
             <mesh scale={[1, 0.74, 1]} material={lip}>
-              <torusGeometry args={[0.32, 0.008, 8, 48]} />
+              <torusGeometry args={[0.285, 0.008, 8, 48]} />
             </mesh>
           </group>
         </>
@@ -395,74 +414,86 @@ function PartMesh({ id, lip, ctx }) {
               hemisphere quadrant, phi a wide 0.9π arc) so the chest reads as one
               smooth lit bulge with NO dark interior facing the camera. Sits
               slightly proud of the lit torso so the two together read as a single
-              convex chest mass. Tapered (scale y/z) so it's humanoid, not boxy. */}
+              convex chest mass. Tapered (scale y/z) so it's humanoid, not boxy.
+              SLIMMED (r 0.28, was 0.33) in step with the slimmed torso so the
+              plastron stays just proud of the trunk (lean, not a wide barrel). */}
           <mesh position={[0, 0.02, 0.05]} scale={[1, 1.12, 0.82]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.33, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
+            <sphereGeometry args={[0.28, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
           </mesh>
           {/* abdominal plastron — extends the lit chest panel DOWN over the upper
               waist so the chest flows into the midriff with no dark step. LENGTHENED
               (h0.4, center y=-0.22) so its lit front laps DOWN to world ~1.55 —
               firmly overlapping the raised pelvis girdle/cover top (world ~1.66+)
               so there is NO dark gap between the chest and the abdomen/pelvis. A
-              tapered cylinder section closed at the front (matte). */}
+              tapered cylinder section closed at the front (matte). Slimmed
+              (r 0.27/0.255, was 0.3/0.285) in step with the trunk; still laps the
+              pelvis girdle top (r 0.235) so the chest->abdomen->pelvis stays one
+              continuous lit column with no dark step. */}
           <mesh position={[0, -0.22, 0.02]} scale={[1, 1, 0.86]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.3, 0.285, 0.4, 18, 1, false, Math.PI * 1.12, Math.PI * 0.76]} />
+            <cylinderGeometry args={[0.27, 0.255, 0.4, 18, 1, false, Math.PI * 1.12, Math.PI * 0.76]} />
           </mesh>
           {/* HARD-SURFACE PECTORAL PANELS — two proud flat-faced plates (L/R)
               chamfered onto the convex plastron so the chest reads as a paneled
               plastron, not a smooth barrel. They catch the highlight as flat
-              faces; the dark sternum channel between them divides the chest. */}
+              faces; the dark sternum channel between them divides the chest.
+              Pulled in (x s*0.088, z 0.245) to track the slimmer plastron. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.16, 0.2, 0.06]}
+              args={[0.15, 0.2, 0.06]}
               radius={0.025}
               smoothness={3}
-              position={[s * 0.1, 0.08, 0.265]}
+              position={[s * 0.088, 0.08, 0.245]}
               rotation-y={s * -0.32}
               material={mattePolymer}
               castShadow
             />
           ))}
-          {/* recessed dark STERNUM channel dividing the two pectoral panels */}
-          <RoundedBox args={[0.05, 0.26, 0.04]} radius={0.012} position={[0, 0.04, 0.3]} material={darkPolymer} />
-          {/* side panel-break seams along the chest flanks (Optimus shell lines) */}
+          {/* recessed dark STERNUM channel dividing the two pectoral panels —
+              pulled in to z=0.275 to sit on the slimmed plastron front */}
+          <RoundedBox args={[0.05, 0.26, 0.04]} radius={0.012} position={[0, 0.04, 0.275]} material={darkPolymer} />
+          {/* side panel-break seams along the chest flanks (Optimus shell lines) —
+              pulled in (x s*0.18) to track the slimmer chest flanks */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
               args={[0.012, 0.3, 0.012]}
               radius={0.004}
               smoothness={2}
-              position={[s * 0.2, 0.04, 0.2]}
+              position={[s * 0.18, 0.04, 0.19]}
               rotation-y={s * -0.5}
               material={seamInset}
             />
           ))}
           {/* white emissive chest seam — the sternum accent line */}
-          <RoundedBox args={[0.012, 0.22, 0.012]} radius={0.004} position={[0, 0.04, 0.335]} material={brightEmissiveSeam} />
+          <RoundedBox args={[0.012, 0.22, 0.012]} radius={0.004} position={[0, 0.04, 0.31]} material={brightEmissiveSeam} />
           {/* abdominal WAIST-BREAK panel — a recessed dark band low on the
               plastron so the trunk reads as chest-panel-over-abdomen, with a
               clean horizontal break instead of a smooth drum that runs to the
-              pelvis. */}
-          <RoundedBox args={[0.3, 0.04, 0.04]} radius={0.012} position={[0, -0.16, 0.24]} material={seamInset} />
+              pelvis. Narrowed (0.26, was 0.3) to track the slimmer trunk. */}
+          <RoundedBox args={[0.26, 0.04, 0.04]} radius={0.012} position={[0, -0.16, 0.225]} material={seamInset} />
           {/* lit abdominal segment plate below the break — LENGTHENED + dropped to
               y=-0.3 so its lit front laps down over the pelvis girdle top, closing
               the chest->abdomen gap with a continuous lit surface. Stays above the
-              y=-0.34 hinge line so the teardown hinge is unchanged. */}
-          <RoundedBox args={[0.26, 0.2, 0.06]} radius={0.02} smoothness={3} position={[0, -0.3, 0.22]} material={mattePolymer} castShadow />
+              y=-0.34 hinge line so the teardown hinge is unchanged. Narrowed (0.23,
+              was 0.26) in step with the slimmer trunk. */}
+          <RoundedBox args={[0.23, 0.2, 0.06]} radius={0.02} smoothness={3} position={[0, -0.3, 0.21]} material={mattePolymer} castShadow />
           {/* status dot trio — same chest lights as the 2D V */}
           {[-0.05, 0, 0.05].map((x) => (
-            <mesh key={x} position={[x, -0.1, 0.32]} material={chestDotMat}>
+            <mesh key={x} position={[x, -0.1, 0.295]} material={chestDotMat}>
               <sphereGeometry args={[0.013, 12, 12]} />
             </mesh>
           ))}
-          {/* one clean machined inner lip framing the panel's top opening edge */}
-          <mesh position={[0, 0.3, 0.16]} rotation-x={HPI * 0.92} material={lip}>
-            <torusGeometry args={[0.28, 0.012, 8, 40, Math.PI]} />
+          {/* one clean machined inner lip framing the panel's top opening edge —
+              radius tracks the slimmed plastron (0.26, was 0.28) */}
+          <mesh position={[0, 0.3, 0.15]} rotation-x={HPI * 0.92} material={lip}>
+            <torusGeometry args={[0.26, 0.012, 8, 40, Math.PI]} />
           </mesh>
-          {/* visible hinge pivot along the bottom edge */}
+          {/* visible hinge pivot along the bottom edge — narrowed (0.36) to match
+              the slimmer plastron; pivot Y unchanged so the teardown hinge line is
+              untouched */}
           <mesh position={[0, -0.34, 0.18]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.02, 0.02, 0.42, 12]} />
+            <cylinderGeometry args={[0.02, 0.02, 0.36, 12]} />
           </mesh>
         </>
       );
@@ -471,12 +502,14 @@ function PartMesh({ id, lip, ctx }) {
         <>
           {/* solid convex dorsal shell matching the plastron — a filled domed
               back panel (same closed form, mirrored), with a single central
-              spine channel and no open dark interior. */}
+              spine channel and no open dark interior. Slimmed (r 0.30/0.28, was
+              0.33/0.31) in step with the front plastron so the trunk depth reads
+              lean from the side/3-4 too. */}
           <mesh position={[0, 0.02, -0.05]} scale={[1, 1.12, 0.82]} rotation-y={Math.PI} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.33, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
+            <sphereGeometry args={[0.28, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
           </mesh>
           <mesh position={[0, -0.12, -0.04]} scale={[1, 1, 0.78]} rotation-y={Math.PI} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.31, 36, 24, Math.PI * 1.1, Math.PI * 0.8, Math.PI * 0.42, Math.PI * 0.42]} />
+            <sphereGeometry args={[0.28, 36, 24, Math.PI * 1.1, Math.PI * 0.8, Math.PI * 0.42, Math.PI * 0.42]} />
           </mesh>
           {/* central spine channel (dark) */}
           <RoundedBox args={[0.08, 0.3, 0.04]} radius={0.02} position={[0, 0.04, -0.3]} material={darkPolymer} />
@@ -1145,6 +1178,8 @@ export default function VRobot(props) {
   const stateRef = useRef({ name: "idle", t0: 0 });
   const look = useRef({ yaw: 0, pitch: 0, eyeYaw: 0, eyePitch: 0 });
   // gesture engine: a named gesture window + the next autonomous-idle fire time.
+  // ANTICIPATION + FOLLOW-THROUGH come from DIFFERENTIAL DAMPING in the idle block
+  // (eyes lead fast, head trails, neck/body settle slowest), not a stored lead.
   const gesture = useRef({ name: "none", t0: -10, dur: 0, next: 4 });
   // damped articulation pose (per-side shoulder pitch/roll + elbow flex, body
   // sway/nod). Everything eases toward these so joints move with servo feel.
@@ -1153,8 +1188,12 @@ export default function VRobot(props) {
     shR: { L: 0, R: 0 }, // shoulder roll (lateral abduct)
     elb: { L: 0, R: 0 }, // elbow flexion
     sway: 0, // weight-shift yaw of the whole figure
+    swayRoll: 0, // weight-shift ROLL (subtle body lean into the shift)
     nod: 0, // extra head pitch from nod/bow gestures
     shrug: 0, // shoulder-yoke rise
+    hCock: 0, // idle head COCK (roll/tilt of the head, organic life)
+    hSway: 0, // idle head SWAY (slow yaw drift independent of gaze)
+    hand: 0, // hand/finger micro-curl (tiny settle, reads as alive)
   });
   // damped face-expression channels (see the FACE EXPRESSION block in useFrame)
   const faceRef = useRef({
@@ -1308,11 +1347,15 @@ export default function VRobot(props) {
     const calmA = s.quality === "static" ? 0 : s.quality === "reduced" ? 0.45 : 1;
     const torn = s.depth > 0.04; // mid-teardown: hold a neutral service pose
 
-    // breathing — torso carries the whole upper kinematic chain; the shoulder
-    // yoke rises slightly with the breath so the chest visibly inflates
-    const breath = Math.sin(t * 1.4) * calmA;
-    if (R.torso) R.torso.position.y = TORSO_Y0 + breath * 0.012;
-    pose.current.shrug = breath * 0.01;
+    // BREATHING — a layered organic breath, not a single mechanical sine. A slow
+    // primary inhale/exhale (1.4) plus a smaller faster harmonic (2.9) and a very
+    // slow drift (0.6) so the rise+fall never loops on an obvious beat. The torso
+    // carries the whole upper chain; the shoulder yoke rises with the breath so
+    // the chest visibly inflates, and the chest expands a hair on the inhale.
+    const breath =
+      (Math.sin(t * 1.4) * 0.78 + Math.sin(t * 2.9 + 1.1) * 0.16 + Math.sin(t * 0.6 + 0.5) * 0.06) * calmA;
+    if (R.torso) R.torso.position.y = TORSO_Y0 + breath * 0.013;
+    pose.current.shrug = breath * 0.011;
 
     // gesture engine: pick the active gesture from avatarState, or fire an
     // autonomous idle gesture on a timer so V keeps articulating on its own.
@@ -1325,11 +1368,29 @@ export default function VRobot(props) {
       const g = map[s.avatarState];
       if (g) gesture.current = { name: g, t0: t, dur: g === "scanArm" ? 2.4 : 1.0, next: gs.next };
     }
-    // autonomous idle gestures — only when truly idle, assembled, and not frozen
-    if (!torn && calmA > 0 && s.avatarState === "idle" && creep < 1 && t > gs.next && t - gs.t0 > 1.2) {
-      const pick = ["wave", "elbowFlex", "shoulderRoll", "weightShift", "nod"];
-      const name = pick[Math.floor(Math.random() * pick.length)];
-      gesture.current = { name, t0: t, dur: name === "wave" ? 2.2 : 1.4, next: t + 5 + Math.random() * 5 };
+    // AUTONOMOUS IDLE GESTURES — only when truly idle, assembled, and not frozen.
+    // Fires MORE OFTEN (every ~2.6-6s, was 5-10) and from a RICHER, WEIGHTED pool
+    // so V keeps articulating with variety: small, frequent organic beats (head
+    // tilt/cock, glance, weight shift, arm sway, breath) interleaved with the
+    // bigger occasional articulations (wave, elbow flex, shoulder roll). Durations
+    // vary per gesture so the loop never reads as a fixed cadence.
+    if (!torn && calmA > 0 && s.avatarState === "idle" && creep < 1 && t > gs.next && t - gs.t0 > 1.0) {
+      // weighted pool — the small organic beats dominate so V feels alive but calm
+      const pool = [
+        "headTilt", "headTilt", "headCock", "glance", "glance",
+        "weightShift", "weightShift", "armSway", "armSway", "breathDeep",
+        "shoulderRoll", "elbowFlex", "nod", "wave",
+      ];
+      const name = pool[(Math.random() * pool.length) | 0];
+      const durMap = {
+        wave: 2.2, elbowFlex: 1.5, shoulderRoll: 1.7, weightShift: 2.8,
+        nod: 1.2, headTilt: 2.4, headCock: 2.0, glance: 1.8, armSway: 2.6,
+        breathDeep: 3.0,
+      };
+      // small beats come back sooner; big articulations leave more breathing room
+      const big = name === "wave" || name === "elbowFlex" || name === "shoulderRoll";
+      const gap = (big ? 4.5 : 2.6) + Math.random() * (big ? 4 : 3);
+      gesture.current = { name, t0: t, dur: durMap[name] || 1.6, next: t + gap };
     }
     // DEV pose-hold (?v8gesture=<name>): pin a named gesture at its PEAK phase
     // statically so a joint can be screenshotted mid-pose. hold short-circuits
@@ -1351,6 +1412,13 @@ export default function VRobot(props) {
     let elbT = { L: restElb, R: restElb };
     let swayT = 0;
     let nodT = 0;
+    // idle-gesture head channels (cock=roll/tilt, sway=extra yaw) + a transient
+    // GLANCE that steers the gaze briefly without a lookTarget. These layer on
+    // top of the continuous organic idle further below.
+    let hCockT = 0;
+    let hSwayGT = 0;
+    let glanceX = 0;
+    let glanceY = 0;
     if (gActive) {
       // when holding, pin the envelope to peak (e=1) and freeze sub-oscillators
       const p = hold ? 0.5 : gt / gesture.current.dur;
@@ -1358,7 +1426,40 @@ export default function VRobot(props) {
       // wave/scan bob phases: live = time-driven; held = frozen at the bob peak
       const waveBob = hold ? 1 : Math.sin(gt * 9);
       const scanBob = hold ? 1 : Math.sin(gt * 1.6);
-      if (gName === "wave") {
+      if (gName === "headTilt") {
+        // a slow, curious head tilt to one side (deterministic side from t0 so the
+        // held dev pose is stable) — pure secondary head life, no arm motion
+        const dir = Math.sin(gesture.current.t0 * 1.7) >= 0 ? 1 : -1;
+        hCockT = dir * 0.16 * e;
+        hSwayGT = dir * 0.12 * e;
+      } else if (gName === "headCock") {
+        // a quicker, sharper cock-and-return (alert/listening) with a chin lift
+        const dir = Math.cos(gesture.current.t0 * 2.3) >= 0 ? 1 : -1;
+        hCockT = dir * 0.22 * e;
+        nodT = -0.06 * e; // slight chin UP (attentive)
+      } else if (gName === "glance") {
+        // V looks away briefly then back — a darting glance (deterministic dir)
+        const dx = Math.sin(gesture.current.t0 * 3.1);
+        glanceX = dx * 0.5 * e;
+        glanceY = -0.12 * e;
+        hCockT = dx * 0.05 * e; // a hair of head tilt into the glance
+      } else if (gName === "armSway") {
+        // both arms drift gently outward + back (a relaxed settle), opposite
+        // phase L/R so it reads organic, not symmetric-robotic
+        shPT.L = -0.08 * e;
+        shPT.R = -0.06 * e;
+        shRT.L = -0.07 * e;
+        shRT.R = -0.05 * e;
+        elbT.L = 0.12 + 0.1 * e;
+        elbT.R = 0.12 + 0.14 * e;
+      } else if (gName === "breathDeep") {
+        // a deliberate deep breath — shoulders rise + a faint chest lift; reads as
+        // V settling/relaxing. Layered on top of the base breath via the yoke.
+        G.shrug = (G.shrug || 0) + 0.018 * e;
+        shRT.L = -0.05 * e;
+        shRT.R = -0.05 * e;
+        nodT = 0.04 * e;
+      } else if (gName === "wave") {
         // raise the RIGHT arm out + up, then the ELBOW flexes back-and-forth
         // (a real wave): forearm rotates about the elbow joint, visibly bending.
         // shR<0 = abduct OUTWARD; elb>0 = forearm flexes UP+FORWARD (sign handled
@@ -1406,8 +1507,31 @@ export default function VRobot(props) {
       shPT[side] = clamp(shPT[side], -1.7, 0.5); // raise forward/up, slight back
       shRT[side] = clamp(shRT[side], -1.45, 0.25); // abduct out, minimal adduct
     }
-    // a slow continuous idle weight-shift sway under everything (very subtle)
+    // CONTINUOUS ORGANIC IDLE — under every gesture, V is always subtly alive.
+    // Only when assembled + idle-ish (not torn, not frozen): a slow weight-shift
+    // that ALSO leans the body a touch (swayRoll), a gentle perpetual arm sway
+    // (opposite phase L/R so it's organic, never mirror-symmetric), continuous
+    // head cock/sway micro-drift built from incommensurate sines (so it never
+    // loops on an obvious beat), and a tiny hand micro-curl. Everything is small
+    // and damped, so it reads as life, not twitch. aliveA folds in calmA so the
+    // static tier freezes it and the reduced tier softens it.
+    const aliveA = !torn ? calmA : 0;
+    // slow weight-shift sway about the vertical axis + a matched subtle lean
     swayT += Math.sin(t * 0.5) * 0.02 * calmA;
+    const idleShift = Math.sin(t * 0.34 + 0.6) * aliveA; // very slow L/R weight cycle
+    swayT += idleShift * 0.018;
+    let swayRollT = idleShift * 0.02; // lean INTO the weight shift (body roll)
+    // perpetual gentle arm sway — pendular, tiny, opposite phase per side
+    shPT.L += Math.sin(t * 0.62 + 0.3) * 0.035 * aliveA;
+    shPT.R += Math.sin(t * 0.62 + Math.PI + 0.3) * 0.035 * aliveA;
+    shRT.L += (Math.sin(t * 0.47) * 0.5 + 0.5) * 0.03 * aliveA; // breathe outward a hair
+    shRT.R += (Math.sin(t * 0.47 + 0.4) * 0.5 + 0.5) * 0.03 * aliveA;
+    // continuous head life — slow cock (roll) + sway (yaw) drift, two sines each
+    // at incommensurate rates so the head never settles into a fixed loop
+    let hCockC = (Math.sin(t * 0.41) * 0.6 + Math.sin(t * 0.23 + 1.0) * 0.4) * 0.05 * aliveA;
+    let hSwayC = (Math.sin(t * 0.29 + 0.7) * 0.6 + Math.sin(t * 0.19) * 0.4) * 0.06 * aliveA;
+    // hand micro-curl — a tiny perpetual settle so the fingers never read frozen
+    const handT = (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.05 * aliveA;
     // typing: hands a touch active/raised so V looks engaged
     if (s.avatarState === "typing") {
       shPT.L -= 0.18 * calmA;
@@ -1423,7 +1547,15 @@ export default function VRobot(props) {
       G.elb[side] = damp(G.elb[side], elbT[side], 8, delta);
     }
     G.sway = damp(G.sway, swayT, 5, delta);
+    G.swayRoll = damp(G.swayRoll, swayRollT, 4, delta);
     G.nod = damp(G.nod, nodT, 7, delta);
+    // head idle channels: cock (gesture + continuous), sway (gesture + continuous).
+    // SECONDARY MOTION + FOLLOW-THROUGH: the head cock damps a touch SLOWER (5)
+    // than the body so the head leads and settles a beat behind — anticipation in,
+    // overshoot-settle out.
+    G.hCock = damp(G.hCock, hCockT + hCockC, 5, delta);
+    G.hSway = damp(G.hSway, hSwayGT + hSwayC, 5, delta);
+    G.hand = damp(G.hand, handT, 6, delta);
 
     // apply articulation to the actual kinematic joints. Sign conventions
     // (right-handed, +y up, +z front, arms hang along -y):
@@ -1447,16 +1579,30 @@ export default function VRobot(props) {
       }
       if (el) el.rotation.x = -G.elb[side]; // forward elbow flexion (sign fixed)
     }
+    // hand micro-curl — a tiny perpetual finger settle so the hands read alive,
+    // not frozen claws. Rotates the whole hand group a hair about its wrist (x),
+    // opposite phase per side. Pure secondary life, far below any gesture pose.
+    for (const side of ["L", "R"]) {
+      const sgn = side === "L" ? -1 : 1;
+      const hand = R[`hand_${side.toLowerCase()}`];
+      if (hand) hand.rotation.x = G.hand * (side === "L" ? 1 : 0.8) + Math.sin(t * 0.7 + sgn) * 0.015 * aliveA;
+    }
     if (R.shoulder_yoke) R.shoulder_yoke.position.y = YOKE_Y0 + G.shrug;
-    // weight-shift sways the whole figure subtly about its vertical axis,
-    // composited on top of the user's drag-to-turn yaw on the root group
-    if (root.current) root.current.rotation.y = (s.yaw || 0) + G.sway;
+    // weight-shift sways the whole figure subtly about its vertical axis, plus a
+    // matched subtle ROLL lean INTO the shift (swayRoll) so the weight transfer
+    // reads in the whole body, not just a yaw twist. Both composited on top of
+    // the user's drag-to-turn yaw on the root group.
+    if (root.current) {
+      root.current.rotation.y = (s.yaw || 0) + G.sway;
+      root.current.rotation.z = G.swayRoll;
+    }
 
-    // look: eyes lead, head follows (secondary motion). The nod/bow gesture
-    // adds an extra chin dip on top of the gaze pitch.
+    // look: eyes lead, head follows (secondary motion). The nod/bow gesture adds
+    // an extra chin dip on top of the gaze pitch; idle GLANCE gestures dart the
+    // gaze briefly; and the continuous head SWAY adds slow organic yaw drift.
     const lt = s.lookTarget || { x: 0, y: 0 };
-    let yawT = lt.x * 0.5;
-    let pitchT = lt.y * 0.28 + creep * 0.05 + G.nod;
+    let yawT = lt.x * 0.5 + glanceX + G.hSway;
+    let pitchT = lt.y * 0.28 + creep * 0.05 + G.nod + glanceY;
     if (mode === "typing") pitchT += 0.24;
     if (mode === "sleep") {
       pitchT += 0.55;
@@ -1469,18 +1615,26 @@ export default function VRobot(props) {
     if (hold === "shake") shake = 0.32;
 
     const L = look.current;
-    L.yaw = damp(L.yaw, yawT, 6, delta);
-    L.pitch = damp(L.pitch, pitchT, 6, delta);
+    // ANTICIPATION: the gaze/head damps a touch faster (6.5) and the EYES lead
+    // fast (16) — eyes arrive first, head follows, body trails. Reads as a real
+    // look: eyes flick, head turns after, weight settles last.
+    L.yaw = damp(L.yaw, yawT, 6.5, delta);
+    L.pitch = damp(L.pitch, pitchT, 6.5, delta);
     L.eyeYaw = damp(L.eyeYaw, yawT, 16, delta);
     L.eyePitch = damp(L.eyePitch, pitchT, 16, delta);
 
     if (R.head_base) {
       R.head_base.rotation.y = L.yaw + shake;
       R.head_base.rotation.x = L.pitch;
+      R.head_base.rotation.z = G.hCock; // organic head COCK / tilt (life)
     }
     if (R.neck_stack) {
-      R.neck_stack.rotation.y = L.yaw * 0.35;
+      // the neck FOLLOWS the head a beat behind (secondary motion): it carries a
+      // fraction of the yaw/pitch and a smaller fraction of the cock, so the
+      // head-then-neck chain reads as anticipation + follow-through, not rigid.
+      R.neck_stack.rotation.y = L.yaw * 0.35 + G.hSway * 0.4;
       R.neck_stack.rotation.x = L.pitch * 0.3;
+      R.neck_stack.rotation.z = G.hCock * 0.45;
     }
     for (const id of ["eye_ring_l", "eye_ring_r"]) {
       const g = R[id];
