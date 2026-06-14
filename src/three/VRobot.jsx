@@ -256,8 +256,8 @@ function PartMesh({ id, lip, ctx }) {
               and DOWN to y=-0.16 to meet the hip sockets — no gap above or below.
               SLAB: scale-z 0.5 so it is thin front-to-back like the chest, not a
               round drum. SLIMMED to r 0.16 so it never flares past the lit slab. */}
-          <mesh position={[0, 0.0, 0]} scale={[1, 1, 0.5]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.16, 0.15, 0.46, 22]} />
+          <mesh position={[0, 0.0, 0]} scale={[1, 1, 0.6]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.18, 0.17, 0.46, 22]} />
           </mesh>
           {/* LIGHT pelvis slab — the proud lit hip block. NARROW (r 0.165, half
               -width 0.165, clearly under the chest half-width ~0.245) and FLAT
@@ -265,38 +265,38 @@ function PartMesh({ id, lip, ctx }) {
               chest envelope, never a bulky barrel. Laps UP to y=+0.22 (into the
               lit waist) and DOWN to y=-0.14 (over the hip sockets) so the lit
               column stays unbroken trunk -> hips. */}
-          <mesh position={[0, 0.02, 0]} scale={[1, 1, 0.5]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.165, 0.155, 0.5, 22]} />
+          <mesh position={[0, 0.02, 0]} scale={[1, 1, 0.62]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.195, 0.185, 0.5, 22]} />
           </mesh>
           {/* thin lit deck capping the top into the waist overlap — a flat
               machined plate, NARROW (0.255, under the chest) and shallow so the
               pelvis top reads as a clean deck, not a wide shelf or round crown. */}
-          <RoundedBox args={[0.255, 0.07, 0.13]} radius={0.022} smoothness={3} position={[0, 0.2, 0]} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.3, 0.07, 0.18]} radius={0.025} smoothness={3} position={[0, 0.2, 0]} material={mattePolymer} castShadow />
           {/* broad flat front fascia PLATE — the frontmost lit pelvis panel, a
               clean slab face. Pulled to z=0.085 so it sits just proud of the
               flattened girdle front (~0.08), keeping the hips thin front-to-back. */}
-          <RoundedBox args={[0.215, 0.34, 0.045]} radius={0.022} smoothness={3} position={[0, -0.02, 0.085]} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.26, 0.34, 0.05]} radius={0.025} smoothness={3} position={[0, -0.02, 0.115]} material={mattePolymer} castShadow />
           {/* angled side hip flanks chamfered onto the slab so the block wraps —
               they sweep down-out toward each hip socket (x=+/-0.135) so the
               pelvis meets the legs with no gap, without ballooning the hips. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.085, 0.32, 0.045]}
-              radius={0.018}
+              args={[0.1, 0.32, 0.05]}
+              radius={0.02}
               smoothness={3}
-              position={[s * 0.13, -0.04, 0.045]}
+              position={[s * 0.16, -0.04, 0.06]}
               rotation-y={s * -0.55}
               material={mattePolymer}
               castShadow
             />
           ))}
           {/* recessed center seam splitting the front fascia (hip panel break) */}
-          <RoundedBox args={[0.013, 0.28, 0.013]} radius={0.005} position={[0, -0.02, 0.108]} material={seamInset} />
+          <RoundedBox args={[0.013, 0.28, 0.013]} radius={0.005} position={[0, -0.02, 0.143]} material={seamInset} />
           {/* machined seam belt low on the girdle (a hip panel break, NOT at the
               trunk join). Radius tracks the slimmed slab (0.155). */}
-          <mesh position={[0, -0.1, 0]} scale={[1, 1, 0.5]} rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.155, 0.007, 8, 40]} />
+          <mesh position={[0, -0.1, 0]} scale={[1, 1, 0.6]} rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.185, 0.007, 8, 40]} />
           </mesh>
         </>
       );
@@ -340,17 +340,17 @@ function PartMesh({ id, lip, ctx }) {
               dominant lit mass of the trunk. Clearly NARROWER than the 0.56
               shoulder span so the shoulders frame a lean chest, not a wide box.
               Reads by silhouette + big luma step under the dither. */}
-          <RoundedBox args={[0.4, 0.5, 0.16]} radius={0.045} smoothness={4} position={[0, 0.12, 0.0]} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.47, 0.5, 0.22]} radius={0.05} smoothness={4} position={[0, 0.12, 0.0]} material={mattePolymer} castShadow />
           {/* shallow side chest flanks chamfered onto the slab so the chest wraps
               at the flanks instead of ending in a hard vertical wall — keeps the
               broad flat front but rounds the silhouette toward the arms. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.08, 0.46, 0.13]}
-              radius={0.035}
+              args={[0.1, 0.46, 0.18]}
+              radius={0.04}
               smoothness={3}
-              position={[s * 0.195, 0.12, 0.0]}
+              position={[s * 0.225, 0.12, 0.0]}
               rotation-y={s * -0.5}
               material={panelShade}
               castShadow
@@ -387,16 +387,16 @@ function PartMesh({ id, lip, ctx }) {
               continuous chest -> waist -> pelvis with NO dark step even while the
               chest plate is hinged open. Width 0.255 < chest, > waist: a clean
               tapered midriff. */}
-          <RoundedBox args={[0.26, 0.22, 0.12]} radius={0.03} smoothness={3} position={[0, -0.34, 0.02]} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.31, 0.22, 0.16]} radius={0.035} smoothness={3} position={[0, -0.34, 0.02]} material={mattePolymer} castShadow />
           {/* angled side abdomen flanks so the bridge wraps onto the pelvis, not
               a flat slab — tracks the slim pinched waist. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.08, 0.2, 0.09]}
-              radius={0.025}
+              args={[0.1, 0.2, 0.13]}
+              radius={0.03}
               smoothness={3}
-              position={[s * 0.135, -0.33, 0.0]}
+              position={[s * 0.16, -0.33, 0.0]}
               rotation-y={s * -0.5}
               material={panelShade}
               castShadow
@@ -425,12 +425,12 @@ function PartMesh({ id, lip, ctx }) {
               front face (NOT a round bulge): width 0.36, just inside the 0.40
               chest so it reads as a removable teardown panel laid over the
               trunk. Sits slightly proud (z 0.085) of the slab front. */}
-          <RoundedBox args={[0.36, 0.44, 0.07]} radius={0.035} smoothness={4} position={[0, 0.08, 0.085]} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.42, 0.44, 0.085]} radius={0.04} smoothness={4} position={[0, 0.08, 0.105]} material={mattePolymer} castShadow />
           {/* abdominal plastron extension — laps the lit panel DOWN over the
               upper waist so the chest flows into the midriff with no dark step
               when the plate is closed; stays above the y=-0.34 hinge line so the
               teardown swing is unchanged. */}
-          <RoundedBox args={[0.3, 0.18, 0.06]} radius={0.03} smoothness={3} position={[0, -0.2, 0.075]} material={mattePolymer} castShadow />
+          <RoundedBox args={[0.35, 0.18, 0.07]} radius={0.035} smoothness={3} position={[0, -0.2, 0.095]} material={mattePolymer} castShadow />
           {/* two subtle proud PECTORAL plates split by the sternum groove so the
               chest reads as a paneled plastron, not a smooth slab. Modest relief
               (proud just 0.02 over the panel) — crisp flat faces that catch the
@@ -438,10 +438,10 @@ function PartMesh({ id, lip, ctx }) {
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.14, 0.24, 0.04]}
-              radius={0.018}
+              args={[0.16, 0.24, 0.045]}
+              radius={0.02}
               smoothness={3}
-              position={[s * 0.085, 0.12, 0.115]}
+              position={[s * 0.1, 0.12, 0.14]}
               rotation-y={s * -0.18}
               material={mattePolymer}
               castShadow
@@ -450,7 +450,7 @@ function PartMesh({ id, lip, ctx }) {
           {/* RECESSED dark sternum channel dividing the two pectorals — the
               subtle central seam (seamInset, dark .20). G1 has NO glowing chest,
               so the centreline is a DARK machined groove, not a bright bar. */}
-          <RoundedBox args={[0.03, 0.26, 0.03]} radius={0.008} position={[0, 0.12, 0.125]} material={seamInset} />
+          <RoundedBox args={[0.03, 0.26, 0.03]} radius={0.008} position={[0, 0.12, 0.155]} material={seamInset} />
           {/* side panel-break seams along the chest flanks (machined shell
               lines) — thin dark grooves tracking the flatter chest flanks. */}
           {[-1, 1].map((s) => (
@@ -612,9 +612,9 @@ function PartMesh({ id, lip, ctx }) {
           <PanelSegment
             topY={-0.02}
             len={0.4}
-            wTop={0.115}
-            wBot={0.09}
-            flat={0.50}
+            wTop={0.142}
+            wBot={0.112}
+            flat={0.6}
             seams={2}
           />
           {/* modest dark actuator disc at the top — compact, not a big ring */}
@@ -652,9 +652,9 @@ function PartMesh({ id, lip, ctx }) {
           <PanelSegment
             topY={0}
             len={0.30}
-            wTop={0.085}
-            wBot={0.058}
-            flat={0.50}
+            wTop={0.108}
+            wBot={0.078}
+            flat={0.58}
             mat={mattePolymer}
             backMat={panelShade}
             seams={2}
@@ -755,10 +755,10 @@ function PartMesh({ id, lip, ctx }) {
               block when the light shell hinges off, not a thin rod. */}
           <PanelSegment
             topY={0.1}
-            len={0.82}
-            wTop={0.14}
-            wBot={0.1}
-            flat={0.55}
+            len={0.64}
+            wTop={0.17}
+            wBot={0.125}
+            flat={0.62}
             mat={darkPolymer}
             backMat={darkPolymer}
             seams={2}
@@ -769,7 +769,7 @@ function PartMesh({ id, lip, ctx }) {
             <sphereGeometry args={[0.094, 18, 14]} />
           </mesh>
           {/* machined collar at the knee end (at the knee origin y=-0.7) */}
-          <mesh position={[0, -0.72, 0]} material={lip}>
+          <mesh position={[0, -0.54, 0]} material={lip}>
             <cylinderGeometry args={[0.06, 0.06, 0.022, 16]} />
           </mesh>
         </>
@@ -787,10 +787,10 @@ function PartMesh({ id, lip, ctx }) {
               Opens on the same top-rear hinge (pivot mesh unchanged). */}
           <PanelSegment
             topY={0.3}
-            len={0.84}
-            wTop={0.185}
-            wBot={0.13}
-            flat={0.55}
+            len={0.66}
+            wTop={0.225}
+            wBot={0.16}
+            flat={0.66}
             seams={2}
           />
           {/* LIT hip-socket cap — a proud matte hub at the shell top lapping up
@@ -852,10 +852,10 @@ function PartMesh({ id, lip, ctx }) {
               depth than the thigh (a shin plate), with a distinct CALF swell. */}
           <PanelSegment
             topY={0.12}
-            len={0.72}
-            wTop={0.12}
-            wBot={0.075}
-            flat={0.52}
+            len={0.58}
+            wTop={0.145}
+            wBot={0.095}
+            flat={0.6}
             mat={darkPolymer}
             backMat={darkPolymer}
             seams={2}
@@ -872,7 +872,7 @@ function PartMesh({ id, lip, ctx }) {
             castShadow
           />
           {/* machined collar at the ankle end (at the ankle origin) */}
-          <mesh position={[0, -0.6, 0]} material={lip}>
+          <mesh position={[0, -0.46, 0]} material={lip}>
             <cylinderGeometry args={[0.046, 0.046, 0.02, 16]} />
           </mesh>
         </>
@@ -890,10 +890,10 @@ function PartMesh({ id, lip, ctx }) {
               unchanged). */}
           <PanelSegment
             topY={0.28}
-            len={0.68}
-            wTop={0.155}
-            wBot={0.09}
-            flat={0.52}
+            len={0.54}
+            wTop={0.185}
+            wBot={0.11}
+            flat={0.6}
             seams={2}
           />
           {/* LIT shin-top cap lapping the knee — a proud matte hub at the shell

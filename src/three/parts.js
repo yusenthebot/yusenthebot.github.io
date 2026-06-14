@@ -75,7 +75,7 @@ const PARTS = [
     // half of standing height — the single biggest lever on the "legs too short"
     // read. The leg chain below (thigh/shin) is lengthened to match so the feet
     // still plant flat on the floor (y~0).
-    origin: [0, 1.62, 0],
+    origin: [0, 1.30, 0],
     band: null,
     motion: null,
     spec: [
@@ -423,7 +423,7 @@ const PARTS = [
     kind: "actuator",
     // PULLED IN (was -0.17, then -0.15) for a narrow G1-style hip (sep ~0.27).
     // The legs hang close together under a slim pelvis — narrow hips, long legs.
-    origin: [-0.135, -0.1, 0],
+    origin: [-0.155, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -438,7 +438,7 @@ const PARTS = [
     id: "hip_r",
     parent: "pelvis",
     kind: "actuator",
-    origin: [0.135, -0.1, 0],
+    origin: [0.155, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -512,7 +512,7 @@ const PARTS = [
     // LOWERED (was -0.6) to lengthen the thigh segment — part of pushing the
     // legs to ~half the standing height. The thigh geometry in VRobot is
     // lengthened to span the longer gap; the knee bend direction is unchanged.
-    origin: [0, -0.7, 0],
+    origin: [0, -0.52, 0],
     band: null,
     motion: null,
     spec: [
@@ -527,7 +527,7 @@ const PARTS = [
     id: "knee_r",
     parent: "thigh_r",
     kind: "actuator",
-    origin: [0, -0.7, 0],
+    origin: [0, -0.52, 0],
     band: null,
     motion: null,
     spec: [
@@ -601,7 +601,7 @@ const PARTS = [
     // LOWERED (was -0.54) to lengthen the shin segment and drop the foot toward
     // the floor — the legs grow to match the raised hip so the feet stay planted
     // (foot world y ~0). Shin geometry in VRobot is lengthened to span the gap.
-    origin: [0, -0.6, 0],
+    origin: [0, -0.46, 0],
     band: null,
     motion: null,
     spec: [
@@ -616,7 +616,7 @@ const PARTS = [
     id: "ankle_r",
     parent: "shin_r",
     kind: "actuator",
-    origin: [0, -0.6, 0],
+    origin: [0, -0.46, 0],
     band: null,
     motion: null,
     spec: [
