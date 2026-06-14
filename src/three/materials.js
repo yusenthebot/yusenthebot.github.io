@@ -35,6 +35,31 @@ export const darkPolymer = new THREE.MeshStandardMaterial({
   side: THREE.DoubleSide,
 });
 
+// A SECONDARY light panel shade — a half-stop darker than mattePolymer. Used on
+// the hard-surface limbs/torso for the recessed back/side faces and the narrow
+// chamfer bevels, so a paneled segment reads as a multi-plane assembly (broad
+// bright front face / dimmer angled sides) rather than one uniform tube. Strict
+// monochrome, slightly higher roughness so its planes catch a different luma
+// band under the dither — that contrast is what reads as "panel breaks".
+export const panelShade = new THREE.MeshStandardMaterial({
+  color: gray(0.54),
+  metalness: 0.08,
+  roughness: 0.66,
+  side: THREE.DoubleSide,
+});
+
+// Recessed panel-seam inset — a near-dark thin channel sunk between light
+// panels (the dark division lines Optimus shows where shells meet). Darker than
+// panelShade, matte, so a thin RoundedBox of it reads as a cut groove, not a
+// raised rib. Distinct from darkPolymer (the exposed-actuator black) so seams on
+// a light panel don't read as exposed mechanism.
+export const seamInset = new THREE.MeshStandardMaterial({
+  color: gray(0.2),
+  metalness: 0.15,
+  roughness: 0.82,
+  side: THREE.DoubleSide,
+});
+
 // The cranium DOME — a medium-dark matte helmet shell. Dark enough to read as
 // a sleek Optimus helmet (clearly LOWER luma than the body's light panels) but
 // not so dark it dissolves into the void: it dithers to a distinct mid-dark
