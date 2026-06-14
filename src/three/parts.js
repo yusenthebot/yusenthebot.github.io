@@ -202,7 +202,7 @@ const PARTS = [
     id: "shoulder_ball_l",
     parent: "shoulder_yoke",
     kind: "actuator",
-    origin: [-0.42, 0, 0],
+    origin: [-0.36, 0, 0],
     band: null,
     motion: null,
     spec: [
@@ -217,7 +217,7 @@ const PARTS = [
     id: "shoulder_ball_r",
     parent: "shoulder_yoke",
     kind: "actuator",
-    origin: [0.42, 0, 0],
+    origin: [0.36, 0, 0],
     band: null,
     motion: null,
     spec: [

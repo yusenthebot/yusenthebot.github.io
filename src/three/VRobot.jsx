@@ -149,39 +149,42 @@ function PartMesh({ id, lip, ctx }) {
     case "pelvis":
       return (
         <>
-          {/* sculpted black pelvis girdle — wider at the hips, tapering up to the
-              waist; the hip ball joints (at x=+/-0.17, y=-0.1) embed in its
-              flanks so legs and pelvis read as one continuous structure, not a
-              block with legs hung under it. A single chamfered form, no clutter.
-              This is the dark INNER structure the light girdle cover rides on. */}
-          <mesh material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.16, 0.26, 0.3, 24]} />
+          {/* dark inner girdle structure — the hip ball joints (at x=+/-0.17,
+              y=-0.1) embed in its flanks so legs + pelvis read as one continuous
+              structure. Reaches UP (top r 0.28 at y=+0.22) to firmly overlap the
+              torso waist bottom (world ~1.61): the trunk and hips are bridged,
+              no gap. This dark core is mostly hidden under the light girdle. */}
+          <mesh position={[0, 0.04, 0]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.28, 0.26, 0.42, 24]} />
           </mesh>
-          {/* LIGHT matte girdle cover — a proud chamfered sleeve over the dark
-              core so the pelvis reads as a solid LIT form (matching chest +
-              thighs), never a black void at the hips. Slightly larger radius than
-              the dark core; kept a touch narrower in z so the back stays dark and
-              the hip joints still read as exposed internals on the flanks. */}
-          <mesh scale={[1, 1, 0.82]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.172, 0.268, 0.27, 24]} />
+          {/* LIGHT matte hip girdle — a proud lit sleeve covering the front + sides
+              so the pelvis reads as a SOLID LIT form (matching chest + thighs),
+              never a dark ring. Reaches UP to y=+0.25 (overlapping the lit waist
+              that comes down to world ~1.61) so the lit volume is unbroken — no
+              dark pinch between trunk and hips. Kept narrower in z so the hip
+              actuators still read as exposed dark internals on the flanks/back. */}
+          <mesh position={[0, 0.05, 0]} scale={[1, 1, 0.84]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.285, 0.27, 0.44, 24]} />
           </mesh>
-          {/* flared hip yokes that sweep DOWN-OUT to meet each hip socket —
-              this is the meat that bridges pelvis to thigh on each side. Light
-              matte so the hip shoulders carry highlight (the bare actuator
-              clusters remain dark, hung off the hip_l/hip_r links). */}
+          {/* domed lit cap closing the top of the girdle into the waist overlap —
+              reaches up to world ~1.9 (well into the lit waist) so the trunk-hip
+              join is one continuous lit surface. */}
+          <mesh position={[0, 0.26, 0]} scale={[1, 0.6, 0.84]} material={mattePolymer} castShadow>
+            <sphereGeometry args={[0.285, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          </mesh>
+          {/* flared lit hip yokes sweeping DOWN-OUT to meet each hip socket —
+              the meat that bridges pelvis to thigh on each side. */}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.13, -0.1, 0]} scale={[1, 1.2, 0.9]} material={mattePolymer} castShadow>
-              <sphereGeometry args={[0.1, 20, 16]} />
+            <mesh key={s} position={[s * 0.15, -0.12, 0]} scale={[1, 1.2, 0.92]} material={mattePolymer} castShadow>
+              <sphereGeometry args={[0.115, 20, 16]} />
             </mesh>
           ))}
           {/* light front fascia panel set flush into the girdle (machined look) */}
-          <RoundedBox args={[0.2, 0.2, 0.05]} radius={0.02} position={[0, -0.01, 0.135]} material={mattePolymer} castShadow />
-          {/* lumbar joint barrel up into the torso — the spine bridge */}
-          <mesh position={[0, 0.16, 0]} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.12, 0.14, 0.12, 24]} />
-          </mesh>
-          <mesh position={[0, 0.22, 0]} rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.125, 0.01, 8, 32]} />
+          <RoundedBox args={[0.24, 0.26, 0.05]} radius={0.025} position={[0, -0.04, 0.15]} material={mattePolymer} castShadow />
+          {/* machined seam belt low on the girdle (hip panel break, NOT at the
+              trunk join — the trunk/hip overlap stays one unbroken lit surface) */}
+          <mesh position={[0, -0.1, 0]} scale={[1, 1, 0.84]} rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.275, 0.008, 8, 40]} />
           </mesh>
         </>
       );
@@ -202,38 +205,38 @@ function PartMesh({ id, lip, ctx }) {
     case "torso":
       return (
         <>
-          {/* one continuous monocoque — a chamfered chest that flows without a
-              break from the clavicle line down to a slim waist, then the waist
-              column reaches DOWN to physically meet the pelvis lumbar barrel.
-              No separate floating barrel: torso and pelvis read as one trunk.
-              Upper chest: wide chamfered frustum (16-gon = smooth in the dither). */}
-          <mesh position={[0, 0.1, 0]} scale={[1, 1, 0.66]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.4, 0.3, 0.56, 16]} />
+          {/* ONE SOLID LIT TRUNK. The torso link itself carries the lit chest
+              -to-waist mass in mattePolymer so the body's centre is never a dark
+              void — the chest plastron (chest_plate) sits OVER this, and when it
+              hinges open during teardown the lit torso underneath still reads as
+              a solid convex chest, not a black cavity. Slimmer/less boxy than the
+              old wide frustum (top r 0.34, not 0.4) so the shoulders no longer
+              over-dominate. 18-gon = smooth under the dither. */}
+          <mesh position={[0, 0.08, 0]} scale={[1, 1, 0.74]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.34, 0.3, 0.52, 18]} />
           </mesh>
-          {/* continuous waist — tapers from the chest base (r 0.3) down to the
-              lumbar barrel (r 0.16) with no gap; bottom reaches torso y=-0.24
-              == pelvis lumbar top, so the trunk is bridged. Dark inner core. */}
-          <mesh position={[0, -0.13, 0]} scale={[1, 1, 0.72]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.3, 0.17, 0.22, 16]} />
+          {/* convex upper-chest cap so the top of the trunk domes (pectoral mass)
+              instead of reading as a flat cylinder lid under the clavicle. */}
+          <mesh position={[0, 0.3, 0]} scale={[1, 0.6, 0.74]} material={mattePolymer} castShadow>
+            <sphereGeometry args={[0.34, 24, 18, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
           </mesh>
-          {/* LIGHT lumbar fascia over the dark waist column — a slightly proud
-              matte sleeve so the midsection reads as a solid LIT form against the
-              #050505 void instead of vanishing (the chest + thighs are light, the
-              waist must match). Kept just under the chest base radius so the
-              chamfer line stays continuous; front+sides carry the highlight. */}
-          <mesh position={[0, -0.13, 0]} scale={[1, 1, 0.73]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.305, 0.182, 0.23, 16]} />
+          {/* SHORT solid waist — a stout lit barrel that tapers only gently from
+              the chest base (r 0.3) to the pelvis (r 0.28) and physically MEETS
+              it: its bottom sits at torso y=-0.34 (world ~1.62) and overlaps the
+              raised pelvis girdle top (which domes up to world ~1.85), so there is
+              NO thin dark neck and NO gap — chest, waist and pelvis read as one
+              continuous lit volume. */}
+          <mesh position={[0, -0.18, 0]} scale={[1, 1, 0.8]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.3, 0.28, 0.34, 18]} />
           </mesh>
-          {/* machined seam belt at the waist/lumbar junction (reads the panel break) */}
-          <mesh position={[0, -0.235, 0]} scale={[1, 1, 0.73]} rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.182, 0.009, 8, 40]} />
-          </mesh>
-          {/* internal core bay block that reads when the chest shells open */}
-          <RoundedBox args={[0.3, 0.3, 0.16]} radius={0.03} position={[0, -0.02, 0.0]} material={darkPolymer} />
+          {/* internal dark core bay — kept SMALL and recessed (z back) so it only
+              reads as the exposed core once the chest plastron hinges open; it no
+              longer faces the camera as a dark block at idle. */}
+          <RoundedBox args={[0.24, 0.24, 0.12]} radius={0.03} position={[0, 0.02, -0.04]} material={darkPolymer} />
           {/* machined seam ring at the clavicle line, tucked inside the chest */}
-          <group position={[0, 0.34, 0]} rotation={[HPI, 0, 0]}>
-            <mesh scale={[1, 0.66, 1]} material={lip}>
-              <torusGeometry args={[0.37, 0.009, 8, 48]} />
+          <group position={[0, 0.32, 0]} rotation={[HPI, 0, 0]}>
+            <mesh scale={[1, 0.74, 1]} material={lip}>
+              <torusGeometry args={[0.32, 0.008, 8, 48]} />
             </mesh>
           </group>
         </>
@@ -241,48 +244,63 @@ function PartMesh({ id, lip, ctx }) {
     case "chest_plate":
       return (
         <>
-          {/* continuous curved plastron — ONE chamfered shell (a wide, gently
-              domed panel) instead of two stacked flat boxes; reads as a premium
-              machined chest plate. A spherical-section cap gives the soft chest
-              curvature; a RoundedBox behind it closes the panel volume. */}
-          <mesh position={[0, 0.0, 0.13]} scale={[1, 1.18, 0.72]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.4, 40, 28, Math.PI * 1.15, Math.PI * 0.7, Math.PI * 0.18, Math.PI * 0.62]} />
+          {/* SOLID CONVEX PLASTRON — a FILLED chest panel, not an open ring. A
+              full front-facing dome cap (theta 0..0.5π = the whole front
+              hemisphere quadrant, phi a wide 0.9π arc) so the chest reads as one
+              smooth lit bulge with NO dark interior facing the camera. Sits
+              slightly proud of the lit torso so the two together read as a single
+              convex chest mass. Tapered (scale y/z) so it's humanoid, not boxy. */}
+          <mesh position={[0, 0.02, 0.05]} scale={[1, 1.12, 0.82]} material={mattePolymer} castShadow>
+            <sphereGeometry args={[0.33, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
           </mesh>
-          {/* sternum inset channel (dark) running down the plastron center */}
-          <RoundedBox args={[0.1, 0.34, 0.05]} radius={0.02} position={[0, 0.06, 0.28]} material={darkPolymer} />
+          {/* abdominal plastron — extends the lit chest panel DOWN over the upper
+              waist so the chest flows into the midriff with no dark step. A
+              tapered cylinder section closed at the front (matte) blending the
+              dome into the waist. */}
+          <mesh position={[0, -0.16, 0.02]} scale={[1, 1, 0.84]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.3, 0.285, 0.26, 18, 1, false, Math.PI * 1.12, Math.PI * 0.76]} />
+          </mesh>
+          {/* SMALL dark sternum accent — a short shallow inset high on the chest
+              (the one dark detail), kept narrow + short so it never reads as a
+              hollow centre; the convex lit plastron dominates. */}
+          <RoundedBox args={[0.07, 0.18, 0.03]} radius={0.015} position={[0, 0.08, 0.3]} material={darkPolymer} />
           {/* white emissive chest seam — the sternum accent line */}
-          <RoundedBox args={[0.012, 0.3, 0.012]} radius={0.004} position={[0, 0.06, 0.31]} material={brightEmissiveSeam} />
+          <RoundedBox args={[0.012, 0.22, 0.012]} radius={0.004} position={[0, 0.04, 0.33]} material={brightEmissiveSeam} />
           {/* status dot trio — same chest lights as the 2D V */}
           {[-0.05, 0, 0.05].map((x) => (
-            <mesh key={x} position={[x, -0.14, 0.29]} material={chestDotMat}>
+            <mesh key={x} position={[x, -0.1, 0.31]} material={chestDotMat}>
               <sphereGeometry args={[0.013, 12, 12]} />
             </mesh>
           ))}
           {/* one clean machined inner lip framing the panel's top opening edge */}
-          <mesh position={[0, 0.3, 0.18]} rotation-x={HPI * 0.92} material={lip}>
-            <torusGeometry args={[0.32, 0.012, 8, 40, Math.PI]} />
+          <mesh position={[0, 0.3, 0.16]} rotation-x={HPI * 0.92} material={lip}>
+            <torusGeometry args={[0.28, 0.012, 8, 40, Math.PI]} />
           </mesh>
           {/* visible hinge pivot along the bottom edge */}
-          <mesh position={[0, -0.34, 0.2]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.02, 0.02, 0.46, 12]} />
+          <mesh position={[0, -0.34, 0.18]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.02, 0.02, 0.42, 12]} />
           </mesh>
         </>
       );
     case "back_plate":
       return (
         <>
-          {/* continuous curved dorsal shell — one chamfered panel matching the
-              plastron, with a single central spine channel (no stray ribs) */}
-          <mesh position={[0, 0.0, -0.13]} scale={[1, 1.2, 0.72]} rotation-y={Math.PI} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.4, 40, 28, Math.PI * 1.15, Math.PI * 0.7, Math.PI * 0.18, Math.PI * 0.62]} />
+          {/* solid convex dorsal shell matching the plastron — a filled domed
+              back panel (same closed form, mirrored), with a single central
+              spine channel and no open dark interior. */}
+          <mesh position={[0, 0.02, -0.05]} scale={[1, 1.12, 0.82]} rotation-y={Math.PI} material={mattePolymer} castShadow>
+            <sphereGeometry args={[0.33, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
+          </mesh>
+          <mesh position={[0, -0.12, -0.04]} scale={[1, 1, 0.78]} rotation-y={Math.PI} material={mattePolymer} castShadow>
+            <sphereGeometry args={[0.31, 36, 24, Math.PI * 1.1, Math.PI * 0.8, Math.PI * 0.42, Math.PI * 0.42]} />
           </mesh>
           {/* central spine channel (dark) */}
-          <RoundedBox args={[0.09, 0.38, 0.05]} radius={0.02} position={[0, 0.04, -0.28]} material={darkPolymer} />
-          <mesh position={[0, 0.3, -0.18]} rotation={[HPI * 1.08, 0, Math.PI]} material={lip}>
-            <torusGeometry args={[0.32, 0.012, 8, 40, Math.PI]} />
+          <RoundedBox args={[0.08, 0.3, 0.04]} radius={0.02} position={[0, 0.04, -0.3]} material={darkPolymer} />
+          <mesh position={[0, 0.3, -0.16]} rotation={[HPI * 1.08, 0, Math.PI]} material={lip}>
+            <torusGeometry args={[0.28, 0.012, 8, 40, Math.PI]} />
           </mesh>
-          <mesh position={[0, -0.34, -0.2]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.02, 0.02, 0.46, 12]} />
+          <mesh position={[0, -0.34, -0.18]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.02, 0.02, 0.42, 12]} />
           </mesh>
         </>
       );
@@ -334,17 +352,19 @@ function PartMesh({ id, lip, ctx }) {
     case "shoulder_yoke":
       return (
         <>
-          {/* clavicle yoke — shoulder line ~2.2x the helmet width */}
-          <RoundedBox args={[0.9, 0.13, 0.22]} radius={0.05} material={brushedMetal} castShadow />
+          {/* clavicle yoke — narrowed so the shoulder line is ~2.2x the helmet
+              width (was over-wide / dominant). Lit clavicle deck so the top of
+              the trunk reads solid, not a dark crossbar. */}
+          <RoundedBox args={[0.74, 0.13, 0.22]} radius={0.05} material={mattePolymer} castShadow />
           {/* defined clavicle ridges sweeping to the shoulders */}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.3, 0.02, 0.06]} rotation-z={s * 0.25} material={mattePolymer} castShadow>
-              <capsuleGeometry args={[0.035, 0.18, 4, 10]} />
+            <mesh key={s} position={[s * 0.26, 0.02, 0.06]} rotation-z={s * 0.25} material={mattePolymer} castShadow>
+              <capsuleGeometry args={[0.035, 0.16, 4, 10]} />
             </mesh>
           ))}
-          {[-0.42, 0.42].map((x) => (
+          {[-0.36, 0.36].map((x) => (
             <mesh key={x} position={[x, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-              <cylinderGeometry args={[0.08, 0.08, 0.06, 16]} />
+              <cylinderGeometry args={[0.075, 0.075, 0.06, 16]} />
             </mesh>
           ))}
         </>
