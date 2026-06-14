@@ -250,214 +250,169 @@ function PartMesh({ id, lip, ctx }) {
     case "pelvis":
       return (
         <>
-          {/* dark inner girdle structure — the hip ball joints (at x=+/-0.17,
-              y=-0.1) embed in its flanks so legs + pelvis read as one continuous
-              structure. Reaches UP (top r 0.215 at y=+0.22) to firmly overlap the
-              torso waist bottom (world ~1.61): the trunk and hips are bridged,
-              no gap. PULLED IN at the front (scale-z 0.6) so it no longer
-              protrudes past the LIGHT sleeve and turn the pelvis front dark — it
-              now only shows as exposed dark internals on the flanks/back. SLIMMED
-              (r 0.215/0.20, was 0.27/0.25) IN STEP with the light sleeve so the
-              pelvis reads lean + humanoid, never wider than the waist, and the
-              dark core still stays tucked INSIDE the lit sleeve (front stays lit). */}
-          <mesh position={[0, 0.02, 0]} scale={[1, 1, 0.45]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.185, 0.175, 0.46, 24]} />
+          {/* dark inner girdle — a compact dark cage. The hip balls (x=+/-0.135,
+              world y~1.52) seat into its flanks so legs+pelvis read continuous.
+              Reaches UP (top y=+0.2) to lap the lit waist bottom (world ~1.62)
+              and DOWN to y=-0.16 to meet the hip sockets — no gap above or below.
+              SLAB: scale-z 0.5 so it is thin front-to-back like the chest, not a
+              round drum. SLIMMED to r 0.16 so it never flares past the lit slab. */}
+          <mesh position={[0, 0.0, 0]} scale={[1, 1, 0.5]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.16, 0.15, 0.46, 22]} />
           </mesh>
-          {/* LIGHT matte hip girdle — a proud lit sleeve covering the front + sides
-              so the pelvis reads as a SOLID LIT form (matching chest + thighs),
-              never a dark ring. WIDENED in z (scale 0.92) so its FRONT face is the
-              frontmost surface (in front of the dark core) and catches the key
-              light as a bright panel. Reaches UP to y=+0.25 (lapping the lit waist
-              down to world ~1.61) and DOWN to y=-0.18 (lapping the hip sockets at
-              world ~1.33) so the lit volume is unbroken trunk->hips->legs. SLIMMED
-              (r 0.235/0.225, was 0.29/0.275) so the hips no longer flare out wider
-              than the waist — a lean Figure-02 pelvis. FLATTENED (z 0.55, was 0.92)
-              so the hips are a slab like the chest — width 0.235, depth 0.235*0.55
-              = 0.13 (the G1 ~2.25:1 hip envelope), NOT a round drum. Still proud of
-              the dark core so its FRONT face stays the frontmost LIT surface. */}
-          <mesh position={[0, 0.0, 0]} scale={[1, 1, 0.55]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.205, 0.195, 0.5, 24]} />
+          {/* LIGHT pelvis slab — the proud lit hip block. NARROW (r 0.165, half
+              -width 0.165, clearly under the chest half-width ~0.245) and FLAT
+              (z 0.5 => depth 0.165) so the pelvis is a compact slab matching the
+              chest envelope, never a bulky barrel. Laps UP to y=+0.22 (into the
+              lit waist) and DOWN to y=-0.14 (over the hip sockets) so the lit
+              column stays unbroken trunk -> hips. */}
+          <mesh position={[0, 0.02, 0]} scale={[1, 1, 0.5]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.165, 0.155, 0.5, 22]} />
           </mesh>
-          {/* lit cap closing the top of the girdle into the waist overlap —
-              reaches up to world ~1.9 (well into the lit waist) so the trunk-hip
-              join is one continuous lit surface. Flattened (low scale-y) and in
-              the dimmer panel shade so it reads as a transitional bevel between
-              the abdomen and the flat hip fascia, NOT a bright smooth dome. */}
-          <mesh position={[0, 0.24, 0]} scale={[1, 0.42, 0.55]} material={panelShade} castShadow>
-            <sphereGeometry args={[0.205, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
-          </mesh>
-          {/* flat-topped lit hip deck plate — a broad chamfered plate capping the
-              girdle so the top of the pelvis reads as a flat machined deck, not
-              a round crown. NARROWED (0.29, was 0.34) to match the slimmed narrow
-              pelvis. DEPTH 0.15 so the deck is a thin slab in step with the
-              flattened girdle, not a deep shelf. */}
-          <RoundedBox args={[0.29, 0.08, 0.15]} radius={0.025} smoothness={3} position={[0, 0.2, 0]} material={mattePolymer} castShadow />
-          {/* flared lit hip yokes sweeping DOWN-OUT to meet each hip socket —
-              the meat that bridges pelvis to thigh on each side. Pulled IN
-              (x s*0.125, r0.10) so they still bridge to the hip sockets at
-              x=+/-0.17 but no longer balloon the hips outward. */}
-          {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.11, -0.12, 0]} scale={[1, 1.2, 0.6]} material={mattePolymer} castShadow>
-              <sphereGeometry args={[0.095, 20, 16]} />
-            </mesh>
-          ))}
-          {/* HARD-SURFACE hip fascia — a broad flat front PLATE plus two angled
-              side hip plates chamfered onto the girdle so the pelvis reads as a
-              paneled hip block (Optimus pelvis), not a smooth dome. Pulled BACK to
-              z=0.11 (was 0.185) so it sits ON the flattened girdle front (~0.13)
-              and stays the frontmost LIT pelvis surface without floating proud —
-              keeps the hips THIN front-to-back. NARROWED (0.28) to match the
-              slimmed girdle. */}
-          <RoundedBox args={[0.235, 0.36, 0.05]} radius={0.025} smoothness={3} position={[0, -0.03, 0.095]} material={mattePolymer} castShadow />
+          {/* thin lit deck capping the top into the waist overlap — a flat
+              machined plate, NARROW (0.255, under the chest) and shallow so the
+              pelvis top reads as a clean deck, not a wide shelf or round crown. */}
+          <RoundedBox args={[0.255, 0.07, 0.13]} radius={0.022} smoothness={3} position={[0, 0.2, 0]} material={mattePolymer} castShadow />
+          {/* broad flat front fascia PLATE — the frontmost lit pelvis panel, a
+              clean slab face. Pulled to z=0.085 so it sits just proud of the
+              flattened girdle front (~0.08), keeping the hips thin front-to-back. */}
+          <RoundedBox args={[0.215, 0.34, 0.045]} radius={0.022} smoothness={3} position={[0, -0.02, 0.085]} material={mattePolymer} castShadow />
+          {/* angled side hip flanks chamfered onto the slab so the block wraps —
+              they sweep down-out toward each hip socket (x=+/-0.135) so the
+              pelvis meets the legs with no gap, without ballooning the hips. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.09, 0.34, 0.05]}
-              radius={0.02}
+              args={[0.085, 0.32, 0.045]}
+              radius={0.018}
               smoothness={3}
-              position={[s * 0.135, -0.04, 0.05]}
+              position={[s * 0.13, -0.04, 0.045]}
               rotation-y={s * -0.55}
               material={mattePolymer}
               castShadow
             />
           ))}
           {/* recessed center seam splitting the front fascia (hip panel break) */}
-          <RoundedBox args={[0.014, 0.3, 0.014]} radius={0.005} position={[0, -0.03, 0.12]} material={seamInset} />
-          {/* machined seam belt low on the girdle (hip panel break, NOT at the
-              trunk join — the trunk/hip overlap stays one unbroken lit surface).
-              Radius tracks the slimmed narrow girdle (0.195, was 0.225). */}
-          <mesh position={[0, -0.1, 0]} scale={[1, 1, 0.55]} rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.195, 0.008, 8, 40]} />
+          <RoundedBox args={[0.013, 0.28, 0.013]} radius={0.005} position={[0, -0.02, 0.108]} material={seamInset} />
+          {/* machined seam belt low on the girdle (a hip panel break, NOT at the
+              trunk join). Radius tracks the slimmed slab (0.155). */}
+          <mesh position={[0, -0.1, 0]} scale={[1, 1, 0.5]} rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.155, 0.007, 8, 40]} />
           </mesh>
         </>
       );
     case "pelvis_cover":
       return (
         <>
-          {/* HARD-SURFACE fascia shell that slides off to expose the hip
-              actuators — a flat-fronted hip plate (broad front fascia + angled
-              side flanks) with a recessed center seam, matching the paneled
-              girdle underneath. The frontmost LIT pelvis panel at idle: WIDER +
-              brought FORWARD to z=0.215 so the pelvis front reads as a bright
-              girdle plate (like the chest/thighs), never a dark block. It slides
-              +z on teardown to expose the pelvis fascia underneath. NARROWED
-              (0.29) in step with the slimmed girdle; pulled BACK to z=0.135 (was
-              0.215) so at idle it sits ON the flattened girdle front (~0.13) — the
-              frontmost lit pelvis surface kept THIN front-to-back, not a proud
-              block. Still slides +z on teardown (motion unchanged). */}
-          <RoundedBox args={[0.245, 0.34, 0.06]} radius={0.03} smoothness={3} position={[0, -0.01, 0.12]} material={mattePolymer} castShadow />
+          {/* slide-off front fascia — the frontmost lit pelvis panel at idle, a
+              clean narrow slab face matching the slimmed girdle. Flat front plate
+              + angled side flanks + recessed center seam. NARROWED (0.22) in step
+              with the compact pelvis; sits at z=0.11 just on the slab front (~0.08)
+              so it reads thin front-to-back. Slides +z on teardown (motion is the
+              part registry's, unchanged). */}
+          <RoundedBox args={[0.22, 0.32, 0.05]} radius={0.025} smoothness={3} position={[0, 0.0, 0.1]} material={mattePolymer} castShadow />
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.09, 0.32, 0.05]}
-              radius={0.02}
+              args={[0.085, 0.3, 0.045]}
+              radius={0.018}
               smoothness={3}
-              position={[s * 0.135, -0.01, 0.06]}
+              position={[s * 0.13, 0.0, 0.05]}
               rotation-y={s * -0.6}
               material={mattePolymer}
               castShadow
             />
           ))}
           {/* one recessed seam line down the fascia center */}
-          <RoundedBox args={[0.014, 0.28, 0.014]} radius={0.005} position={[0, -0.01, 0.145]} material={seamInset} />
+          <RoundedBox args={[0.013, 0.26, 0.013]} radius={0.005} position={[0, 0.0, 0.123]} material={seamInset} />
         </>
       );
     case "torso":
       return (
         <>
-          {/* ONE SOLID LIT TRUNK. The torso link itself carries the lit chest
-              -to-waist mass in mattePolymer so the body's centre is never a dark
-              void — the chest plastron (chest_plate) sits OVER this, and when it
-              hinges open during teardown the lit torso underneath still reads as
-              a solid convex chest, not a black cavity. Slimmer/less boxy than the
-              old wide frustum (top r 0.30, was 0.34) so the chest reads LEAN +
-              humanoid (a Figure-02 trunk) and the shoulders frame it without the
-              torso being a wide box. 18-gon = smooth under the dither. */}
-          {/* SLAB chest: z-scale 0.5 (was 0.74) so the trunk is a flat humanoid
-              chest — width 0.275, depth 0.275*0.5 = 0.138 (width:depth 2:1, the
-              G1 0.45x0.20 envelope). This is THE change that kills the barrel
-              read from the side/3-4. 18-gon = smooth under the dither. */}
-          <mesh position={[0, 0.08, 0]} scale={[1, 1, 0.5]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.24, 0.205, 0.52, 18]} />
-          </mesh>
-          {/* convex upper-chest cap so the top of the trunk domes (pectoral mass)
-              instead of reading as a flat cylinder lid under the clavicle. SLIMMED
-              (r 0.24, was 0.275) in this proportion pass so the narrowed shoulders
-              frame a lean chest, not a wide box. FLATTENED (z 0.5) in step with the
-              slab trunk so the chest top stays thin front-to-back. */}
-          <mesh position={[0, 0.3, 0]} scale={[1, 0.6, 0.5]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.24, 24, 18, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
-          </mesh>
-          {/* G1 3-DOF WAIST JOINT. The G1 has a distinct, NARROWER waist actuator
-              section between the chest and the pelvis — a flattened hub clearly
-              pinched in from both the chest (r 0.275) and the hips (r 0.235). This
-              both matches the G1 and breaks the barrel silhouette into chest +
-              waist + hips instead of one drum.
-              (a) upper transition: chest base (r 0.265) tapers IN to the waist
-                  hub (r 0.175) over a short section so the pinch reads, no gap. */}
-          <mesh position={[0, -0.075, 0]} scale={[1, 1, 0.5]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.21, 0.155, 0.16, 18]} />
-          </mesh>
-          {/* (b) the WAIST HUB itself — a short, NARROW, flattened dark actuator
-              band (the visible waist joint), r 0.15, z 0.42 so it's the thinnest
-              part of the trunk front-to-back. TIGHTENED (was 0.175) so the waist
-              reads CLEARLY PINCHED — no belly bulge. Dark polymer so it reads as an
-              exposed actuator section between the lit chest and lit pelvis. */}
-          <mesh position={[0, -0.18, 0]} scale={[1, 1, 0.42]} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.15, 0.155, 0.13, 20]} />
-          </mesh>
-          {/* (c) waist actuator side DISCS — flat dark hubs on the L/R flanks of
-              the waist joint, axis sideways, so the waist reads as a real powered
-              joint (the G1 waist-roll actuator) and the pinch is unmistakable. */}
-          {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.135, -0.18, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-              <cylinderGeometry args={[0.058, 0.058, 0.05, 20]} />
-            </mesh>
-          ))}
-          {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.16, -0.18, 0]} rotation-z={HPI} material={brushedMetal}>
-              <cylinderGeometry args={[0.028, 0.028, 0.02, 16]} />
-            </mesh>
-          ))}
-          {/* (d) lower transition: the waist hub flares back OUT to the pelvis
-              girdle (r 0.245) and physically MEETS it — bottom at torso y=-0.34
-              (world ~1.62) overlapping the raised girdle top (r 0.235), so the
-              lit column stays continuous chest -> waist -> pelvis with NO gap. */}
-          <mesh position={[0, -0.285, 0]} scale={[1, 1, 0.52]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.155, 0.205, 0.16, 18]} />
-          </mesh>
-          {/* LIT ABDOMEN BRIDGE — a broad flat front panel on the TORSO itself
-              (not the hinged chest plate) spanning the lower waist DOWN to the
-              pelvis. Pulled BACK to z=0.12 (was 0.245) so it sits ON the flattened
-              slab front (trunk front ~0.13), not floating proud of it — keeps the
-              slab THIN front-to-back while still lapping over the raised pelvis
-              girdle/cover top with a lit surface (kills the dark chest/abdomen
-              step even while the chest plate is hinged open in teardown). */}
-          <RoundedBox args={[0.255, 0.32, 0.06]} radius={0.03} smoothness={3} position={[0, -0.36, 0.1]} material={mattePolymer} castShadow />
-          {/* its angled side abdomen flanks so the bridge wraps, not a flat slab —
-              pulled in (x s*0.14) to track the slimmer pinched waist */}
+          {/* ONE COHERENT G1 TRUNK. The torso link carries the lit chest-to-waist
+              mass so the body centre is never a dark void — the hinged chest
+              plastron sits OVER this and, when it swings open during teardown,
+              the lit slab underneath still reads as a solid flat chest, not a
+              black cavity. A clean LIGHT slab, NOT a stack of mismatched
+              cylinders. */}
+          {/* CHEST SLAB — a broad FLAT-fronted light panel: width 0.40, height
+              0.50, depth 0.16 (a true 2.5:1 slab, the G1 chest envelope). The
+              dominant lit mass of the trunk. Clearly NARROWER than the 0.56
+              shoulder span so the shoulders frame a lean chest, not a wide box.
+              Reads by silhouette + big luma step under the dither. */}
+          <RoundedBox args={[0.4, 0.5, 0.16]} radius={0.045} smoothness={4} position={[0, 0.12, 0.0]} material={mattePolymer} castShadow />
+          {/* shallow side chest flanks chamfered onto the slab so the chest wraps
+              at the flanks instead of ending in a hard vertical wall — keeps the
+              broad flat front but rounds the silhouette toward the arms. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.09, 0.3, 0.05]}
-              radius={0.025}
+              args={[0.08, 0.46, 0.13]}
+              radius={0.035}
               smoothness={3}
-              position={[s * 0.14, -0.34, 0.045]}
+              position={[s * 0.195, 0.12, 0.0]}
               rotation-y={s * -0.5}
-              material={mattePolymer}
+              material={panelShade}
               castShadow
             />
           ))}
-          {/* internal dark core bay — kept SMALL and recessed (z back) so it only
-              reads as the exposed core once the chest plastron hinges open; it no
-              longer faces the camera as a dark block at idle. Also stands in for
-              the removed chest_core_housing's dark cage behind the plastron. */}
-          <RoundedBox args={[0.2, 0.24, 0.12]} radius={0.03} position={[0, 0.02, -0.04]} material={darkPolymer} />
-          {/* machined seam ring at the clavicle line, tucked inside the chest.
-              Radius tracks the slimmed chest top (0.25, was 0.285). */}
-          <group position={[0, 0.32, 0]} rotation={[HPI, 0, 0]}>
-            <mesh scale={[1, 0.74, 1]} material={lip}>
-              <torusGeometry args={[0.25, 0.008, 8, 48]} />
+          {/* subtle RECESSED central seam — a thin dark groove down the chest
+              centreline (seamInset, dark .20), NOT a bright bar. Sits just proud
+              of the slab front so it reads as a machined panel split. */}
+          <RoundedBox args={[0.018, 0.42, 0.02]} radius={0.006} smoothness={2} position={[0, 0.12, 0.082]} material={seamInset} />
+          {/* G1 WAIST JOINT — a NARROW dark actuator hub clearly pinched IN from
+              the chest slab (0.40 wide) and the pelvis. r 0.135, z-scale 0.5 so
+              it is the thinnest part of the trunk, front-to-back AND across. Dark
+              polymer so it reads as an exposed powered joint between the lit
+              chest and lit pelvis — the unmistakable pinch. */}
+          <mesh position={[0, -0.2, 0]} scale={[1, 1, 0.5]} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.135, 0.14, 0.16, 22]} />
+          </mesh>
+          {/* waist-roll side discs — flat dark hubs on the L/R flanks, axis
+              sideways, so the waist reads as a real G1 waist actuator and the
+              pinch is legible from the front-3/4. */}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.12, -0.2, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
+              <cylinderGeometry args={[0.052, 0.052, 0.05, 20]} />
+            </mesh>
+          ))}
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[s * 0.145, -0.2, 0]} rotation-z={HPI} material={brushedMetal}>
+              <cylinderGeometry args={[0.024, 0.024, 0.02, 16]} />
+            </mesh>
+          ))}
+          {/* LIT ABDOMEN BRIDGE — a broad flat front panel on the TORSO itself
+              (not the hinged plate) spanning from below the waist hub DOWN onto
+              the pelvis girdle top (world overlap), so the lit column stays
+              continuous chest -> waist -> pelvis with NO dark step even while the
+              chest plate is hinged open. Width 0.255 < chest, > waist: a clean
+              tapered midriff. */}
+          <RoundedBox args={[0.26, 0.22, 0.12]} radius={0.03} smoothness={3} position={[0, -0.34, 0.02]} material={mattePolymer} castShadow />
+          {/* angled side abdomen flanks so the bridge wraps onto the pelvis, not
+              a flat slab — tracks the slim pinched waist. */}
+          {[-1, 1].map((s) => (
+            <RoundedBox
+              key={s}
+              args={[0.08, 0.2, 0.09]}
+              radius={0.025}
+              smoothness={3}
+              position={[s * 0.135, -0.33, 0.0]}
+              rotation-y={s * -0.5}
+              material={panelShade}
+              castShadow
+            />
+          ))}
+          {/* internal dark core bay — recessed (z back) so it only reads as the
+              exposed core once the chest plastron hinges open; it does not face
+              the camera as a dark block at idle. Stands in for the removed core
+              housing's dark cage behind the plastron. */}
+          <RoundedBox args={[0.2, 0.26, 0.12]} radius={0.03} position={[0, 0.06, -0.05]} material={darkPolymer} />
+          {/* thin machined seam lip at the clavicle line, tucked inside the top
+              of the chest slab so the trunk top reads as a finished edge under
+              the clavicle, not a raw box lid. */}
+          <group position={[0, 0.36, 0.0]} rotation={[HPI, 0, 0]}>
+            <mesh scale={[1, 0.55, 1]} material={lip}>
+              <torusGeometry args={[0.2, 0.008, 8, 48]} />
             </mesh>
           </group>
         </>
@@ -465,122 +420,93 @@ function PartMesh({ id, lip, ctx }) {
     case "chest_plate":
       return (
         <>
-          {/* SOLID CONVEX PLASTRON — a FILLED chest panel, not an open ring. A
-              full front-facing dome cap (theta 0..0.5π = the whole front
-              hemisphere quadrant, phi a wide 0.9π arc) so the chest reads as one
-              smooth lit bulge with NO dark interior facing the camera. Sits
-              slightly proud of the lit torso so the two together read as a single
-              convex chest mass. Tapered (scale y/z) so it's humanoid, not boxy.
-              SLIMMED (r 0.28, was 0.33) in step with the slimmed torso so the
-              plastron stays just proud of the trunk (lean, not a wide barrel).
-              FLATTENED (z 0.5, was 0.82) so the plastron is a thin slab chest
-              that hugs the flattened trunk front (~0.14 deep), NOT a round
-              barrel bulging forward — this is what makes the chest read THIN in
-              the side/3-4 views. */}
-          <mesh position={[0, 0.02, 0.03]} scale={[1, 1.12, 0.5]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.245, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
-          </mesh>
-          {/* abdominal plastron — extends the lit chest panel DOWN over the upper
-              waist so the chest flows into the midriff with no dark step. LENGTHENED
-              (h0.4, center y=-0.22) so its lit front laps DOWN to world ~1.55 —
-              firmly overlapping the raised pelvis girdle/cover top (world ~1.66+)
-              so there is NO dark gap between the chest and the abdomen/pelvis. A
-              tapered cylinder section closed at the front (matte). Slimmed
-              (r 0.27/0.255, was 0.3/0.285) in step with the trunk; still laps the
-              pelvis girdle top (r 0.235) so the chest->abdomen->pelvis stays one
-              continuous lit column with no dark step. FLATTENED (z 0.52) in step
-              with the slab plastron so the abdomen panel stays thin front-to-back. */}
-          <mesh position={[0, -0.22, 0.0]} scale={[1, 1, 0.52]} material={mattePolymer} castShadow>
-            <cylinderGeometry args={[0.235, 0.215, 0.4, 18, 1, false, Math.PI * 1.12, Math.PI * 0.76]} />
-          </mesh>
-          {/* HARD-SURFACE PECTORAL PANELS — two proud flat-faced plates (L/R)
-              chamfered onto the convex plastron so the chest reads as a paneled
-              plastron, not a smooth barrel. They catch the highlight as flat
-              faces; the dark sternum channel between them divides the chest.
-              Pulled in + BACK (z 0.155, was 0.245) onto the flattened slab front
-              so the pectorals sit on the thin chest, not floating proud of it. */}
+          {/* HINGED PLASTRON — ONE clean light SLAB panel that hugs the chest
+              slab and swings as a unit on the bottom-edge hinge. A broad flat
+              front face (NOT a round bulge): width 0.36, just inside the 0.40
+              chest so it reads as a removable teardown panel laid over the
+              trunk. Sits slightly proud (z 0.085) of the slab front. */}
+          <RoundedBox args={[0.36, 0.44, 0.07]} radius={0.035} smoothness={4} position={[0, 0.08, 0.085]} material={mattePolymer} castShadow />
+          {/* abdominal plastron extension — laps the lit panel DOWN over the
+              upper waist so the chest flows into the midriff with no dark step
+              when the plate is closed; stays above the y=-0.34 hinge line so the
+              teardown swing is unchanged. */}
+          <RoundedBox args={[0.3, 0.18, 0.06]} radius={0.03} smoothness={3} position={[0, -0.2, 0.075]} material={mattePolymer} castShadow />
+          {/* two subtle proud PECTORAL plates split by the sternum groove so the
+              chest reads as a paneled plastron, not a smooth slab. Modest relief
+              (proud just 0.02 over the panel) — crisp flat faces that catch the
+              key light. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.15, 0.2, 0.05]}
-              radius={0.02}
+              args={[0.14, 0.24, 0.04]}
+              radius={0.018}
               smoothness={3}
-              position={[s * 0.088, 0.08, 0.155]}
-              rotation-y={s * -0.32}
+              position={[s * 0.085, 0.12, 0.115]}
+              rotation-y={s * -0.18}
               material={mattePolymer}
               castShadow
             />
           ))}
-          {/* recessed dark STERNUM channel dividing the two pectoral panels —
-              pulled BACK to z=0.18 to sit on the flattened plastron front */}
-          <RoundedBox args={[0.05, 0.26, 0.035]} radius={0.01} position={[0, 0.04, 0.18]} material={darkPolymer} />
-          {/* side panel-break seams along the chest flanks (Optimus shell lines) —
-              pulled in (x s*0.155) to track the slimmer flatter chest flanks */}
+          {/* RECESSED dark sternum channel dividing the two pectorals — the
+              subtle central seam (seamInset, dark .20). G1 has NO glowing chest,
+              so the centreline is a DARK machined groove, not a bright bar. */}
+          <RoundedBox args={[0.03, 0.26, 0.03]} radius={0.008} position={[0, 0.12, 0.125]} material={seamInset} />
+          {/* side panel-break seams along the chest flanks (machined shell
+              lines) — thin dark grooves tracking the flatter chest flanks. */}
           {[-1, 1].map((s) => (
             <RoundedBox
               key={s}
-              args={[0.012, 0.3, 0.012]}
+              args={[0.012, 0.34, 0.012]}
               radius={0.004}
               smoothness={2}
-              position={[s * 0.155, 0.04, 0.12]}
-              rotation-y={s * -0.5}
+              position={[s * 0.165, 0.08, 0.1]}
+              rotation-y={s * -0.35}
               material={seamInset}
             />
           ))}
-          {/* white emissive chest seam — the sternum accent line */}
-          <RoundedBox args={[0.012, 0.22, 0.012]} radius={0.004} position={[0, 0.04, 0.2]} material={brightEmissiveSeam} />
-          {/* abdominal WAIST-BREAK panel — a recessed dark band low on the
-              plastron so the trunk reads as chest-panel-over-abdomen, with a
-              clean horizontal break instead of a smooth drum that runs to the
-              pelvis. Pulled BACK to z=0.15 onto the flattened slab front. */}
-          <RoundedBox args={[0.26, 0.04, 0.035]} radius={0.01} position={[0, -0.16, 0.15]} material={seamInset} />
-          {/* lit abdominal segment plate below the break — LENGTHENED + dropped to
-              y=-0.3 so its lit front laps down over the pelvis girdle top, closing
-              the chest->abdomen gap with a continuous lit surface. Stays above the
-              y=-0.34 hinge line so the teardown hinge is unchanged. Pulled BACK to
-              z=0.13 onto the flattened slab front. */}
-          <RoundedBox args={[0.23, 0.2, 0.05]} radius={0.018} smoothness={3} position={[0, -0.3, 0.13]} material={mattePolymer} castShadow />
-          {/* status dot trio — same chest lights as the 2D V (on the flat front) */}
+          {/* horizontal WAIST-BREAK groove low on the plastron so the trunk reads
+              as chest-panel-over-abdomen with a clean break, not one drum. */}
+          <RoundedBox args={[0.3, 0.03, 0.03]} radius={0.008} position={[0, -0.1, 0.105]} material={seamInset} />
+          {/* status-dot trio — the chest lights (mirrors the 2D V), on the flat
+              front of the plastron. */}
           {[-0.05, 0, 0.05].map((x) => (
-            <mesh key={x} position={[x, -0.1, 0.19]} material={chestDotMat}>
+            <mesh key={x} position={[x, -0.05, 0.135]} material={chestDotMat}>
               <sphereGeometry args={[0.013, 12, 12]} />
             </mesh>
           ))}
-          {/* one clean machined inner lip framing the panel's top opening edge —
-              pulled back (z 0.1) onto the flattened plastron */}
-          <mesh position={[0, 0.3, 0.1]} rotation-x={HPI * 0.92} material={lip}>
-            <torusGeometry args={[0.26, 0.012, 8, 40, Math.PI]} />
+          {/* one clean machined inner lip framing the panel's top opening edge. */}
+          <mesh position={[0, 0.31, 0.07]} rotation-x={HPI * 0.95} material={lip}>
+            <torusGeometry args={[0.2, 0.012, 8, 40, Math.PI]} />
           </mesh>
-          {/* visible hinge pivot along the bottom edge — narrowed (0.36) to match
-              the slimmer plastron; pulled back (z 0.12) onto the flattened front.
-              Pivot Y unchanged so the teardown hinge line is untouched. */}
-          <mesh position={[0, -0.34, 0.12]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.02, 0.02, 0.36, 12]} />
+          {/* visible hinge pivot along the bottom edge (hinge axis = x, matches
+              the parts.js pivot at y=-0.34 / z=0.22) — the whole plate swings
+              about this as a unit. */}
+          <mesh position={[0, -0.34, 0.18]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.02, 0.02, 0.34, 12]} />
           </mesh>
         </>
       );
     case "back_plate":
       return (
         <>
-          {/* solid convex dorsal shell matching the plastron — a filled domed
-              back panel (same closed form, mirrored), with a single central
-              spine channel and no open dark interior. FLATTENED (z 0.5, was 0.82)
-              in step with the front plastron so the trunk reads THIN front-to-back
-              from the side/3-4 — the back is a slab, not a barrel half. */}
-          <mesh position={[0, 0.02, -0.03]} scale={[1, 1.12, 0.5]} rotation-y={Math.PI} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.28, 40, 30, Math.PI * 1.05, Math.PI * 0.9, 0.0, Math.PI * 0.62]} />
+          {/* DORSAL SHELL matching the front plastron — ONE clean light SLAB
+              back panel (flat, not a barrel half) so the trunk reads THIN
+              front-to-back from the side/3-4. Swings as a unit on the bottom
+              hinge. */}
+          <RoundedBox args={[0.36, 0.46, 0.07]} radius={0.035} smoothness={4} position={[0, 0.08, -0.085]} material={mattePolymer} castShadow />
+          {/* lower dorsal extension lapping down toward the pelvis so the back
+              has no dark step at the waist. */}
+          <RoundedBox args={[0.3, 0.18, 0.06]} radius={0.03} smoothness={3} position={[0, -0.18, -0.075]} material={mattePolymer} castShadow />
+          {/* single recessed dark SPINE channel down the centre (seamInset). */}
+          <RoundedBox args={[0.05, 0.4, 0.03]} radius={0.012} position={[0, 0.08, -0.115]} material={seamInset} />
+          {/* machined lip framing the top edge. */}
+          <mesh position={[0, 0.31, -0.07]} rotation={[HPI * 1.05, 0, Math.PI]} material={lip}>
+            <torusGeometry args={[0.2, 0.012, 8, 40, Math.PI]} />
           </mesh>
-          <mesh position={[0, -0.12, -0.03]} scale={[1, 1, 0.5]} rotation-y={Math.PI} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.28, 36, 24, Math.PI * 1.1, Math.PI * 0.8, Math.PI * 0.42, Math.PI * 0.42]} />
-          </mesh>
-          {/* central spine channel (dark) — pulled forward to z=-0.16 onto the
-              flattened back surface */}
-          <RoundedBox args={[0.08, 0.3, 0.04]} radius={0.02} position={[0, 0.04, -0.16]} material={darkPolymer} />
-          <mesh position={[0, 0.3, -0.1]} rotation={[HPI * 1.08, 0, Math.PI]} material={lip}>
-            <torusGeometry args={[0.28, 0.012, 8, 40, Math.PI]} />
-          </mesh>
+          {/* visible hinge pivot along the bottom edge (matches parts.js back
+              hinge at y=-0.34 / z=-0.22). */}
           <mesh position={[0, -0.34, -0.18]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.02, 0.02, 0.42, 12]} />
+            <cylinderGeometry args={[0.02, 0.02, 0.34, 12]} />
           </mesh>
         </>
       );
@@ -601,19 +527,27 @@ function PartMesh({ id, lip, ctx }) {
     case "shoulder_yoke":
       return (
         <>
-          {/* clavicle yoke — NARROWED (0.56, was 0.74) so the shoulder line is a
-              MODEST ~1.7x the hip width, not the old dominant crossbar. Lit
-              clavicle deck so the top of the trunk reads solid, not a dark bar. */}
-          <RoundedBox args={[0.56, 0.13, 0.21]} radius={0.05} material={mattePolymer} castShadow />
-          {/* defined clavicle ridges sweeping to the shoulders */}
-          {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.19, 0.02, 0.06]} rotation-z={s * 0.25} material={mattePolymer} castShadow>
-              <capsuleGeometry args={[0.033, 0.14, 4, 10]} />
+          {/* NARROW lit clavicle DECK — a thin, hard slab (h 0.085, was 0.13)
+              so the top of the trunk reads as a crisp machined deck, not a fat
+              crossbar. Span 0.56 kept (matches the +/-0.27 shoulder seats) but
+              flatter + sharper-edged so the shoulder LINE doesn't dominate. */}
+          <RoundedBox args={[0.56, 0.085, 0.2]} radius={0.022} smoothness={3} material={mattePolymer} castShadow />
+          {/* dimmer back lip so the deck reads as a panel over a shell */}
+          <RoundedBox args={[0.5, 0.07, 0.1]} radius={0.018} smoothness={3} position={[0, -0.005, -0.075]} material={panelShade} castShadow />
+          {/* fine central seam down the deck */}
+          <RoundedBox args={[0.012, 0.07, 0.14]} radius={0.004} smoothness={2} position={[0, 0.045, 0.01]} material={seamInset} />
+          {/* two recessed DARK cylindrical sockets — the shoulder actuator pods
+              seat into these, so the joint reads as motor-in-socket (axis X,
+              along the arm line) and the pod hugs tight to the body. */}
+          {[-0.27, 0.27].map((x) => (
+            <mesh key={x} position={[x, -0.01, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
+              <cylinderGeometry args={[0.066, 0.066, 0.07, 20]} />
             </mesh>
           ))}
+          {/* machined seat rims */}
           {[-0.27, 0.27].map((x) => (
-            <mesh key={x} position={[x, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-              <cylinderGeometry args={[0.072, 0.072, 0.06, 16]} />
+            <mesh key={`r${x}`} position={[x, -0.01, 0]} rotation-z={HPI} material={lip}>
+              <torusGeometry args={[0.06, 0.006, 8, 22]} />
             </mesh>
           ))}
         </>
@@ -623,23 +557,28 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* exposed black ball joint — the deltoid actuator (compact, G1-scale) */}
-          <mesh material={darkPolymer} castShadow>
-            <sphereGeometry args={[0.078, 24, 18]} />
+          {/* G1 SHOULDER ACTUATOR POD — one tight DARK cylinder, axis along the
+              arm (X), tucked hard to the body. Replaces the old puffy ball: the
+              shoulder now reads as a compact powered pod, not a soft blob.
+              r 0.072, depth 0.1 -> caps cleanly onto the 0.13-wide upper-arm. */}
+          <mesh rotation-z={HPI} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.072, 0.072, 0.1, 28]} />
           </mesh>
-          {/* G1 SHOULDER MOTOR — a MODEST cylindrical actuator on the outboard
-              side of the shoulder, axis along the arm (X). Compact (r 0.068,
-              depth 0.06) so the shoulder reads as a powered joint, not a big
-              disc blob — G1 shoulders are tight to the body. */}
-          <mesh position={[sgn * 0.072, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.068, 0.068, 0.06, 24]} />
+          {/* inboard collar seating the pod into the yoke socket (hides the gap) */}
+          <mesh position={[sgn * -0.055, 0, 0]} rotation-z={HPI} material={panelShade} castShadow>
+            <cylinderGeometry args={[0.05, 0.064, 0.03, 22]} />
           </mesh>
-          {/* brushed center hub + machined rim on the motor face */}
-          <mesh position={[sgn * 0.103, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.034, 0.034, 0.018, 18]} />
+          {/* outboard MOTOR FACE — brushed center hub + machined rim, the only
+              metal accent, so the pod reads as a sealed actuator end-cap */}
+          <mesh position={[sgn * 0.058, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.038, 0.038, 0.02, 20]} />
           </mesh>
-          <mesh position={[sgn * 0.1, 0, 0]} rotation-z={HPI} material={lip}>
-            <torusGeometry args={[0.06, 0.008, 8, 24]} />
+          <mesh position={[sgn * 0.054, 0, 0]} rotation-z={HPI} material={lip}>
+            <torusGeometry args={[0.063, 0.007, 8, 26]} />
+          </mesh>
+          {/* fine inset groove ringing the pod barrel for a crisp luma edge */}
+          <mesh rotation-z={HPI} material={seamInset}>
+            <torusGeometry args={[0.073, 0.006, 8, 28]} />
           </mesh>
         </>
       );
@@ -649,18 +588,18 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* COMPACT deltoid cap — a small chamfered shoulder cap hugging the
-              joint (G1 shoulders are tight, NOT big pauldron blobs). A modest
-              rounded plate over the top-outboard of the shoulder motor + a short
-              flank panel; no oversized cap, no wide skirt. */}
-          <RoundedBox args={[0.13, 0.09, 0.15]} radius={0.04} smoothness={3} position={[sgn * 0.03, 0.03, 0]} material={mattePolymer} castShadow />
-          {/* short outboard flank panel down the upper deltoid */}
-          <RoundedBox args={[0.07, 0.11, 0.13]} radius={0.03} smoothness={3} position={[sgn * 0.085, -0.03, 0]} rotation-z={sgn * 0.45} material={panelShade} castShadow />
-          {/* recessed seam dividing the cap from the flank */}
-          <RoundedBox args={[0.01, 0.016, 0.12]} radius={0.003} smoothness={2} position={[sgn * 0.06, -0.005, 0]} material={seamInset} />
-          {/* visible hinge pivot along the inboard edge (hinge axis = z) */}
-          <mesh position={[sgn * -0.06, 0.05, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.014, 0.014, 0.08, 10]} />
+          {/* THIN ANGULAR DELTOID PLATE — not a bulbous cap. A flat chamfered
+              shoulder plate sitting over the top-outboard of the actuator pod,
+              tilted down the deltoid. Light panel so the band reveal reads;
+              shallow in Y (0.05) so it's a PLATE, never a padded blob. */}
+          <RoundedBox args={[0.16, 0.05, 0.15]} radius={0.022} smoothness={3} position={[sgn * 0.02, 0.025, 0]} rotation-z={sgn * 0.32} material={mattePolymer} castShadow />
+          {/* slim outboard flank rail down the upper deltoid (short, hard) */}
+          <RoundedBox args={[0.05, 0.13, 0.12]} radius={0.018} smoothness={3} position={[sgn * 0.085, -0.04, 0]} rotation-z={sgn * 0.5} material={panelShade} castShadow />
+          {/* recessed seam dividing the plate from the flank rail */}
+          <RoundedBox args={[0.01, 0.014, 0.12]} radius={0.003} smoothness={2} position={[sgn * 0.055, -0.012, 0]} material={seamInset} />
+          {/* visible inboard HINGE pivot (hinge axis = z, matches the part motion) */}
+          <mesh position={[sgn * -0.05, 0.04, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.013, 0.013, 0.085, 12]} />
           </mesh>
         </>
       );
@@ -669,30 +608,22 @@ function PartMesh({ id, lip, ctx }) {
     case "upper_arm_r":
       return (
         <>
-          {/* HARD-SURFACE humeral segment — a flat-fronted tapered PANEL (broad
-              front face, narrower dimmer back shell, chamfered side rails, two
-              recessed seams) replacing the old smooth cylinder. Reads as a
-              machined Optimus upper-arm shell, not a tube. */}
+          {/* slim G1 humeral slab — mattePolymer light panel, tapers shoulder->elbow */}
           <PanelSegment
             topY={-0.02}
             len={0.4}
-            wTop={0.13}
-            wBot={0.1}
-            flat={0.52}
+            wTop={0.115}
+            wBot={0.09}
+            flat={0.50}
             seams={2}
           />
-          {/* compact DARK actuator hub at the top, exposed under the deltoid —
-              the light panel caps onto this so the joint reads as an exposed
-              mechanical hub between shells (breaks the tube read at the top) */}
-          <mesh position={[0, 0.04, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.062, 0.062, 0.12, 16]} />
+          {/* modest dark actuator disc at the top — compact, not a big ring */}
+          <mesh position={[0, 0.02, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.05, 0.05, 0.08, 16]} />
           </mesh>
-          <mesh position={[0, 0.04, 0]} rotation-z={HPI} material={brushedMetal}>
-            <cylinderGeometry args={[0.03, 0.03, 0.14, 14]} />
-          </mesh>
-          {/* machined collar where the panel caps onto the elbow */}
+          {/* machined collar where the panel meets the elbow disc */}
           <mesh position={[0, -0.41, 0]} material={lip}>
-            <cylinderGeometry args={[0.052, 0.052, 0.02, 16]} />
+            <cylinderGeometry args={[0.046, 0.046, 0.016, 16]} />
           </mesh>
         </>
       );
@@ -701,22 +632,14 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* G1 ELBOW DISC MOTOR — exposed flat dark actuator disc, hinge axis
-              left-right (X). Widened to r 0.07 and given a proud OUTBOARD disc
-              face so the elbow reads as a powered disc joint that breaks the arm
-              into upper-arm + forearm segments (not one tube). */}
+          {/* G1 elbow disc — slim proportionate dark cylinder, hinge axis X */}
           <mesh rotation-z={HPI} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.07, 0.07, 0.092, 24]} />
+            <cylinderGeometry args={[0.055, 0.055, 0.075, 20]} />
           </mesh>
-          {/* outboard disc face — brushed hub + machined rim */}
-          <mesh position={[sgn * 0.06, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.036, 0.036, 0.018, 16]} />
+          {/* outboard brushed hub face — small centre hub only, no oversized rim */}
+          <mesh position={[sgn * 0.048, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.026, 0.026, 0.014, 14]} />
           </mesh>
-          <mesh position={[sgn * 0.057, 0, 0]} rotation-z={HPI} material={lip}>
-            <torusGeometry args={[0.062, 0.008, 8, 24]} />
-          </mesh>
-          {/* hinge linkage plate */}
-          <RoundedBox args={[0.03, 0.08, 0.05]} radius={0.008} position={[sgn * 0.04, -0.04, 0]} material={brushedMetal} />
         </>
       );
     }
@@ -724,28 +647,18 @@ function PartMesh({ id, lip, ctx }) {
     case "forearm_r":
       return (
         <>
-          {/* HARD-SURFACE forearm core (black, tendon-driven) — a flat-fronted
-              tapered dark PANEL narrowing toward the wrist, with a brushed
-              actuator spine showing on the back. No smooth tube. */}
+          {/* slim G1 forearm slab — mattePolymer light panel tapering to the wrist;
+              reads LIGHT against the dark elbow and wrist discs (panel-over-joint) */}
           <PanelSegment
             topY={0}
-            len={0.32}
-            wTop={0.092}
-            wBot={0.06}
-            flat={0.52}
-            mat={darkPolymer}
-            backMat={darkPolymer}
+            len={0.30}
+            wTop={0.085}
+            wBot={0.058}
+            flat={0.50}
+            mat={mattePolymer}
+            backMat={panelShade}
             seams={2}
           />
-          {/* exposed brushed tendon-actuator spine running the back of the
-              forearm — the mechanical detail that reads under the dither */}
-          <mesh position={[0, -0.15, -0.04]} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.022, 0.016, 0.28, 12]} />
-          </mesh>
-          {/* one machined collar near the elbow reading as the segment seam */}
-          <mesh position={[0, -0.04, 0]} material={brushedMetal}>
-            <cylinderGeometry args={[0.05, 0.05, 0.016, 16]} />
-          </mesh>
         </>
       );
     case "forearm_shell_l":
@@ -753,23 +666,18 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* HARD-SURFACE forearm cuff — a flat-fronted tapered PLATE covering
-              the forearm, hinging outboard. Replaces the round cuff with a
-              paneled gauntlet (front fascia + back shell + seam). */}
+          {/* forearm cover shell — slim light panel aligned over the forearm core */}
           <PanelSegment
-            topY={0.08}
-            len={0.3}
-            wTop={0.115}
-            wBot={0.078}
-            flat={0.5}
+            topY={0.06}
+            len={0.26}
+            wTop={0.10}
+            wBot={0.068}
+            flat={0.48}
             seams={1}
           />
-          <mesh position={[0, 0.08, 0.01]} scale={[1, 1, 0.86]} material={lip}>
-            <cylinderGeometry args={[0.06, 0.06, 0.014, 16]} />
-          </mesh>
-          {/* visible hinge pivot along the outboard edge (hinge axis = z) */}
-          <mesh position={[sgn * 0.058, 0.18, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.012, 0.012, 0.08, 10]} />
+          {/* hinge pivot on the outboard edge */}
+          <mesh position={[sgn * 0.052, 0.16, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.010, 0.010, 0.06, 10]} />
           </mesh>
         </>
       );
@@ -778,15 +686,14 @@ function PartMesh({ id, lip, ctx }) {
     case "wrist_r":
       return (
         <>
-          {/* 2-DOF gimbal block */}
-          <mesh material={darkPolymer} castShadow>
-            <sphereGeometry args={[0.04, 18, 14]} />
+          {/* slim 2-DOF wrist disc — flat dark cylinder instead of a bulbous sphere;
+              reads as a compact rotary joint, no soft lumps */}
+          <mesh rotation-z={HPI} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.038, 0.038, 0.05, 16]} />
           </mesh>
+          {/* small brushed hub face */}
           <mesh rotation-z={HPI} material={brushedMetal}>
-            <cylinderGeometry args={[0.026, 0.026, 0.07, 14]} />
-          </mesh>
-          <mesh rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.036, 0.007, 8, 20]} />
+            <cylinderGeometry args={[0.018, 0.018, 0.056, 12]} />
           </mesh>
         </>
       );
@@ -803,36 +710,36 @@ function PartMesh({ id, lip, ctx }) {
               space between the pelvis girdle above and the thigh root below so the
               leg connects to the pelvis with no gap. */}
           <mesh rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.082, 0.082, 0.13, 20]} />
+            <cylinderGeometry args={[0.08, 0.08, 0.13, 20]} />
           </mesh>
           <mesh material={darkPolymer} castShadow>
-            <sphereGeometry args={[0.092, 20, 16]} />
+            <sphereGeometry args={[0.09, 20, 16]} />
           </mesh>
-          {/* G1 HIP DISC MOTOR — the signature flat actuator housing on the
-              OUTBOARD hip flank, axis along the joint (X). SLIMMED + pulled INBOARD
-              (r 0.082 @ 0.06, was 0.105 @ 0.085) so the hip reads as a powered disc
-              joint without flaring the hips wider than the slim pelvis/legs. */}
+          {/* G1 HIP DISC MOTOR — the flat actuator housing on the OUTBOARD hip
+              flank, axis along the joint (X). PROPORTIONATE: face disc r 0.07,
+              about the thigh width (wTop 0.17 -> ~0.085 half), so it reads as a
+              powered disc, not an oversized ring flaring the hips. */}
           {(() => { const sgn = id.endsWith("_l") ? -1 : 1; return (
             <>
-              <mesh position={[sgn * 0.048, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-                <cylinderGeometry args={[0.066, 0.066, 0.055, 28]} />
+              <mesh position={[sgn * 0.05, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
+                <cylinderGeometry args={[0.07, 0.07, 0.05, 28]} />
               </mesh>
               <mesh position={[sgn * 0.078, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
-                <cylinderGeometry args={[0.034, 0.034, 0.02, 20]} />
+                <cylinderGeometry args={[0.03, 0.03, 0.018, 20]} />
               </mesh>
-              <mesh position={[sgn * 0.074, 0, 0]} rotation-z={HPI} material={lip}>
-                <torusGeometry args={[0.06, 0.008, 8, 28]} />
+              <mesh position={[sgn * 0.073, 0, 0]} rotation-z={HPI} material={lip}>
+                <torusGeometry args={[0.052, 0.007, 8, 28]} />
               </mesh>
             </>
           ); })()}
-          {/* LIT hip-socket sleeve lapping UP toward the pelvis girdle (world
-              ~1.52) so the hip reads as a lit joint feeding into the pelvis, not
-              a dark bead under a void. FLATTENED (z 0.6) in step with the slab leg. */}
-          <mesh position={[0, 0.09, 0.01]} scale={[1, 1.1, 0.6]} material={mattePolymer} castShadow>
-            <sphereGeometry args={[0.092, 18, 14]} />
+          {/* LIT hip-socket sleeve lapping UP toward the pelvis girdle so the hip
+              reads as a lit joint feeding into the pelvis, not a dark bead under a
+              void. FLATTENED (z 0.55) in step with the slab leg. */}
+          <mesh position={[0, 0.09, 0.01]} scale={[1, 1.1, 0.55]} material={mattePolymer} castShadow>
+            <sphereGeometry args={[0.088, 18, 14]} />
           </mesh>
           <mesh rotation-x={HPI} material={lip}>
-            <torusGeometry args={[0.074, 0.01, 8, 24]} />
+            <torusGeometry args={[0.07, 0.009, 8, 24]} />
           </mesh>
         </>
       );
@@ -841,32 +748,29 @@ function PartMesh({ id, lip, ctx }) {
       return (
         <>
           {/* femur actuator core (black) — a flat-sided dark PANEL spanning the
-              full thigh. Top RAISED to y=+0.10 (world ~1.44, up into the hip
-              socket) and lengthened so the BASE reaches the knee actuator at
-              y=-0.62 (world ~0.72): no dark void at the hip, no severed gap at
-              the knee. Built as a hard segment so when the light thigh shell
-              hinges off in teardown the exposed femur still reads as a machined
-              block, not a round rod. Slim (the broad light shell rides over it). */}
+              full thigh. Top at y=+0.1 (world ~1.44, up into the hip socket) and
+              the base reaches the knee actuator at y=-0.7 (world ~0.76): no dark
+              void at the hip, no severed gap at the knee. Slightly broadened
+              (wTop 0.14) so the exposed femur reads as a substantial machined
+              block when the light shell hinges off, not a thin rod. */}
           <PanelSegment
             topY={0.1}
             len={0.82}
-            wTop={0.13}
-            wBot={0.092}
-            flat={0.52}
+            wTop={0.14}
+            wBot={0.1}
+            flat={0.55}
             mat={darkPolymer}
             backMat={darkPolymer}
             seams={2}
           />
-          {/* upper-thigh shoulder that seats UP into the hip ball — raised to
-              y=+0.11 (world ~1.45) so it plugs the hip socket and the leg root
-              reads continuous with the pelvis, no gap. */}
+          {/* upper-thigh shoulder seating UP into the hip ball (world ~1.45) so
+              the leg root reads continuous with the pelvis, no gap. */}
           <mesh position={[0, 0.11, 0]} material={darkPolymer} castShadow>
-            <sphereGeometry args={[0.095, 18, 14]} />
+            <sphereGeometry args={[0.094, 18, 14]} />
           </mesh>
-          {/* machined collar at the knee end (LOWERED to the lengthened base, at
-              the new knee origin y=-0.7) */}
+          {/* machined collar at the knee end (at the knee origin y=-0.7) */}
           <mesh position={[0, -0.72, 0]} material={lip}>
-            <cylinderGeometry args={[0.058, 0.058, 0.022, 16]} />
+            <cylinderGeometry args={[0.06, 0.06, 0.022, 16]} />
           </mesh>
         </>
       );
@@ -874,25 +778,25 @@ function PartMesh({ id, lip, ctx }) {
     case "thigh_shell_r":
       return (
         <>
-          {/* HARD-SURFACE thigh shell — a broad flat-fronted LIT PLATE widest at
-              the hip, tapering toward the knee (Optimus quad panel). Top RAISED
-              to y=+0.30 (world ~1.46, lapping up into the pelvis hip socket) and
-              lengthened to len 0.74 so the LIT base reaches the knee at world
-              ~0.72 — closes the hip gap above and the knee gap below. Wide front
-              fascia + dimmer back shell + chamfer rails + two recessed quad
-              seams. Opens on the same top-rear hinge (pivot mesh unchanged). */}
+          {/* HARD-SURFACE thigh shell — a broad flat-fronted LIT quad PLATE,
+              widest at the hip and tapering toward the knee (Optimus quad panel).
+              Top at y=+0.30 (world ~1.46, lapping up into the hip socket) and
+              long (len 0.84) so the LIT base reaches the knee at world ~0.76 —
+              closes the hip gap above and the knee gap below. Broadened (wTop
+              0.185) so the thigh reads structural and substantial, not spindly.
+              Opens on the same top-rear hinge (pivot mesh unchanged). */}
           <PanelSegment
             topY={0.3}
             len={0.84}
-            wTop={0.17}
-            wBot={0.125}
-            flat={0.52}
+            wTop={0.185}
+            wBot={0.13}
+            flat={0.55}
             seams={2}
           />
-          {/* LIT hip-socket cap — a proud matte hub at the shell top that laps
-              up into the pelvis girdle (world ~1.49) so the thigh root reads as a
-              lit ball seating into the hip, not a dark stub below a void. */}
-          <mesh position={[0, 0.33, 0.01]} scale={[1, 0.92, 0.92]} material={mattePolymer} castShadow>
+          {/* LIT hip-socket cap — a proud matte hub at the shell top lapping up
+              into the pelvis girdle (world ~1.49) so the thigh root reads as a lit
+              ball seating into the hip, not a dark stub below a void. */}
+          <mesh position={[0, 0.33, 0.01]} scale={[1, 0.92, 0.9]} material={mattePolymer} castShadow>
             <sphereGeometry args={[0.1, 20, 16]} />
           </mesh>
           {/* machined collar at the top rim where the shell caps the hip */}
@@ -911,27 +815,27 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* exposed knee hinge + visible 4-bar linkage. Hub WIDENED (r0.072,
-              len 0.14) so it bodily FILLS the joint between the thigh base and
-              the shin top — the leg reads continuous thigh->knee->shin with no
-              severed gap. Hinge axis (rotation-z = HPI -> bend about X) is
-              UNCHANGED so the knee still bends correctly. */}
+          {/* exposed knee hinge. Hub fills the joint between the thigh base and the
+              shin top so the leg reads continuous thigh->knee->shin with no severed
+              gap. Hinge axis (rotation-z = HPI -> bend about X) UNCHANGED so the
+              knee still bends correctly. */}
           <mesh rotation-z={HPI} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.082, 0.082, 0.14, 24]} />
+            <cylinderGeometry args={[0.078, 0.078, 0.14, 24]} />
           </mesh>
-          {/* G1 KNEE DISC MOTOR — proud OUTBOARD flat actuator disc face with a
-              brushed hub + machined rim so the knee reads as a powered disc joint
-              breaking the leg into thigh + shin (not one tube). */}
+          {/* G1 KNEE DISC MOTOR — outboard flat actuator disc, PROPORTIONATE to
+              the shin (wTop 0.14 -> ~0.07 half): face disc r 0.06 + a tight rim,
+              so the knee reads as a powered disc breaking the leg into thigh+shin,
+              NOT a huge ring wider than the shin. */}
           <mesh position={[sgn * 0.072, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.044, 0.044, 0.02, 18]} />
+            <cylinderGeometry args={[0.038, 0.038, 0.018, 18]} />
           </mesh>
-          <mesh position={[sgn * 0.068, 0, 0]} rotation-z={HPI} material={lip}>
-            <torusGeometry args={[0.074, 0.009, 8, 26]} />
+          <mesh position={[sgn * 0.066, 0, 0]} rotation-z={HPI} material={lip}>
+            <torusGeometry args={[0.062, 0.008, 8, 26]} />
           </mesh>
           {/* lit knee cap — a small matte plate proud of the joint front so the
-              knee reads as a lit hub, not a dark bead, joining the lit shells */}
-          <RoundedBox args={[0.1, 0.13, 0.045]} radius={0.018} smoothness={3} position={[0, 0, 0.06]} material={mattePolymer} castShadow />
-          {/* linkage bars front + rear */}
+              knee reads as a lit hub joining the lit shells, not a dark bead */}
+          <RoundedBox args={[0.095, 0.12, 0.04]} radius={0.016} smoothness={3} position={[0, 0, 0.058]} material={mattePolymer} castShadow />
+          {/* 4-bar linkage bars front + rear */}
           {[0.05, -0.05].map((z) => (
             <RoundedBox key={z} args={[0.02, 0.12, 0.018]} radius={0.005} position={[sgn * 0.035, -0.02, z]} rotation-x={z > 0 ? 0.2 : -0.2} material={brushedMetal} />
           ))}
@@ -942,24 +846,23 @@ function PartMesh({ id, lip, ctx }) {
     case "shin_r":
       return (
         <>
-          {/* tibial actuator core (black) — a flat-fronted dark PANEL spanning
-              the full shin. Top RAISED to y=+0.12 (world ~0.76) so it overlaps
-              the knee actuator (no gap under the knee hub); base at the ankle
-              y=-0.54. Flatter in depth than the thigh (a shin plate), with a
-              distinct CALF swell behind it. */}
+          {/* tibial actuator core (black) — a flat-fronted dark PANEL spanning the
+              full shin. Top at y=+0.12 (world ~0.78) overlapping the knee actuator
+              (no gap under the knee hub); base at the ankle y=-0.6. Flatter in
+              depth than the thigh (a shin plate), with a distinct CALF swell. */}
           <PanelSegment
             topY={0.12}
             len={0.72}
-            wTop={0.115}
-            wBot={0.07}
-            flat={0.5}
+            wTop={0.12}
+            wBot={0.075}
+            flat={0.52}
             mat={darkPolymer}
             backMat={darkPolymer}
             seams={2}
           />
-          {/* CALF swell — a paneled bulge behind the upper shin (the gastroc
-              mass) chamfered, not a round ball, so the back of the leg has a
-              real machined profile that tapers to the ankle */}
+          {/* CALF swell — a paneled bulge behind the upper shin (gastroc mass),
+              chamfered not round, so the back of the leg has a machined profile
+              that tapers to the ankle. */}
           <RoundedBox
             args={[0.09, 0.28, 0.07]}
             radius={0.03}
@@ -968,9 +871,9 @@ function PartMesh({ id, lip, ctx }) {
             material={darkPolymer}
             castShadow
           />
-          {/* machined collar at the ankle end (LOWERED to the new ankle origin) */}
+          {/* machined collar at the ankle end (at the ankle origin) */}
           <mesh position={[0, -0.6, 0]} material={lip}>
-            <cylinderGeometry args={[0.044, 0.044, 0.02, 16]} />
+            <cylinderGeometry args={[0.046, 0.046, 0.02, 16]} />
           </mesh>
         </>
       );
@@ -980,21 +883,21 @@ function PartMesh({ id, lip, ctx }) {
         <>
           {/* HARD-SURFACE shin shell — a flat-fronted SHIN PLATE (the Optimus
               tibia guard), broad at the top tapering to the ankle, with a paneled
-              CALF swell on the back. Top RAISED to y=+0.28 (world ~0.76, lapping
-              up to the knee actuator) and lengthened to len 0.62 so the LIT shin
-              meets the knee hub — no severed gap at the knee. Same top-rear
-              hinge (pivot mesh unchanged). */}
+              CALF swell on the back. Top at y=+0.28 (world ~0.78, lapping up to the
+              knee actuator) and long (len 0.68) so the LIT shin meets the knee hub
+              — no severed gap at the knee. Broadened (wTop 0.155) so the lower leg
+              reads structural to match the thigh. Same top-rear hinge (pivot mesh
+              unchanged). */}
           <PanelSegment
             topY={0.28}
             len={0.68}
-            wTop={0.14}
-            wBot={0.088}
-            flat={0.5}
+            wTop={0.155}
+            wBot={0.09}
+            flat={0.52}
             seams={2}
           />
           {/* LIT shin-top cap lapping the knee — a proud matte hub at the shell
-              top (world ~0.77) so the shin reads as a lit form meeting the knee,
-              not a stub below the gap. */}
+              top (world ~0.77) so the shin reads as a lit form meeting the knee. */}
           <mesh position={[0, 0.27, 0.01]} scale={[1, 0.85, 0.9]} material={mattePolymer} castShadow>
             <sphereGeometry args={[0.092, 18, 14]} />
           </mesh>
@@ -1020,11 +923,13 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
+          {/* ankle gimbal hub — a small dark disc filling the shin base to foot
+              gap, axis along the joint (X). Kept compact and proportionate. */}
           <mesh rotation-z={HPI} material={darkPolymer} castShadow>
             <cylinderGeometry args={[0.05, 0.05, 0.08, 18]} />
           </mesh>
           <mesh position={[sgn * 0.045, 0, 0]} rotation-z={HPI} material={brushedMetal}>
-            <cylinderGeometry args={[0.026, 0.026, 0.018, 14]} />
+            <cylinderGeometry args={[0.024, 0.024, 0.018, 14]} />
           </mesh>
         </>
       );
@@ -1033,7 +938,8 @@ function PartMesh({ id, lip, ctx }) {
     case "foot_r":
       return (
         <>
-          {/* sole plate + toe link */}
+          {/* simple flat sole plate + toe link — planted flat (foot bottom near
+              world y~0). A clean industrial plate, no toe articulation drama. */}
           <RoundedBox args={[0.1, 0.04, 0.24]} radius={0.015} position={[0, 0, 0.05]} material={darkPolymer} castShadow receiveShadow />
           <RoundedBox args={[0.1, 0.022, 0.07]} radius={0.008} position={[0, -0.012, 0.18]} material={mattePolymer} castShadow />
           {/* ankle mount block */}
@@ -1073,39 +979,42 @@ function PartMesh({ id, lip, ctx }) {
     case "head_base":
       return (
         <>
-          {/* inner skull — optic core sits inside it */}
-          <mesh scale={[1, 1.05, 0.95]} material={darkPolymer}>
-            <sphereGeometry args={[0.16, 32, 24]} />
+          {/* inner skull — the dark structural core the optics sit in */}
+          <mesh scale={[1, 1.04, 0.96]} material={darkPolymer}>
+            <sphereGeometry args={[0.158, 32, 24]} />
           </mesh>
-          {/* smooth dark teardrop helmet shell (sides + jaw stay when cranium opens) */}
-          <mesh scale={[1.0, 1.08, 1.02]} material={darkGlass} castShadow>
+          {/* smooth matte helmet shell — a small clean G1 cranium, slightly
+              flattened front-to-back. darkHelmet (matte gray .13) so the head
+              reads as a solid industrial helmet, not a glossy bauble. */}
+          <mesh scale={[1.0, 1.06, 0.98]} material={darkHelmet} castShadow>
             <sphereGeometry args={[0.2, 48, 36]} />
           </mesh>
-          {/* DARK VISOR (folded in from the removed visor_glass part) — the
-              near-black glossy blank face. A smoked teardrop filling the face
-              opening so the front of the head reads as one dark glossy mass; the
-              emissive eyes + mouth (below / in eye_ring) are the ONLY things that
-              bloom through it. No bright brow arc/halo — the face is just the
-              eyes + mouth on a dark visor. */}
-          <mesh position={[0, 0.005, 0.085]} scale={[1.02, 1.14, 0.7]} material={darkGlass}>
-            <sphereGeometry args={[0.18, 40, 30, Math.PI * 0.82, Math.PI * 1.36, 0.42, 1.42]} />
+          {/* BLANK DARK WRAPAROUND VISOR — the whole face is one near-black
+              glossy band, no eyes/grin moulded in. A wide shallow lens of
+              darkGlass wrapping the front. The emissive optic SLITS in the
+              eye_ring parts are the ONLY features that bloom through it. */}
+          <mesh position={[0, 0.012, 0.052]} scale={[1.04, 0.62, 0.92]} material={darkGlass} castShadow>
+            <sphereGeometry args={[0.188, 44, 32, Math.PI * 0.78, Math.PI * 1.44, 0.62, 1.0]} />
           </mesh>
-          {/* MOUTH / underscanline (folded in from the removed face_seam part) —
-              a thin emissive bar low on the visor that shifts with mood (dim+flat
-              at rest, brighter/wider scan/typing, short+sharp on error). The
-              `faceMouth` ref is driven by the frame loop's FACE EXPRESSION block.
-              This is the only emissive face feature besides the eyes; there is NO
-              brow seam/arc over the head anymore. */}
+          {/* slim brushed brow lip capping the top of the visor band — a single
+              crisp horizontal panel edge so the visor reads as set into the
+              helmet, machined not moulded. */}
+          <mesh position={[0, 0.083, 0.142]} rotation-x={0.32} material={brushedMetal} castShadow>
+            <boxGeometry args={[0.2, 0.016, 0.05]} />
+          </mesh>
+          {/* MINIMAL MOUTH — a near-invisible thin short underscore low on the
+              visor. Driven by the FACE EXPRESSION block via `faceMouth`; at
+              rest it is a dim flat hairline, machine-like, not a grin. */}
           <RoundedBox
-            args={[0.07, 0.008, 0.01]}
-            radius={0.004}
-            position={[0, -0.061, 0.198]}
+            args={[0.034, 0.005, 0.008]}
+            radius={0.0025}
+            position={[0, -0.07, 0.176]}
             ref={(m) => ctx.setExtra("faceMouth", m)}
             material={faceMat.mouth}
           />
-          {/* LIT neck collar joining the stack — mattePolymer (was dark) so the
-              head-to-neck join stays lit and continuous, no dark band that re-
-              breaks the head off from the body. */}
+          {/* LIT neck collar joining the stack — mattePolymer so the head-to-neck
+              join stays lit and continuous, no dark band re-breaking the head
+              off the body. */}
           <mesh position={[0, -0.18, 0]} material={mattePolymer}>
             <cylinderGeometry args={[0.078, 0.092, 0.08, 20]} />
           </mesh>
@@ -1115,17 +1024,20 @@ function PartMesh({ id, lip, ctx }) {
       return (
         <>
           {/* DARK cranium dome over the helmet — a SYMMETRIC top+back shell open
-              only at the face. darkPolymer (near-black), not the light matte:
-              the head is a dark Optimus helmet (dark dome + dark visor) with
-              only the thin seam bright — so its rim-lit edge no longer flares
-              into a pale hair-flick crescent. phiStart/phiLength centered on the
-              back so both edges are even. */}
+              only at the face. darkHelmet (matte gray .13) so it stays a solid
+              G1 helmet, no glossy hair-flick crescent. phiStart/phiLength
+              centered on the back so both face edges are even. */}
           <mesh scale={[1, 1.04, 1.0]} material={darkHelmet} castShadow>
-            <sphereGeometry args={[0.212, 48, 32, Math.PI * 0.74, Math.PI * 1.52, 0.0, 1.5]} />
+            <sphereGeometry args={[0.21, 48, 32, Math.PI * 0.76, Math.PI * 1.48, 0.0, 1.5]} />
+          </mesh>
+          {/* crisp seam ridge where the dome meets the visor band — one thin
+              brushed panel edge, the only machined accent on the dome */}
+          <mesh position={[0, 0.058, 0.0]} rotation-x={HPI} material={brushedMetal}>
+            <torusGeometry args={[0.196, 0.005, 8, 40, Math.PI * 1.4]} />
           </mesh>
           {/* rear-top hinge: visible pivot + blocks */}
           <mesh position={[0, 0.13, -0.15]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.018, 0.018, 0.26, 12]} />
+            <cylinderGeometry args={[0.018, 0.018, 0.24, 12]} />
           </mesh>
           {[-0.1, 0.1].map((x) => (
             <RoundedBox key={x} args={[0.04, 0.04, 0.045]} radius={0.01} position={[x, 0.13, -0.145]} material={lip} />
@@ -1137,33 +1049,35 @@ function PartMesh({ id, lip, ctx }) {
       const side = id.endsWith("_l") ? "L" : "R";
       const sgn = side === "L" ? -1 : 1;
       const fm = faceMat[side];
-      // V's EYE — a readable emissive LENS on the dark visor, not a faint ring.
-      // Emotion comes from SHAPE + INTENSITY + MOTION, never from going googly:
-      //   eyeBlink{side}  group: scaleY collapses for blinks / sleep slits.
-      //   eyeShape{side}  group: scaleY = openness (focus/flare), rotation-z =
-      //                   MOOD tilt (happy arc vs angry slant), mirrored per eye.
-      //   lens (rounded bar) = the eye body; pupil dot brightens the center.
-      // The frame loop drives all of these via refs. Sized bigger + brighter
-      // than the old whisper ring so V has a FACE at hero distance.
+      // V's OPTIC — a SLIM HORIZONTAL emissive SLIT set INTO the dark visor,
+      // G1-style, NOT a round googly lens. Emotion is shape + intensity + motion:
+      //   eyeBlink{side}  group: scaleY collapses the slit (blink / sleep line).
+      //   eyeShape{side}  group: scaleX = slit length (focus/flare), rotation-z =
+      //                   MOOD tilt (subtle arc vs slant), mirrored per eye.
+      //   eyeLens (thin rounded bar) = the slit body; eyePupil = a small glare
+      //   node that punches the brightest pixel along the slit.
+      // The frame loop drives all of these via refs. Kept slim so the face stays
+      // a blank machine visor with two thin light lines, no cartoon roundness.
       return (
         <group ref={(g) => ctx.setExtra(`eyeBlink${side}`, g)}>
           <group ref={(g) => ctx.setExtra(`eyeShape${side}`, g)}>
-            {/* socket recess so the lit lens reads as set INTO the dark visor */}
-            <mesh position={[0, 0, -0.004]} material={darkPolymer}>
-              <boxGeometry args={[0.06, 0.034, 0.01]} />
+            {/* deep dark socket channel so the slit reads as cut INTO the visor */}
+            <mesh position={[0, 0, -0.006]} material={darkPolymer}>
+              <boxGeometry args={[0.064, 0.016, 0.014]} />
             </mesh>
-            {/* the eye lens — a horizontal rounded bar (confident Optimus eye) */}
+            {/* the optic SLIT — a thin horizontal emissive bar (G1 light line) */}
             <RoundedBox
-              args={[0.052, 0.02, 0.012]}
-              radius={0.009}
+              args={[0.056, 0.0075, 0.01]}
+              radius={0.0035}
               smoothness={4}
-              position={[0, 0, 0.01]}
+              position={[0, 0, 0.006]}
               ref={(m) => ctx.setExtra(`eyeLens${side}`, m)}
               material={fm}
             />
-            {/* bright pupil core — punches the brightest pixel for the glare */}
-            <mesh position={[sgn * 0.006, 0, 0.016]} ref={(m) => ctx.setExtra(`eyePupil${side}`, m)} material={fm}>
-              <sphereGeometry args={[0.007, 14, 14]} />
+            {/* glare node — small bright point sliding toward the inner end of
+                the slit; scaled by the frame loop for the focus glint */}
+            <mesh position={[sgn * -0.014, 0, 0.011]} ref={(m) => ctx.setExtra(`eyePupil${side}`, m)} material={fm}>
+              <sphereGeometry args={[0.005, 12, 12]} />
             </mesh>
           </group>
         </group>
@@ -1391,9 +1305,11 @@ export default function VRobot(props) {
       prevF.current[def.id] = target;
     }
 
-    // core reveal: it never moves — its band ramps the emissive instead
+    // core reveal: it never moves — its band ramps the emissive instead. Idle
+    // base is near-DARK (G1 has no glowing chest); the core only lights up as
+    // the chest plate hinges open during teardown (coreF ramps 0->1).
     const coreF = openFraction(s.depth, PART_INDEX.get("core").band);
-    emissiveCore.emissiveIntensity = 2.6 + coreF * 1.8 + Math.sin(t * 2.4) * (0.25 + coreF * 0.5);
+    emissiveCore.emissiveIntensity = 0.1 + coreF * 4.2 + Math.sin(t * 2.4) * coreF * 0.6;
     if (X.coreMesh) X.coreMesh.scale.setScalar(1 + Math.sin(t * 2.4) * 0.02 * (1 + coreF));
 
     // ALIVE IDLE — V is never a statue. calmA scales every voluntary motion so

@@ -152,7 +152,9 @@ const PARTS = [
     id: "core",
     parent: "torso",
     kind: "core",
-    origin: [0, 0, 0.04],
+    // pushed BACK (was z 0.04) so the core sphere stays fully behind the chest
+    // plastron at idle — it only shows in the cavity once the chest hinges open.
+    origin: [0, 0, -0.03],
     // re-tiled to fill the band left by the removed chest_core_housing — the
     // core's emissive reveal ramp now begins right after the chest/back plates
     // hinge open (no dead gap in the teardown scrub).
