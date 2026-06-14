@@ -2,22 +2,26 @@ import { useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import useVStore from "./store.js";
 
-// Input grammar (DESIGN-V8-TEARDOWN pillar A) extended for free-look:
-//   one-finger / left-drag, axis-disambiguated by the dominant axis of the
-//   first ~6px of movement and then LOCKED for that press:
-//     HORIZONTAL drag -> turn the robot (store.setYaw, accumulated)
-//     VERTICAL   drag -> scrub the teardown depth (store.setDepth)
+// Input grammar (DESIGN-V8-TEARDOWN pillar A), now a FREE TRACKBALL:
+//   one-finger / left-drag = trackball — BOTH axes at once, no axis lock:
+//     HORIZONTAL delta -> turn the robot (store.setYaw, accumulated, unbounded)
+//     VERTICAL   delta -> camera elevation orbit (store.setPitch, store-clamped)
+//   Drag NO LONGER scrubs teardown depth — the slim TEARDOWN slider + arrows +
+//   commands own depth now.
 //   wheel / two-finger pinch -> zoom the figure (store.setScale)
 //   ArrowUp/Down -> depth scrub   Escape -> clearFocus
-// A press that never crosses the threshold stays a CLICK (inspect / talk).
+// A press that never crosses the ~6px threshold stays a CLICK (open part / talk).
 // All depth writes go through setDepth(v, source) which bumps tweenToken,
-// killing in-flight command tweens — last human input wins. Yaw/scale are
-// pure root-group transforms; the camera never free-orbits.
+// killing in-flight command tweens — last human input wins. Yaw is a pure
+// root-group rotation; pitch is a camera-only orbit (CameraRig), never the robot.
 
-const DRAG_THRESHOLD = 6; // px before a press commits to drag (and picks an axis)
-const DRAG_SCALE = 1.2; // one full panel height of vertical drag = 1.2 depth
+const DRAG_THRESHOLD = 6; // px before a press commits to a trackball drag (not a click)
 // ~2π of yaw per ~1.5 panel widths of horizontal drag, both directions.
 const YAW_TURNS_PER_WIDTH = (Math.PI * 2) / 1.5;
+// vertical drag -> pitch: one full panel height spans ~1.6 rad, comfortably more
+// than the store's [-0.45, 0.55] clamp so a normal drag reaches the limits and
+// the clamp (not the gesture) defines the ceiling/floor.
+const PITCH_PER_HEIGHT = 1.6;
 const WHEEL_ZOOM = 0.0012; // wheel zoom sensitivity (per the task spec)
 const KEY_STEP = 0.04;
 const MODE_EPSILON = 0.02;
@@ -54,15 +58,14 @@ export default function useInputs() {
     wrapper.setAttribute("tabindex", "0"); // keyboard scrubbing needs a focusable host
     canvas.style.setProperty("touch-action", "none"); // drags drive the figure, never scroll
 
-    // single-pointer drag state (rotate or depth, axis locked once chosen)
+    // single-pointer drag state — a free trackball (yaw + pitch together, no lock)
     const drag = {
       id: null,
       active: false, // crossed the threshold -> committed to a drag (not a click)
-      axis: null, // 'x' (rotate) | 'y' (depth), locked for the press
       startX: 0,
       startY: 0,
-      startDepth: 0,
       startYaw: 0,
+      startPitch: 0,
       suppressClickUntil: 0,
     };
     // active pointers for pinch detection (pointerId -> {x, y})
@@ -81,7 +84,6 @@ export default function useInputs() {
       if (drag.active) drag.suppressClickUntil = performance.now() + CLICK_SUPPRESS_MS;
       drag.id = null;
       drag.active = false;
-      drag.axis = null;
     };
 
     const onPointerDown = (e) => {
@@ -98,12 +100,11 @@ export default function useInputs() {
 
       drag.id = e.pointerId;
       drag.active = false;
-      drag.axis = null;
       drag.startX = e.clientX;
       drag.startY = e.clientY;
       const s = useVStore.getState();
-      drag.startDepth = s.depth;
       drag.startYaw = s.yaw;
+      drag.startPitch = s.pitch || 0;
     };
 
     const onPointerMove = (e) => {
@@ -125,20 +126,19 @@ export default function useInputs() {
 
       if (!drag.active) {
         if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
-        // past threshold: commit, and lock to the dominant axis of this initial move
+        // past threshold: commit to a trackball drag (no axis lock — both axes live)
         drag.active = true;
-        drag.axis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
       }
 
-      if (drag.axis === "x") {
-        // horizontal drag -> turn. drag right = turn the figure to its right.
-        const w = Math.max(1, canvas.clientWidth);
-        useVStore.getState().setYaw(drag.startYaw + (dx / w) * YAW_TURNS_PER_WIDTH);
-      } else {
-        // vertical drag -> scrub. drag down = increase depth (descend into chassis)
-        const h = Math.max(1, canvas.clientHeight);
-        applyDepth(drag.startDepth + (dy / h) * DRAG_SCALE, "pointer");
-      }
+      // FREE TRACKBALL: horizontal -> robot yaw, vertical -> camera pitch, both
+      // every frame off the press-start values. drag right = turn V to its right;
+      // drag down = camera cranes up to look DOWN on V (positive pitch), drag up =
+      // crane under to look up. The store clamps pitch; yaw is unbounded.
+      const s = useVStore.getState();
+      const w = Math.max(1, canvas.clientWidth);
+      const h = Math.max(1, canvas.clientHeight);
+      s.setYaw(drag.startYaw + (dx / w) * YAW_TURNS_PER_WIDTH);
+      s.setPitch(drag.startPitch + (dy / h) * PITCH_PER_HEIGHT);
     };
 
     const endPointer = (e) => {
@@ -156,7 +156,6 @@ export default function useInputs() {
         if (drag.active) drag.suppressClickUntil = performance.now() + CLICK_SUPPRESS_MS;
         drag.id = null;
         drag.active = false;
-        drag.axis = null;
       }
     };
 

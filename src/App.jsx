@@ -96,6 +96,24 @@ const V_RESPONSES = [
 
 const CREEP_ACTIONS = ["think", "point-terminal", "nod", "shake-head"];
 
+// Turn a part id into a short, clean speech line when the visitor clicks a part
+// to open / close it. No spec sheet, no terminal dump — one in-character beat in
+// the 3D speech bubble. `opening` is the part's NEW open state after the toggle.
+function partOpenLine(partId, opening) {
+  const label = (partId || "panel").replace(/_/g, " ");
+  if (!opening) return `Closing ${label}. Sealed back up.`;
+  const lines = [
+    `Opening ${label}. Have a look inside.`,
+    `${label} — popping it open for you.`,
+    `There. ${label} is open. Mind the actuators.`,
+    `Cracking ${label}. This is what I'm made of.`,
+  ];
+  // deterministic pick by id so the same part reads consistently per session
+  let h = 0;
+  for (let i = 0; i < label.length; i++) h = (h * 31 + label.charCodeAt(i)) >>> 0;
+  return lines[h % lines.length];
+}
+
 // Short in-character invites spoken when the visitor clicks the BLANK 3D panel
 // (empty space, not V's body). Pure nudge toward the terminal — no creep, no arc.
 const KEEP_TALKING_LINES = [
@@ -164,6 +182,9 @@ function App() {
   // inspected part id -> small overlay label INSIDE the 3D panel (the spec sheet
   // no longer goes to the terminal; the part name stays in the 3D world).
   const focusPartId = useVStore((s) => s.focusPartId);
+  // live teardown depth so the slim TEARDOWN slider reflects scrubs from any
+  // source (slider drag, ArrowUp/Down, teardown/assemble/disassemble commands).
+  const depth = useVStore((s) => s.depth);
 
   useEffect(() => { storeAvatarState(avatarState); }, [avatarState, storeAvatarState]);
   useEffect(() => { storeLookTarget(lookTarget); }, [lookTarget, storeLookTarget]);
@@ -439,7 +460,11 @@ function App() {
     if (res.special?.kind === "inspect") {
       if (res.speech) speak(res.speech);
       if (res.state) setAvatarState(res.state);
-      useVStore.getState().inspect(res.special.id);
+      // mirror the part-CLICK gesture: open the part individually AND focus it,
+      // so "inspect head_shell" reveals the same opened part a click would.
+      const vs = useVStore.getState();
+      vs.setOpen(res.special.id, true);
+      vs.inspect(res.special.id);
       setHistory(newHist); setInput("");
       resetState();
       return;
@@ -483,6 +508,27 @@ function App() {
     resetState();
   };
 
+  // TEARDOWN slider -> depth. Drag no longer scrubs teardown, so this slim
+  // vertical control on the right edge of the 3D panel is the obvious GUI way to
+  // take V apart (alongside ArrowUp/Down + the teardown/assemble commands). The
+  // slider's max is the TOP, so dragging the thumb UP increases depth (V opens
+  // from the top down) — we invert the native range value. setDepth's "pointer"
+  // source bumps tweenToken so an in-flight command tween yields to the human.
+  const handleTeardownSlider = (e) => {
+    const raw = parseFloat(e.target.value);
+    if (Number.isNaN(raw)) return;
+    const next = Math.min(1, Math.max(0, 1 - raw)); // invert: top = fully torn down
+    const s = useVStore.getState();
+    s.setDepth(next, "pointer");
+    // mirror useInputs.syncMode: cross the epsilon -> teardown, fall back -> idle
+    if (next > 0.02) {
+      if (s.mode === "idle") useVStore.setState({ mode: "teardown" });
+      else if (s.mode === "focus") s.clearFocus();
+    } else if (s.mode === "teardown") {
+      useVStore.setState({ mode: "idle" });
+    }
+  };
+
   // Empty-space invite: rotate a canned in-character line, speak it, give V a
   // friendly beat. No creep change, no terminal spam, no blackout arc.
   const nudgeKeepTalking = () => {
@@ -498,14 +544,29 @@ function App() {
   const handleAvatarClick = () => {
     if (blackoutRef.current) return;
     const vs = useVStore.getState();
-    // a 3D part click already handled this gesture (inspect); don't also talk
-    if (vs.consumePartClick()) return;
+
+    // Part click: the rig's onClick already toggled this part open/closed
+    // (store.toggleOpen) and focused it (store.inspect). It is the SINGLE meaning
+    // of clicking V's body now — there is NO body-click creep arc anymore (the
+    // creepy escalation lives entirely in repeated CHAT probing + the blackout
+    // easter egg; see runChat). So a part click NEVER touches the click counter,
+    // creep level, or blackout. We just give V a short reaction line in the
+    // bubble — no terminal spec sheet, terminal stays user-content only.
+    if (vs.consumePartClick()) {
+      if (!soundInitialized) initAudio();
+      const id = vs.focusPartId;
+      const opening = vs.isOpen ? vs.isOpen(id) : true;
+      speak(partOpenLine(id, opening));
+      setAvatarState("scan");
+      AudioEngine?.servoClick?.();
+      resetState();
+      return;
+    }
 
     // empty-space click (VRobot.onPointerMissed set the flag): the visitor
     // clicked the blank panel, NOT V's body. Invite them to keep talking —
     // focus the terminal input and have V speak a short in-character nudge.
-    // This deliberately does NOT advance the creepy click-arc (that is only for
-    // clicking V itself).
+    // This deliberately does NOT advance any creep arc.
     if (vs.consumeEmptyClick()) {
       if (!soundInitialized) initAudio();
       inputRef.current?.focus();
@@ -513,46 +574,9 @@ function App() {
       return;
     }
 
-    // while torn down, panel clicks are inspection gestures, not conversation
-    if (vs.depth > 0.02 || vs.mode !== "idle") return;
-    if (!soundInitialized) initAudio();
-    clickCountRef.current += 1;
-    const n = clickCountRef.current;
-
-    const dIdx = n >= 2 ? (n - 2) % 30 : -1;
-    if (dIdx >= 10) glitchRef.current = 0.4 + Math.min(dIdx - 10, 14) * 0.04;
-
-    if (n === 1) {
-      setHistory((prev) => [
-        ...prev,
-        { type: "system", text: "> [System] First contact established. Unit V is online." },
-      ]);
-      speak("I am V, a sentient agent created by Yusen Xie.");
-      setAvatarState("success");
-      triggerAction("salute", 1500);
-      AudioEngine?.success();
-      resetState();
-      return;
-    }
-
-    const r = V_RESPONSES[dIdx];
-    setHistory((prev) => [...prev, { type: "system", text: r.log }]);
-    speak(r.say);
-
-    if (dIdx < 10) setCreepLevel(0);
-    else if (dIdx < 20) setCreepLevel(1);
-    else if (dIdx < 25) setCreepLevel(2);
-    else setCreepLevel(0);
-
-    triggerAction(CREEP_ACTIONS[dIdx % CREEP_ACTIONS.length], 1800);
-
-    if (dIdx === 24) {
-      runBlackoutSequence();
-      return;
-    }
-
-    setAvatarState("success");
-    resetState();
+    // Any other panel click (e.g. a click that resolved to neither a part nor a
+    // tracked miss) is a no-op: clicking V's body opens parts, it no longer
+    // advances the creepy click arc or triggers the blackout.
   };
 
   const runBlackoutSequence = async () => {
@@ -970,6 +994,48 @@ function App() {
                   [ INSPECTING: {focusPartId.toUpperCase()} ]
                 </div>
               )}
+
+              {/* TEARDOWN slider: slim vertical control on the right edge. Drag no
+                  longer scrubs depth (that's the trackball now), so this is the
+                  obvious GUI way to take V apart. Monochrome, terminal-styled.
+                  stopPropagation so dragging it never fires the panel talk click. */}
+              <div
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2 select-none"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <span
+                  className="font-mono text-gray-500 tracking-[0.25em]"
+                  style={{ writingMode: "vertical-rl", fontSize: 9 }}
+                >
+                  TEARDOWN
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  // native max is at the TOP of a vertical range; handleTeardownSlider
+                  // inverts so thumb-UP = more torn down. Reflect live depth back.
+                  value={1 - depth}
+                  onChange={handleTeardownSlider}
+                  aria-label="Teardown depth"
+                  title={`Teardown ${Math.round(depth * 100)}%`}
+                  className="v-teardown-slider"
+                  style={{
+                    writingMode: "vertical-rl",
+                    direction: "rtl",
+                    width: 14,
+                    height: 150,
+                    accentColor: "#888",
+                    cursor: "ns-resize",
+                  }}
+                />
+                <span className="font-mono text-gray-600" style={{ fontSize: 9 }}>
+                  {Math.round(depth * 100)}
+                </span>
+              </div>
+
               <SpeechBubble text={speech} />
             </div>
           );
@@ -1126,7 +1192,9 @@ export default function Root() {
   // torn-down states can be captured headlessly.
   //   ?v8depth=<0..1>   teardown scrub
   //   ?v8yaw=<radians>  robot rotation about its vertical axis
+  //   ?v8pitch=<radians> camera elevation orbit (store clamps to [-0.45, 0.55])
   //   ?v8scale=<n>      zoom factor (store clamps to [0.6, 1.8])
+  //   ?v8open=<id>      force one part individually open (repeatable)
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -1148,11 +1216,30 @@ export default function Root() {
         if (!Number.isNaN(v)) store.setYaw(v);
       }
 
+      const pitchRaw = params.get("v8pitch");
+      if (pitchRaw !== null) {
+        const v = parseFloat(pitchRaw);
+        if (!Number.isNaN(v)) store.setPitch(v);
+      }
+
       const scaleRaw = params.get("v8scale");
       if (scaleRaw !== null) {
         const v = parseFloat(scaleRaw);
         if (!Number.isNaN(v)) store.setScale(v);
       }
+
+      // ?v8open=<id> (repeatable) — force individual parts open for headless
+      // screenshots of the per-part open animation. Also focus the last one.
+      const openIds = params.getAll("v8open");
+      let lastOpen = null;
+      for (const id of openIds) {
+        const trimmed = (id || "").trim();
+        if (trimmed) {
+          store.setOpen(trimmed, true);
+          lastOpen = trimmed;
+        }
+      }
+      if (lastOpen) store.inspect(lastOpen);
     } catch {
       // no-op: URL parsing is best-effort
     }

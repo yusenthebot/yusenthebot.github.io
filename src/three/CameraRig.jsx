@@ -5,10 +5,13 @@ import gsap from "gsap";
 import useVStore from "./store.js";
 import { focusCameraTargetFor, smoothstep } from "./Teardown.jsx";
 
-// Camera language (DESIGN-V8-TEARDOWN pillar B): dolly / crane only, the camera
-// NEVER free-orbits. useFrame is the single writer of the actual camera; GSAP
-// tweens the rig's rest framing (pos/look) and sets `tweening` so the breathing
-// dolly fades out instead of fighting the tween.
+// Camera language (DESIGN-V8-TEARDOWN pillar B): dolly / crane + a CLAMPED
+// ELEVATION ORBIT. The horizontal turn lives on the robot (store.yaw); the
+// camera only ever raises/lowers around the look target by store.pitch (a
+// trackball's vertical axis), so we never get a true free-orbit / gimbal flip.
+// useFrame is the single writer of the actual camera; GSAP tweens the rig's
+// rest framing (pos/look) and sets `tweening` so the breathing dolly fades out
+// instead of fighting the tween. Pitch composes on top of every framing.
 
 // Framing is authored for the FULL FREE-STANDING figure (no cradle): feet flat
 // on the dark floor at y~0, crown at y~2.8 (~7.5 heads), so the body spans
@@ -35,6 +38,12 @@ const CRANE_LIFT = 0.28; // focus flights rise then settle — slight crane
 
 const _target = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
 const _offset = new THREE.Vector3();
+// scratch for the clamped elevation orbit: spin the camera offset about the
+// horizontal axis perpendicular to the view so the camera rises/falls while
+// still aiming at the look target.
+const _orbitAxis = new THREE.Vector3();
+const _orbitQuat = new THREE.Quaternion();
+const _WORLD_UP = new THREE.Vector3(0, 1, 0);
 
 // Scrub-driven rest framing: pure function of depth, blended hero -> inspect.
 function scrubFramingInto(out, depth, mode) {
@@ -120,7 +129,7 @@ export default function CameraRig() {
 
   useFrame((state, delta) => {
     const rig = rigRef.current;
-    const { depth, mode: m, quality } = useVStore.getState();
+    const { depth, mode: m, quality, pitch } = useVStore.getState();
     const dt = Math.min(delta || 0.016, 0.1);
 
     // scrub framing: while teardown depth > 0.3, ease toward the inspection
@@ -143,6 +152,22 @@ export default function CameraRig() {
         Math.sin((state.clock.elapsedTime * Math.PI * 2) / BREATH_PERIOD);
 
     _offset.copy(rig.pos).sub(rig.look).multiplyScalar(scale);
+
+    // Clamped elevation orbit: spin the offset about the camera's "right" axis
+    // (perpendicular to both the view and world-up) so the camera cranes up to
+    // look DOWN on V (pitch > 0) or drops under to look UP (pitch < 0), always
+    // re-aiming at the look target. The store clamps pitch to [-0.45, 0.55], so
+    // this can never flip past the horizon — pillar B's no-free-orbit rule holds.
+    const p = Number.isFinite(pitch) ? pitch : 0;
+    if (p !== 0) {
+      _orbitAxis.crossVectors(_offset, _WORLD_UP);
+      if (_orbitAxis.lengthSq() > 1e-6) {
+        _orbitAxis.normalize();
+        _orbitQuat.setFromAxisAngle(_orbitAxis, p);
+        _offset.applyQuaternion(_orbitQuat);
+      }
+    }
+
     camera.position.copy(rig.look).add(_offset);
     camera.lookAt(rig.look);
   });

@@ -804,6 +804,42 @@ function servoEase(t) {
   return 1.04 - 0.04 * (u * u * (3 - 2 * u));
 }
 
+// Default outward "pop" direction for a part that has no band/motion of its own
+// but is individually openable (click-to-open). A small slide along the part's
+// outward normal pops it out a bit to reveal what sits under/inside it. The
+// normal is derived from the part's placement so each piece moves away from the
+// body axis sensibly: limbs pop outboard (sign of origin x), front-facing
+// covers pop forward (+z), the head/optics pop up-forward, feet/hands pop down.
+const POP_DIST = 0.12;
+
+function outwardNormal(part) {
+  const id = part.id;
+  const [ox] = part.origin || [0, 0, 0];
+  // hands/feet hang off the limb end — pop them down-forward so they clear it
+  if (id.startsWith("hand_") || id.startsWith("foot_")) return [0, -0.7, 0.71];
+  // head / optic internals lift up-forward, away from the neck
+  if (id === "head_base" || id === "head_shell" || id === "optic_internal" || id.startsWith("eye_") || id === "visor_glass" || id === "face_seam") {
+    return [0, 0.5, 0.866];
+  }
+  // anything clearly on a left/right chain pops straight outboard
+  if (id.endsWith("_l")) return [-1, 0, 0];
+  if (id.endsWith("_r")) return [1, 0, 0];
+  if (Math.abs(ox) > 0.05) return ox < 0 ? [-1, 0, 0] : [1, 0, 0];
+  // central column pieces (pelvis/torso/spine/core/neck/yoke) pop forward
+  return [0, 0, 1];
+}
+
+// The open motion a part uses for INDIVIDUAL (click-to-open) reveal. Banded
+// parts reuse their authored teardown motion (so a click drives the same hinge/
+// slide the global scrub would); parts without one get a synthesized outward
+// "pop" slide. VRobot applies this on a dedicated per-part open group, combined
+// with the global band motion via max(globalOpen, perPartOpen).
+function openMotionFor(part) {
+  if (part.motion && part.motion.type !== "reveal") return part.motion;
+  const n = outwardNormal(part);
+  return { type: "slide", axis: n, pivot: [0, 0, 0], dist: POP_DIST, synth: true };
+}
+
 function partById(id) {
   return PART_INDEX.get(id) || null;
 }
@@ -827,6 +863,7 @@ export {
   BAND_ORDER,
   openFraction,
   servoEase,
+  openMotionFor,
   partById,
   kinematicChain,
 };

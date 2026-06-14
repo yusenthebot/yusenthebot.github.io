@@ -5,7 +5,7 @@ import { MathUtils } from "three";
 import useVStore from "./store.js";
 import AudioEngine from "../audio.js";
 import { partRefRegistry, smoothstep } from "./Teardown.jsx";
-import { PARTS, PART_INDEX, BANDED, openFraction, servoEase } from "./parts.js";
+import { PARTS, PART_INDEX, BANDED, openFraction, servoEase, openMotionFor } from "./parts.js";
 import {
   brushedMetal,
   mattePolymer,
@@ -16,6 +16,7 @@ import {
   brightEmissiveSeam,
   makeLip,
   makeEmissive,
+  makeFaceEmitter,
 } from "./materials.js";
 
 const HPI = Math.PI / 2;
@@ -25,10 +26,23 @@ const damp = MathUtils.damp;
 // every frame, which the react-hooks immutability rule forbids on
 // hook-created values. VRobot is a singleton, so shared instances are fine.
 const lips = new Map(PARTS.map((p) => [p.id, makeLip()]));
-const eyeMat = makeEmissive(1.8);
 const scanMat = makeEmissive(2.2);
 scanMat.transparent = true;
 scanMat.opacity = 0.7;
+// the chest status-dot trio (mirrors the 2D V's chest lights) — its own steady
+// emitter, decoupled from the face so eye expression never flickers the chest.
+const chestDotMat = makeEmissive(1.8);
+
+// V's FACE emitters — independent clones so each eye + the mouth can carry its
+// own intensity/opacity (blink, flare, happy-arc dim) without coupling. These
+// are the white features that bloom through the dark visor and give V a
+// readable, emoting face. Built bigger + brighter than the old whisper rings so
+// the expression reads at hero distance; the visor itself stays dark glossy.
+const faceMat = {
+  L: makeFaceEmitter(2.6),
+  R: makeFaceEmitter(2.6),
+  mouth: makeFaceEmitter(2.2),
+};
 
 // Sympathetic lift: the registry's shells have no kinematic children of their
 // own, so the "machine is one connected body" law maps to the internals each
@@ -45,6 +59,28 @@ function revealLift(id, depth) {
   const tail = band[0] + (band[1] - band[0]) * LIFT_TAIL;
   return LIFT * smoothstep((depth - tail) / (band[1] - tail));
 }
+
+// Per-part eased open value for INDIVIDUAL click-to-open (store.openParts[id]).
+// Module scope (singleton VRobot) so the frame loop can mutate it without a
+// hook; eases toward the boolean target so toggling animates with servo feel.
+const perPartOpen = new Map(PARTS.map((p) => [p.id, 0]));
+// precomputed open motion per part (band motion, or a synthesized outward pop)
+const openMotions = new Map(PARTS.map((p) => [p.id, openMotionFor(p)]));
+// non-banded, individually-openable parts get the synthesized pop. base_link is
+// the non-visible ground datum (nothing to open); core uses an emissive reveal,
+// not a slide — skip both so they don't twitch.
+const NON_BANDED = PARTS.filter((p) => !p.band && p.id !== "base_link" && p.id !== "core");
+// stable empty object so reads of a missing store.openParts don't allocate
+const EMPTY_OPEN = Object.freeze({});
+
+// Baseline pivot-group Y for the two parts the alive-idle code nudges. The pivot
+// group sits at local 0 inside its origin group (which already applies the
+// parts.js origin), so a breathing nudge must ride on the pivot's baseline, not
+// re-apply the origin. torso's long-standing breathing line used 0.46 (the
+// figure's geometry is tuned to it); the shoulder yoke had no line before, so
+// its baseline is 0 — writing 0.34 here double-offset and lifted the upper body.
+const TORSO_Y0 = 0.46;
+const YOKE_Y0 = 0;
 
 const childrenOf = (() => {
   const m = new Map();
@@ -116,14 +152,25 @@ function PartMesh({ id, lip, ctx }) {
           {/* sculpted black pelvis girdle — wider at the hips, tapering up to the
               waist; the hip ball joints (at x=+/-0.17, y=-0.1) embed in its
               flanks so legs and pelvis read as one continuous structure, not a
-              block with legs hung under it. A single chamfered form, no clutter. */}
+              block with legs hung under it. A single chamfered form, no clutter.
+              This is the dark INNER structure the light girdle cover rides on. */}
           <mesh material={darkPolymer} castShadow>
             <cylinderGeometry args={[0.16, 0.26, 0.3, 24]} />
           </mesh>
+          {/* LIGHT matte girdle cover — a proud chamfered sleeve over the dark
+              core so the pelvis reads as a solid LIT form (matching chest +
+              thighs), never a black void at the hips. Slightly larger radius than
+              the dark core; kept a touch narrower in z so the back stays dark and
+              the hip joints still read as exposed internals on the flanks. */}
+          <mesh scale={[1, 1, 0.82]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.172, 0.268, 0.27, 24]} />
+          </mesh>
           {/* flared hip yokes that sweep DOWN-OUT to meet each hip socket —
-              this is the meat that bridges pelvis to thigh on each side */}
+              this is the meat that bridges pelvis to thigh on each side. Light
+              matte so the hip shoulders carry highlight (the bare actuator
+              clusters remain dark, hung off the hip_l/hip_r links). */}
           {[-1, 1].map((s) => (
-            <mesh key={s} position={[s * 0.13, -0.1, 0]} scale={[1, 1.2, 0.9]} material={darkPolymer} castShadow>
+            <mesh key={s} position={[s * 0.13, -0.1, 0]} scale={[1, 1.2, 0.9]} material={mattePolymer} castShadow>
               <sphereGeometry args={[0.1, 20, 16]} />
             </mesh>
           ))}
@@ -165,9 +212,21 @@ function PartMesh({ id, lip, ctx }) {
           </mesh>
           {/* continuous waist — tapers from the chest base (r 0.3) down to the
               lumbar barrel (r 0.16) with no gap; bottom reaches torso y=-0.24
-              == pelvis lumbar top, so the trunk is bridged */}
+              == pelvis lumbar top, so the trunk is bridged. Dark inner core. */}
           <mesh position={[0, -0.13, 0]} scale={[1, 1, 0.72]} material={darkPolymer} castShadow>
             <cylinderGeometry args={[0.3, 0.17, 0.22, 16]} />
+          </mesh>
+          {/* LIGHT lumbar fascia over the dark waist column — a slightly proud
+              matte sleeve so the midsection reads as a solid LIT form against the
+              #050505 void instead of vanishing (the chest + thighs are light, the
+              waist must match). Kept just under the chest base radius so the
+              chamfer line stays continuous; front+sides carry the highlight. */}
+          <mesh position={[0, -0.13, 0]} scale={[1, 1, 0.73]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.305, 0.182, 0.23, 16]} />
+          </mesh>
+          {/* machined seam belt at the waist/lumbar junction (reads the panel break) */}
+          <mesh position={[0, -0.235, 0]} scale={[1, 1, 0.73]} rotation-x={HPI} material={lip}>
+            <torusGeometry args={[0.182, 0.009, 8, 40]} />
           </mesh>
           {/* internal core bay block that reads when the chest shells open */}
           <RoundedBox args={[0.3, 0.3, 0.16]} radius={0.03} position={[0, -0.02, 0.0]} material={darkPolymer} />
@@ -195,7 +254,7 @@ function PartMesh({ id, lip, ctx }) {
           <RoundedBox args={[0.012, 0.3, 0.012]} radius={0.004} position={[0, 0.06, 0.31]} material={brightEmissiveSeam} />
           {/* status dot trio — same chest lights as the 2D V */}
           {[-0.05, 0, 0.05].map((x) => (
-            <mesh key={x} position={[x, -0.14, 0.29]} material={eyeMat}>
+            <mesh key={x} position={[x, -0.14, 0.29]} material={chestDotMat}>
               <sphereGeometry args={[0.013, 12, 12]} />
             </mesh>
           ))}
@@ -638,31 +697,54 @@ function PartMesh({ id, lip, ctx }) {
           <mesh position={[0, 0.058, 0.2]} scale={[1, 0.5, 0.36]} rotation={[0.05, 0, Math.PI * 0.07]} material={brightEmissiveSeam}>
             <torusGeometry args={[0.12, 0.006, 10, 80, Math.PI * 0.86]} />
           </mesh>
+          {/* MOUTH / underscanline — a thin emissive bar low on the visor that
+              shifts with mood (dim+flat at rest, brighter+wider scan/typing,
+              short+sharp on error). Subtle: it's a status underline, not a
+              cartoon smile. Driven via the `faceMouth` ref in the frame loop. */}
+          <RoundedBox
+            args={[0.07, 0.008, 0.01]}
+            radius={0.004}
+            position={[0, -0.066, 0.198]}
+            ref={(m) => ctx.setExtra("faceMouth", m)}
+            material={faceMat.mouth}
+          />
         </>
       );
     case "eye_ring_l":
     case "eye_ring_r": {
       const side = id.endsWith("_l") ? "L" : "R";
+      const sgn = side === "L" ? -1 : 1;
+      const fm = faceMat[side];
+      // V's EYE — a readable emissive LENS on the dark visor, not a faint ring.
+      // Emotion comes from SHAPE + INTENSITY + MOTION, never from going googly:
+      //   eyeBlink{side}  group: scaleY collapses for blinks / sleep slits.
+      //   eyeShape{side}  group: scaleY = openness (focus/flare), rotation-z =
+      //                   MOOD tilt (happy arc vs angry slant), mirrored per eye.
+      //   lens (rounded bar) = the eye body; pupil dot brightens the center.
+      // The frame loop drives all of these via refs. Sized bigger + brighter
+      // than the old whisper ring so V has a FACE at hero distance.
       return (
-        <>
-          {/* faint emissive eye ring visible THROUGH/behind the dark visor.
-              kept VERY small + thin so it reads as a whisper of optic glow
-              behind glass, not a bold cartoon eye — identity ("Yusen gave me
-              eyes") without losing the blank Optimus visor. Idle keeps these
-              near-invisible (see frame loop); they only flare on interaction. */}
-          <mesh rotation-x={HPI} material={darkPolymer}>
-            <cylinderGeometry args={[0.02, 0.02, 0.02, 20]} />
-          </mesh>
-          <group ref={(g) => ctx.setExtra(`eyeScale${side}`, g)}>
-            {/* arc gap makes the ring spin readable, like the 2D scan arcs */}
-            <mesh position={[0, 0, 0.018]} ref={(m) => ctx.setExtra(`eyeRing${side}`, m)} material={eyeMat}>
-              <torusGeometry args={[0.012, 0.0028, 10, 32, Math.PI * 1.78]} />
+        <group ref={(g) => ctx.setExtra(`eyeBlink${side}`, g)}>
+          <group ref={(g) => ctx.setExtra(`eyeShape${side}`, g)}>
+            {/* socket recess so the lit lens reads as set INTO the dark visor */}
+            <mesh position={[0, 0, -0.004]} material={darkPolymer}>
+              <boxGeometry args={[0.06, 0.034, 0.01]} />
             </mesh>
-            <mesh position={[0, 0, 0.018]} material={eyeMat}>
-              <sphereGeometry args={[0.0035, 12, 12]} />
+            {/* the eye lens — a horizontal rounded bar (confident Optimus eye) */}
+            <RoundedBox
+              args={[0.052, 0.02, 0.012]}
+              radius={0.009}
+              smoothness={4}
+              position={[0, 0, 0.01]}
+              ref={(m) => ctx.setExtra(`eyeLens${side}`, m)}
+              material={fm}
+            />
+            {/* bright pupil core — punches the brightest pixel for the glare */}
+            <mesh position={[sgn * 0.006, 0, 0.016]} ref={(m) => ctx.setExtra(`eyePupil${side}`, m)} material={fm}>
+              <sphereGeometry args={[0.007, 14, 14]} />
             </mesh>
           </group>
-        </>
+        </group>
       );
     }
     case "optic_internal":
@@ -685,27 +767,32 @@ function PartMesh({ id, lip, ctx }) {
   }
 }
 
-// origin group (static placement) -> pivot group (animated, owns pointer
-// events) -> offset group (pulls geometry back so the pivot sits on the
+// origin group (static placement) -> OPEN group (per-part click-to-open pop,
+// animated from store.openParts) -> pivot group (animated band motion, owns
+// pointer events) -> offset group (pulls geometry back so the pivot sits on the
 // hinge line). Children nest inside so motion carries down the kinematic tree.
+// The open group sits ABOVE the pivot so a non-banded part can pop outward
+// without disturbing the pivot group (which some parts use for breathing/look).
 function PartNode({ id, ctx }) {
   const def = PART_INDEX.get(id);
   const kids = childrenOf.get(id) || [];
   const pivot = def.motion && def.motion.pivot ? def.motion.pivot : null;
   return (
     <group position={def.origin}>
-      <group
-        ref={ctx.register(id)}
-        position={pivot || undefined}
-        onPointerOver={ctx.over(def)}
-        onPointerOut={ctx.out(def)}
-        onClick={ctx.click(def)}
-      >
-        <group position={pivot ? neg(pivot) : undefined}>
-          <PartMesh id={id} lip={lips.get(id)} ctx={ctx} />
-          {kids.map((k) => (
-            <PartNode key={k} id={k} ctx={ctx} />
-          ))}
+      <group ref={ctx.registerOpen(id)}>
+        <group
+          ref={ctx.register(id)}
+          position={pivot || undefined}
+          onPointerOver={ctx.over(def)}
+          onPointerOut={ctx.out(def)}
+          onClick={ctx.click(def)}
+        >
+          <group position={pivot ? neg(pivot) : undefined}>
+            <PartMesh id={id} lip={lips.get(id)} ctx={ctx} />
+            {kids.map((k) => (
+              <PartNode key={k} id={k} ctx={ctx} />
+            ))}
+          </group>
         </group>
       </group>
     </group>
@@ -715,12 +802,36 @@ function PartNode({ id, ctx }) {
 export default function VRobot(props) {
   const root = useRef(null);
   const rig = useRef({});
+  const openRig = useRef({});
   const extras = useRef({});
   const prevF = useRef({});
   const lastServo = useRef(0);
   const lastLook = useRef({ x: 0, y: 0, t: 0 });
   const stateRef = useRef({ name: "idle", t0: 0 });
   const look = useRef({ yaw: 0, pitch: 0, eyeYaw: 0, eyePitch: 0 });
+  // gesture engine: a named gesture window + the next autonomous-idle fire time.
+  const gesture = useRef({ name: "none", t0: -10, dur: 0, next: 4 });
+  // damped articulation pose (per-side shoulder pitch/roll + elbow flex, body
+  // sway/nod). Everything eases toward these so joints move with servo feel.
+  const pose = useRef({
+    shP: { L: 0, R: 0 }, // shoulder pitch (forward raise)
+    shR: { L: 0, R: 0 }, // shoulder roll (lateral abduct)
+    elb: { L: 0, R: 0 }, // elbow flexion
+    sway: 0, // weight-shift yaw of the whole figure
+    nod: 0, // extra head pitch from nod/bow gestures
+    shrug: 0, // shoulder-yoke rise
+  });
+  // damped face-expression channels (see the FACE EXPRESSION block in useFrame)
+  const faceRef = useRef({
+    blink: 0,
+    open: 1,
+    tilt: 0,
+    widen: 1,
+    eyeI: 1.5,
+    mouthW: 1,
+    mouthY: 1,
+    mouthI: 1.1,
+  });
 
   // VRobot renders once (all animation goes through refs), so plain
   // per-render handler objects are fine here — no hooks needed.
@@ -731,6 +842,9 @@ export default function VRobot(props) {
         // camera focus flights resolve world anchors through this registry
         partRefRegistry.set(id, g);
       }
+    },
+    registerOpen: (id) => (g) => {
+      if (g) openRig.current[id] = g;
     },
     setExtra: (name, obj) => {
       if (obj) extras.current[name] = obj;
@@ -756,6 +870,11 @@ export default function VRobot(props) {
       // the avatar talk arc in App; once torn down, clicks mean inspect
       if (s.depth <= 0.02 && s.mode === "idle") return;
       s.markPartClick();
+      // toggle THIS part's individual open state (pops it open / closes it via
+      // store.openParts -> the per-part open pose in useFrame) AND focus it, so
+      // a click both reveals the part and flies the camera to it. App's
+      // handleAvatarClick reads isOpen(focusPartId) to phrase V's reaction.
+      s.toggleOpen(def.id);
       s.inspect(def.id);
       AudioEngine?.servoClick();
     },
@@ -768,28 +887,37 @@ export default function VRobot(props) {
     const X = extras.current;
     const now = performance.now();
 
-    // GLOBAL TRANSFORMS — drag-to-turn yaw + zoom scale, applied to the root
-    // group every frame from the shared store (safe defaults so this builds
-    // and renders before the interaction agent adds yaw/scale to the store).
-    // The interaction agent only WRITES these; we APPLY them here.
-    if (root.current) {
-      root.current.rotation.y = s.yaw || 0;
-      root.current.scale.setScalar(s.scale || 1);
-    }
+    // GLOBAL TRANSFORMS — zoom scale from the shared store (safe default so this
+    // builds before the interaction agent adds scale). Root rotation.y (the
+    // drag-to-turn yaw, composited with the idle weight-shift sway) is applied
+    // later in the ALIVE IDLE block. pitch is the CAMERA's job — never the robot.
+    if (root.current) root.current.scale.setScalar(s.scale || 1);
 
     if (s.avatarState !== stateRef.current.name) {
-      stateRef.current = { name: s.avatarState, t0: t };
+      // carry .prev across the object swap so the gesture engine below doesn't
+      // see prev===undefined and double-fire a state-driven gesture
+      stateRef.current = { name: s.avatarState, t0: t, prev: stateRef.current.prev };
     }
     const st = t - stateRef.current.t0;
     const mode = s.avatarState;
     const creep = s.creepLevel || 0;
 
-    // depth choreography — pose is a pure function of store depth
+    // PER-PART INDIVIDUAL OPEN — ease each part's value toward its boolean
+    // target in store.openParts (true -> 1 opening, false -> 0 closing) so a
+    // click animates smoothly. Then for every part the open fraction is
+    // max(global band open, this per-part open): banded parts reuse their
+    // authored hinge/slide, non-banded parts get a synthesized outward pop.
+    const op = s.openParts || EMPTY_OPEN;
+    const OR = openRig.current;
+
+    // banded parts: drive the authored teardown motion by the COMBINED fraction
     for (const def of BANDED) {
       const g = R[def.id];
       if (!g) continue;
       const raw = openFraction(s.depth, def.band);
-      const f = servoEase(raw);
+      const pp = damp(perPartOpen.get(def.id), op[def.id] ? 1 : 0, 9, delta);
+      perPartOpen.set(def.id, pp);
+      const f = Math.max(servoEase(raw), servoEase(pp));
       const m = def.motion;
       if (m.type === "hinge") {
         if (m.axis === "z") g.rotation.z = m.angle * f;
@@ -810,18 +938,156 @@ export default function VRobot(props) {
       prevF.current[def.id] = raw;
     }
 
+    // non-banded parts: a synthesized outward "pop" on the dedicated open group
+    // (so it never fights the breathing/look writes that ride the pivot group).
+    // Every meaningful part is therefore individually openable — clicking pops
+    // it out a bit to reveal what sits under/inside it; toggling animates back.
+    for (const def of NON_BANDED) {
+      const og = OR[def.id];
+      if (!og) continue;
+      const target = op[def.id] ? 1 : 0;
+      const pp = damp(perPartOpen.get(def.id), target, 9, delta);
+      perPartOpen.set(def.id, pp);
+      if (pp < 0.001) {
+        if (og.position.lengthSq() > 0) og.position.set(0, 0, 0);
+        continue;
+      }
+      const f = servoEase(pp);
+      const m = openMotions.get(def.id); // synthesized slide for non-banded
+      og.position.set(m.axis[0] * m.dist * f, m.axis[1] * m.dist * f, m.axis[2] * m.dist * f);
+      const wasOpen = (prevF.current[def.id] ?? 0) > 0.5;
+      if (wasOpen !== target > 0.5 && now - lastServo.current > 120) {
+        lastServo.current = now;
+        AudioEngine?.servoClick(0.6 + Math.random() * 0.4);
+      }
+      prevF.current[def.id] = target;
+    }
+
     // core reveal: it never moves — its band ramps the emissive instead
     const coreF = openFraction(s.depth, PART_INDEX.get("core").band);
     emissiveCore.emissiveIntensity = 2.6 + coreF * 1.8 + Math.sin(t * 2.4) * (0.25 + coreF * 0.5);
     if (X.coreMesh) X.coreMesh.scale.setScalar(1 + Math.sin(t * 2.4) * 0.02 * (1 + coreF));
 
-    // breathing — torso carries the whole upper kinematic chain
-    if (R.torso) R.torso.position.y = 0.46 + Math.sin(t * 1.4) * 0.01;
+    // ALIVE IDLE — V is never a statue. calmA scales every voluntary motion so
+    // reduced-motion/static tiers freeze the animation (0 = frozen pose).
+    const calmA = s.quality === "static" ? 0 : s.quality === "reduced" ? 0.45 : 1;
+    const torn = s.depth > 0.04; // mid-teardown: hold a neutral service pose
 
-    // look: eyes lead, head follows (secondary motion)
+    // breathing — torso carries the whole upper kinematic chain; the shoulder
+    // yoke rises slightly with the breath so the chest visibly inflates
+    const breath = Math.sin(t * 1.4) * calmA;
+    if (R.torso) R.torso.position.y = TORSO_Y0 + breath * 0.012;
+    pose.current.shrug = breath * 0.01;
+
+    // gesture engine: pick the active gesture from avatarState, or fire an
+    // autonomous idle gesture on a timer so V keeps articulating on its own.
+    const G = pose.current;
+    const gs = gesture.current;
+    // state-driven gestures retrigger when the avatar state changes
+    if (s.avatarState !== stateRef.current.prev) {
+      stateRef.current.prev = s.avatarState;
+      const map = { success: "nod", error: "shake", scan: "scanArm", sleep: "relax" };
+      const g = map[s.avatarState];
+      if (g) gesture.current = { name: g, t0: t, dur: g === "scanArm" ? 2.4 : 1.0, next: gs.next };
+    }
+    // autonomous idle gestures — only when truly idle, assembled, and not frozen
+    if (!torn && calmA > 0 && s.avatarState === "idle" && creep < 1 && t > gs.next && t - gs.t0 > 1.2) {
+      const pick = ["wave", "elbowFlex", "shoulderRoll", "weightShift", "nod"];
+      const name = pick[Math.floor(Math.random() * pick.length)];
+      gesture.current = { name, t0: t, dur: name === "wave" ? 2.2 : 1.4, next: t + 5 + Math.random() * 5 };
+    }
+    const gName = gesture.current.name;
+    const gt = t - gesture.current.t0;
+    const gActive = gt < gesture.current.dur && calmA > 0 && !torn;
+
+    // gesture TARGETS — set the desired joint angles for the active gesture.
+    // env(p): a smooth 0->1->0 envelope across the gesture so it eases in/out.
+    const env = (p) => Math.sin(Math.min(Math.max(p, 0), 1) * Math.PI);
+    let shPT = { L: 0, R: 0 };
+    let shRT = { L: 0, R: 0 };
+    // a slight resting elbow bend (never locked straight) — relaxes to 0 during
+    // teardown so the arm holds a clean neutral pose while shells come off
+    const restElb = torn ? 0 : 0.12;
+    let elbT = { L: restElb, R: restElb };
+    let swayT = 0;
+    let nodT = 0;
+    if (gActive) {
+      const p = gt / gesture.current.dur;
+      const e = env(p);
+      if (gName === "wave") {
+        // raise the RIGHT arm out + up, then the ELBOW flexes back-and-forth
+        // (a real wave): forearm rotates about the elbow joint, visibly bending
+        shRT.R = -1.15 * e; // abduct out to the side
+        shPT.R = -0.35 * e; // and a little forward
+        elbT.R = 0.5 + Math.sin(gt * 9) * 0.6 * e; // elbow flexes to wave
+      } else if (gName === "elbowFlex") {
+        // a clear single elbow articulation on the right arm — the honest joint
+        shPT.R = -0.5 * e;
+        elbT.R = 0.12 + 1.15 * e; // forearm swings up about the elbow
+      } else if (gName === "shoulderRoll") {
+        shPT.L = -0.25 * e;
+        shPT.R = -0.25 * e;
+        shRT.L = -0.12 * e;
+        shRT.R = -0.12 * e;
+      } else if (gName === "weightShift") {
+        swayT = Math.sin(p * Math.PI) * 0.12; // shift weight side to side
+      } else if (gName === "nod") {
+        nodT = e * 0.26; // chin dips (agreement)
+      } else if (gName === "shake") {
+        nodT = 0; // handled by the head-yaw `shake` term below
+      } else if (gName === "scanArm") {
+        // raise the right forearm as if presenting a scan, hold, sweep slightly
+        shPT.R = -0.7 * e;
+        elbT.R = 0.12 + 1.0 * e;
+        shRT.R = (-0.2 + Math.sin(gt * 1.6) * 0.18) * e;
+      } else if (gName === "relax") {
+        elbT.L = 0.05;
+        elbT.R = 0.05;
+      }
+    }
+    // a slow continuous idle weight-shift sway under everything (very subtle)
+    swayT += Math.sin(t * 0.5) * 0.02 * calmA;
+    // typing: hands a touch active/raised so V looks engaged
+    if (s.avatarState === "typing") {
+      shPT.L -= 0.18 * calmA;
+      shPT.R -= 0.18 * calmA;
+      elbT.L = Math.max(elbT.L, 0.55);
+      elbT.R = Math.max(elbT.R, 0.55);
+    }
+
+    // damp every articulation channel toward its target (servo-smooth)
+    for (const side of ["L", "R"]) {
+      G.shP[side] = damp(G.shP[side], shPT[side], 7, delta);
+      G.shR[side] = damp(G.shR[side], shRT[side], 7, delta);
+      G.elb[side] = damp(G.elb[side], elbT[side], 8, delta);
+    }
+    G.sway = damp(G.sway, swayT, 5, delta);
+    G.nod = damp(G.nod, nodT, 7, delta);
+
+    // apply articulation to the actual kinematic joints:
+    //   shoulder_ball -> arm raise/abduct (pivots at the shoulder)
+    //   elbow         -> forearm flexion (the forearm rotates about the elbow)
+    //   shoulder_yoke -> breathing shrug
+    for (const side of ["L", "R"]) {
+      const sgn = side === "L" ? -1 : 1;
+      const sh = R[`shoulder_ball_${side.toLowerCase()}`];
+      const el = R[`elbow_${side.toLowerCase()}`];
+      if (sh) {
+        sh.rotation.x = G.shP[side]; // forward raise
+        sh.rotation.z = G.shR[side] * sgn; // lateral abduct (mirror per side)
+      }
+      if (el) el.rotation.x = G.elb[side]; // true elbow flexion
+    }
+    if (R.shoulder_yoke) R.shoulder_yoke.position.y = YOKE_Y0 + G.shrug;
+    // weight-shift sways the whole figure subtly about its vertical axis,
+    // composited on top of the user's drag-to-turn yaw on the root group
+    if (root.current) root.current.rotation.y = (s.yaw || 0) + G.sway;
+
+    // look: eyes lead, head follows (secondary motion). The nod/bow gesture
+    // adds an extra chin dip on top of the gaze pitch.
     const lt = s.lookTarget || { x: 0, y: 0 };
     let yawT = lt.x * 0.5;
-    let pitchT = lt.y * 0.28 + creep * 0.05;
+    let pitchT = lt.y * 0.28 + creep * 0.05 + G.nod;
     if (mode === "typing") pitchT += 0.24;
     if (mode === "sleep") {
       pitchT += 0.55;
@@ -861,42 +1127,111 @@ export default function VRobot(props) {
       lastLook.current = { x: L.yaw, y: L.pitch, t: now };
     }
 
-    // eye expression per avatar state. IDLE keeps the rings near-invisible —
-    // a faint breathing whisper of glow well under the bloom/dither-bypass
-    // threshold so the face stays a blank dark visor at hero distance (no
-    // googly eyes). The active states (typing/scan/error/success) and creep
-    // are what FLARE the eyes bright — that's when V's optics "wake up". This
-    // preserves V's identity ("Yusen gave me eyes") without a smiley at rest.
-    let intensity = 0.14 + Math.sin(t * 2.1) * 0.05 + creep * 0.9;
-    let spin = 0.4;
-    let ringScale = 1;
-    let slit = 1;
-    if (mode === "typing") {
-      spin = 4 + (s.typingIntensity || 0) * 8;
-      intensity = 2.2 + Math.sin(t * 9) * 0.5;
+    // FACE EXPRESSION. V emotes through eye SHAPE + INTENSITY + MOTION (never by
+    // growing googly). Each state sets targets; everything is damped toward them
+    // each frame so transitions read as servo-smooth, not snaps:
+    //   open    eye openness (scaleY of the lens): slit/sleep -> 0.1, flare -> 1.4
+    //   tilt    MOOD tilt of the lens (rotation-z): + = happy outer-down arc,
+    //           - = angry inner-down slant; mirrored per eye so both read right
+    //   widen   horizontal stretch (scaleX): focus = narrow scan, glare = wide
+    //   eyeI    eye emissive intensity (bloom = how "awake"/menacing)
+    //   mouthW  mouth scaleX, mouthY mouth scaleY, mouthI mouth intensity
+    // calm = animation budget for reduced/static tiers (no jitter when frozen).
+    const calm = s.quality === "static" ? 0 : s.quality === "reduced" ? 0.5 : 1;
+    const fr = faceRef.current;
+
+    // defaults: idle. A confident, awake Optimus stare with a slow breathing
+    // glow + the periodic blink handled separately below.
+    let openT = 1;
+    let tiltT = 0;
+    let widenT = 1;
+    let eyeIT = 1.5 + Math.sin(t * 1.7) * 0.18 * calm;
+    let mouthWT = 1;
+    let mouthYT = 1;
+    let mouthIT = 1.1 + Math.sin(t * 1.7) * 0.12 * calm;
+
+    if (creep >= 2) {
+      // full bright menacing glare — wide, hard, inner-down slant, no blink
+      openT = 0.55; tiltT = -0.42; widenT = 1.25; eyeIT = 6.5;
+      mouthWT = 0.7; mouthYT = 0.5; mouthIT = 3.2;
+    } else if (creep >= 1) {
+      // narrowed + brightened, a touch menacing
+      openT = 0.5; tiltT = -0.22; widenT = 1.1; eyeIT = 3.4;
+      mouthWT = 0.85; mouthIT = 1.8;
+    } else if (mode === "typing") {
+      // focused: eyes narrow + a quick horizontal scan, mouth tight
+      openT = 0.62; widenT = 0.86 + Math.sin(t * 14) * 0.06 * calm;
+      eyeIT = 2.6 + Math.sin(t * 11) * 0.5 * calm;
+      mouthWT = 1.15; mouthYT = 0.7; mouthIT = 2.0;
     } else if (mode === "error") {
-      intensity = st < 0.6 ? 5.5 : 3.4;
-      ringScale = 1.22;
+      // FLARE hard + sharp angry slant; brief shake handled via `shake`
+      const hot = st < 0.6 ? 1 : 0.55;
+      openT = 1.35; tiltT = -0.5; widenT = 1.2;
+      eyeIT = 4.5 + hot * 2.5;
+      mouthWT = 0.55; mouthYT = 1.4; mouthIT = 3.0 + hot * 1.5;
     } else if (mode === "scan") {
-      spin = 2.2;
-      intensity = 2.4 + Math.sin(t * 6) * 0.4;
+      // sweeping scan: a slow horizontal pulse + bright steady eyes
+      openT = 0.85; widenT = 1.0 + Math.sin(t * 5) * 0.12 * calm;
+      eyeIT = 2.8 + Math.sin(t * 6) * 0.5 * calm;
+      mouthWT = 1.3 + Math.sin(t * 5) * 0.15 * calm; mouthIT = 2.2;
     } else if (mode === "sleep") {
-      slit = 0.06;
-      intensity = 0.12;
+      // thin flat slits, dim, mouth nearly gone
+      openT = 0.08; widenT = 1.05; eyeIT = 0.5;
+      mouthWT = 0.6; mouthYT = 0.3; mouthIT = 0.4;
     } else if (mode === "success") {
+      // eyes curve into happy arcs + a bright pulse; mouth lifts wide
       const p = Math.min(st / 0.7, 1);
-      ringScale = 1 + Math.sin(p * Math.PI) * 0.45;
-      intensity = 2.6 + Math.sin(p * Math.PI) * 1.4;
+      const pulse = Math.sin(p * Math.PI);
+      openT = 0.72; tiltT = 0.5; widenT = 1.05;
+      eyeIT = 2.8 + pulse * 2.2;
+      mouthWT = 1.3; mouthYT = 0.7; mouthIT = 2.0 + pulse * 1.4;
     }
-    eyeMat.emissiveIntensity = intensity;
-    for (const side of ["L", "R"]) {
-      const ring = X[`eyeRing${side}`];
-      const sc = X[`eyeScale${side}`];
-      if (ring) {
-        ring.rotation.z += spin * delta;
-        ring.scale.setScalar(ringScale);
+
+    // periodic soft blink in idle-ish states only (not while flaring/sleeping)
+    const blinkable = mode === "idle" && creep < 1;
+    if (blinkable) {
+      // a blink every ~4.5s: a fast close/open via a narrow cosine dip
+      const cycle = 4.5;
+      const ph = (t % cycle) / cycle;
+      if (ph > 0.965) {
+        const b = (ph - 0.965) / 0.035; // 0..1 across the blink window
+        fr.blink = Math.sin(b * Math.PI); // 0 -> 1 -> 0
+      } else {
+        fr.blink = damp(fr.blink, 0, 14, delta);
       }
-      if (sc) sc.scale.y = damp(sc.scale.y, slit, 10, delta);
+    } else {
+      fr.blink = damp(fr.blink, 0, 14, delta);
+    }
+    const blinkScale = 1 - fr.blink * (calm > 0 ? 0.92 : 0);
+
+    // damp every channel toward target (servo-smooth, no snaps)
+    fr.open = damp(fr.open, openT, 11, delta);
+    fr.tilt = damp(fr.tilt, tiltT, 11, delta);
+    fr.widen = damp(fr.widen, widenT, 11, delta);
+    fr.eyeI = damp(fr.eyeI, eyeIT, 10, delta);
+    fr.mouthW = damp(fr.mouthW, mouthWT, 10, delta);
+    fr.mouthY = damp(fr.mouthY, mouthYT, 10, delta);
+    fr.mouthI = damp(fr.mouthI, mouthIT, 10, delta);
+
+    faceMat.L.emissiveIntensity = fr.eyeI;
+    faceMat.R.emissiveIntensity = fr.eyeI;
+    for (const side of ["L", "R"]) {
+      const sgn = side === "L" ? -1 : 1;
+      const blink = X[`eyeBlink${side}`];
+      const shape = X[`eyeShape${side}`];
+      const pupil = X[`eyePupil${side}`];
+      if (blink) blink.scale.y = fr.open * blinkScale;
+      if (shape) {
+        shape.scale.x = fr.widen;
+        // mirror the mood tilt so happy = both outer corners down (an arc),
+        // angry = both inner corners down (a scowl)
+        shape.rotation.z = fr.tilt * sgn;
+      }
+      if (pupil) pupil.scale.setScalar(0.8 + fr.eyeI * 0.12);
+    }
+    if (X.faceMouth) {
+      X.faceMouth.scale.set(fr.mouthW, fr.mouthY, 1);
+      faceMat.mouth.emissiveIntensity = fr.mouthI;
     }
 
     // scan: thin emissive ring sweeps the full standing body vertically

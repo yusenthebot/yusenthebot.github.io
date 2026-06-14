@@ -27,10 +27,35 @@ const useVStore = create((set, get) => ({
   setYaw(v) {
     set({ yaw: Number.isFinite(v) ? v : 0 });
   },
+  // camera elevation orbit (vertical drag): CameraRig reads this and raises /
+  // lowers the camera around the look target — the ROBOT never pitches, only the
+  // camera. Clamped so the view never flips past looking-down / looking-up.
+  pitch: 0, // radians, [-0.45 (look up from below) .. 0.55 (look down from above)]
+  setPitch(v) {
+    const n = Number.isFinite(v) ? v : 0;
+    set({ pitch: Math.min(0.55, Math.max(-0.45, n)) });
+  },
   scale: 1, // zoom factor for the figure (wheel / pinch), clamped to a sane band
   setScale(v) {
     const n = Number.isFinite(v) ? v : 1;
     set({ scale: Math.min(1.8, Math.max(0.6, n)) });
+  },
+
+  // per-part open state (id -> bool). Clicking a part toggles its individual
+  // open flag; the geometry agent combines this with the global depth-driven
+  // band open when posing each part (openFraction = max(band-driven, perPart)).
+  // The interaction layer is the single writer; VRobot only READS these.
+  openParts: {},
+  toggleOpen(id) {
+    if (!id) return;
+    set((s) => ({ openParts: { ...s.openParts, [id]: !s.openParts[id] } }));
+  },
+  setOpen(id, open) {
+    if (!id) return;
+    set((s) => ({ openParts: { ...s.openParts, [id]: !!open } }));
+  },
+  isOpen(id) {
+    return !!get().openParts[id];
   },
 
   // focus / mode arbitration

@@ -119,3 +119,22 @@ export function makeEmissive(intensity = 1.8) {
     toneMapped: false,
   });
 }
+
+// Face expression emitter — V's EYES + mouth, rendered on the dark visor. Same
+// trick as the core/seam (toneMapped off -> bloomed pixels exceed the dither
+// bypass-luma and escape the Bayer pass), so the white emissive features punch
+// cleanly through the near-black visor and read as a FACE at hero distance.
+// transparent so a feature can fade its opacity for soft blinks/idle without
+// jumping luma. Per-eye/mouth clones are made in VRobot so each can animate its
+// own intensity/opacity independently.
+export function makeFaceEmitter(intensity = 2.6) {
+  return new THREE.MeshStandardMaterial({
+    color: gray(1),
+    emissive: gray(1),
+    emissiveIntensity: intensity,
+    toneMapped: false,
+    transparent: true,
+    opacity: 1,
+    depthWrite: false,
+  });
+}
