@@ -103,6 +103,16 @@ const useVStore = create((set, get) => ({
   setAvatarState(s) {
     set({ avatarState: s });
   },
+
+  // DEV pose-hold: when set to a gesture name, VRobot's gesture engine HOLDS
+  // that gesture statically at its peak phase (no time animation) so a specific
+  // joint can be screenshotted mid-pose. Seeded from ?v8gesture=<name> in Root,
+  // alongside ?v8open / ?v8depth. null = normal live idle/gesture loop.
+  // Recognised: wave | elbowFlex | shoulderRoll | nod | shake | reach | weightShift.
+  gestureHold: null,
+  setGestureHold(name) {
+    set({ gestureHold: name || null });
+  },
   lookTarget: { x: 0, y: 0 },
   setLookTarget(t) {
     set({ lookTarget: t || { x: 0, y: 0 } });

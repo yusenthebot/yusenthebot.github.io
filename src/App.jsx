@@ -1195,6 +1195,9 @@ export default function Root() {
   //   ?v8pitch=<radians> camera elevation orbit (store clamps to [-0.45, 0.55])
   //   ?v8scale=<n>      zoom factor (store clamps to [0.6, 1.8])
   //   ?v8open=<id>      force one part individually open (repeatable)
+  //   ?v8gesture=<name> HOLD a named gesture statically at its peak phase for
+  //                     screenshotting a joint mid-pose (wave|elbowFlex|
+  //                     shoulderRoll|nod|shake|reach|weightShift)
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -1240,6 +1243,11 @@ export default function Root() {
         }
       }
       if (lastOpen) store.inspect(lastOpen);
+
+      // ?v8gesture=<name> — hold a gesture statically at its peak for a
+      // mid-pose screenshot (dev affordance, mirrors v8open/v8depth).
+      const gestureRaw = (params.get("v8gesture") || "").trim();
+      if (gestureRaw) store.setGestureHold(gestureRaw);
     } catch {
       // no-op: URL parsing is best-effort
     }

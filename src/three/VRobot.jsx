@@ -1016,9 +1016,14 @@ export default function VRobot(props) {
       const name = pick[Math.floor(Math.random() * pick.length)];
       gesture.current = { name, t0: t, dur: name === "wave" ? 2.2 : 1.4, next: t + 5 + Math.random() * 5 };
     }
-    const gName = gesture.current.name;
+    // DEV pose-hold (?v8gesture=<name>): pin a named gesture at its PEAK phase
+    // statically so a joint can be screenshotted mid-pose. hold short-circuits
+    // the live gesture window: gName = the held name, env e = 1 (peak), and any
+    // time-driven sub-oscillation (wave bob / scan sweep) is frozen at its peak.
+    const hold = s.gestureHold;
+    const gName = hold || gesture.current.name;
     const gt = t - gesture.current.t0;
-    const gActive = gt < gesture.current.dur && calmA > 0 && !torn;
+    const gActive = hold ? true : gt < gesture.current.dur && calmA > 0 && !torn;
 
     // gesture TARGETS — set the desired joint angles for the active gesture.
     // env(p): a smooth 0->1->0 envelope across the gesture so it eases in/out.
@@ -1032,18 +1037,30 @@ export default function VRobot(props) {
     let swayT = 0;
     let nodT = 0;
     if (gActive) {
-      const p = gt / gesture.current.dur;
-      const e = env(p);
+      // when holding, pin the envelope to peak (e=1) and freeze sub-oscillators
+      const p = hold ? 0.5 : gt / gesture.current.dur;
+      const e = hold ? 1 : env(p);
+      // wave/scan bob phases: live = time-driven; held = frozen at the bob peak
+      const waveBob = hold ? 1 : Math.sin(gt * 9);
+      const scanBob = hold ? 1 : Math.sin(gt * 1.6);
       if (gName === "wave") {
         // raise the RIGHT arm out + up, then the ELBOW flexes back-and-forth
-        // (a real wave): forearm rotates about the elbow joint, visibly bending
+        // (a real wave): forearm rotates about the elbow joint, visibly bending.
+        // shR<0 = abduct OUTWARD; elb>0 = forearm flexes UP+FORWARD (sign handled
+        // at the joint-application step below).
         shRT.R = -1.15 * e; // abduct out to the side
         shPT.R = -0.35 * e; // and a little forward
-        elbT.R = 0.5 + Math.sin(gt * 9) * 0.6 * e; // elbow flexes to wave
+        elbT.R = 0.5 + waveBob * 0.55 * e; // elbow flexes to wave (clamped below)
       } else if (gName === "elbowFlex") {
         // a clear single elbow articulation on the right arm — the honest joint
         shPT.R = -0.5 * e;
-        elbT.R = 0.12 + 1.15 * e; // forearm swings up about the elbow
+        elbT.R = 0.12 + 1.15 * e; // forearm swings up+forward about the elbow
+      } else if (gName === "reach") {
+        // V reaches FORWARD with the right arm: shoulder lifts the arm to the
+        // front, elbow mostly extended so the hand presents out ahead of the body
+        shPT.R = -1.1 * e; // raise forward to horizontal-ish
+        elbT.R = 0.25 + 0.35 * e; // only a soft bend so the arm reaches out
+        shRT.R = -0.12 * e; // a touch of abduction so it clears the torso
       } else if (gName === "shoulderRoll") {
         shPT.L = -0.25 * e;
         shPT.R = -0.25 * e;
@@ -1059,11 +1076,20 @@ export default function VRobot(props) {
         // raise the right forearm as if presenting a scan, hold, sweep slightly
         shPT.R = -0.7 * e;
         elbT.R = 0.12 + 1.0 * e;
-        shRT.R = (-0.2 + Math.sin(gt * 1.6) * 0.18) * e;
+        shRT.R = (-0.2 + scanBob * 0.18) * e;
       } else if (gName === "relax") {
         elbT.L = 0.05;
         elbT.R = 0.05;
       }
+    }
+    // JOINT-LIMIT clamps — keep every articulated joint inside an anatomically
+    // safe, non-self-intersecting range so no gesture (or held dev pose) drives
+    // a part through a neighbour. Elbow flexes forward only, never hyperextends.
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+    for (const side of ["L", "R"]) {
+      elbT[side] = clamp(elbT[side], -0.05, 1.95); // 0..~112deg forward flex
+      shPT[side] = clamp(shPT[side], -1.7, 0.5); // raise forward/up, slight back
+      shRT[side] = clamp(shRT[side], -1.45, 0.25); // abduct out, minimal adduct
     }
     // a slow continuous idle weight-shift sway under everything (very subtle)
     swayT += Math.sin(t * 0.5) * 0.02 * calmA;
@@ -1084,19 +1110,27 @@ export default function VRobot(props) {
     G.sway = damp(G.sway, swayT, 5, delta);
     G.nod = damp(G.nod, nodT, 7, delta);
 
-    // apply articulation to the actual kinematic joints:
-    //   shoulder_ball -> arm raise/abduct (pivots at the shoulder)
-    //   elbow         -> forearm flexion (the forearm rotates about the elbow)
-    //   shoulder_yoke -> breathing shrug
+    // apply articulation to the actual kinematic joints. Sign conventions
+    // (right-handed, +y up, +z front, arms hang along -y):
+    //   shoulder PITCH  rotation.x : NEGATIVE raises the arm FORWARD (+z). shP
+    //                   targets are authored negative, so applied straight.
+    //   shoulder ROLL   rotation.z : abduction must swing the arm OUTWARD
+    //                   (left -> -x, right -> +x). A positive shR*sgn rotates
+    //                   INWARD across the body (the old reversed bug), so the
+    //                   sign is FLIPPED here: outward = -shR*sgn.
+    //   elbow  FLEXION  rotation.x : the forearm hangs at -y; +rotation.x swings
+    //                   it BACKWARD through the torso (the old reversed bug).
+    //                   Flexion must bring the forearm UP+FORWARD (+z), so the
+    //                   positive elb target is applied NEGATED.
     for (const side of ["L", "R"]) {
       const sgn = side === "L" ? -1 : 1;
       const sh = R[`shoulder_ball_${side.toLowerCase()}`];
       const el = R[`elbow_${side.toLowerCase()}`];
       if (sh) {
-        sh.rotation.x = G.shP[side]; // forward raise
-        sh.rotation.z = G.shR[side] * sgn; // lateral abduct (mirror per side)
+        sh.rotation.x = G.shP[side]; // forward raise (negative = forward)
+        sh.rotation.z = -G.shR[side] * sgn; // lateral abduct OUTWARD (sign fixed)
       }
-      if (el) el.rotation.x = G.elb[side]; // true elbow flexion
+      if (el) el.rotation.x = -G.elb[side]; // forward elbow flexion (sign fixed)
     }
     if (R.shoulder_yoke) R.shoulder_yoke.position.y = YOKE_Y0 + G.shrug;
     // weight-shift sways the whole figure subtly about its vertical axis,
@@ -1115,6 +1149,9 @@ export default function VRobot(props) {
     }
     let shake = 0;
     if (mode === "error" && st < 0.5) shake = Math.sin(st * 42) * 0.09 * (1 - st / 0.5);
+    // held-shake dev pose: pin the head yawed to one side so ?v8gesture=shake
+    // shows the head-turn statically (the live shake is mode==="error" driven).
+    if (hold === "shake") shake = 0.32;
 
     const L = look.current;
     L.yaw = damp(L.yaw, yawT, 6, delta);
