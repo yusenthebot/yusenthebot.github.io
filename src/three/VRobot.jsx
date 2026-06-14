@@ -623,24 +623,23 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* exposed black ball joint — the deltoid actuator */}
+          {/* exposed black ball joint — the deltoid actuator (compact, G1-scale) */}
           <mesh material={darkPolymer} castShadow>
-            <sphereGeometry args={[0.105, 24, 18]} />
+            <sphereGeometry args={[0.078, 24, 18]} />
           </mesh>
-          {/* G1 SHOULDER DISC MOTOR — the signature big flat actuator housing on
-              the OUTBOARD side of the shoulder, axis along the joint (X). A short
-              wide dark disc (r 0.10, depth 0.07) facing outward so the shoulder
-              reads as a powered disc joint, not a smooth ball. This is the most
-              recognizable G1 feature; sits proud on the deltoid flank. */}
-          <mesh position={[sgn * 0.095, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-            <cylinderGeometry args={[0.1, 0.1, 0.07, 28]} />
+          {/* G1 SHOULDER MOTOR — a MODEST cylindrical actuator on the outboard
+              side of the shoulder, axis along the arm (X). Compact (r 0.068,
+              depth 0.06) so the shoulder reads as a powered joint, not a big
+              disc blob — G1 shoulders are tight to the body. */}
+          <mesh position={[sgn * 0.072, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
+            <cylinderGeometry args={[0.068, 0.068, 0.06, 24]} />
           </mesh>
-          {/* brushed center hub + machined rim on the disc face */}
-          <mesh position={[sgn * 0.135, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.05, 0.05, 0.02, 20]} />
+          {/* brushed center hub + machined rim on the motor face */}
+          <mesh position={[sgn * 0.103, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.034, 0.034, 0.018, 18]} />
           </mesh>
-          <mesh position={[sgn * 0.13, 0, 0]} rotation-z={HPI} material={lip}>
-            <torusGeometry args={[0.092, 0.01, 8, 28]} />
+          <mesh position={[sgn * 0.1, 0, 0]} rotation-z={HPI} material={lip}>
+            <torusGeometry args={[0.06, 0.008, 8, 24]} />
           </mesh>
         </>
       );
@@ -650,24 +649,18 @@ function PartMesh({ id, lip, ctx }) {
       const sgn = id.endsWith("_l") ? -1 : 1;
       return (
         <>
-          {/* HARD-SURFACE deltoid cap — a faceted shoulder pauldron (a chamfered
-              rounded-box plate over the ball joint) instead of a soft dome, so
-              the shoulder reads as an armored panel with a flat top + outboard
-              face. A lower side skirt plate wraps the outboard edge. */}
-          <RoundedBox args={[0.24, 0.13, 0.22]} radius={0.045} smoothness={3} position={[sgn * 0.02, 0.02, 0]} material={mattePolymer} castShadow />
-          {/* outboard side skirt — an angled flat plate down the deltoid flank */}
-          <RoundedBox args={[0.1, 0.13, 0.2]} radius={0.035} smoothness={3} position={[sgn * 0.12, -0.04, 0]} rotation-z={sgn * 0.5} material={panelShade} castShadow />
-          {/* recessed seam dividing the cap from the skirt */}
-          <RoundedBox args={[0.012, 0.02, 0.18]} radius={0.004} smoothness={2} position={[sgn * 0.085, -0.01, 0]} material={seamInset} />
-          {/* machined rim under the cap edge */}
-          <group position={[0, -0.04, 0]} rotation={[HPI, 0, 0]}>
-            <mesh scale={[1.2, 1.05, 1]} material={lip}>
-              <torusGeometry args={[0.12, 0.009, 8, 36]} />
-            </mesh>
-          </group>
+          {/* COMPACT deltoid cap — a small chamfered shoulder cap hugging the
+              joint (G1 shoulders are tight, NOT big pauldron blobs). A modest
+              rounded plate over the top-outboard of the shoulder motor + a short
+              flank panel; no oversized cap, no wide skirt. */}
+          <RoundedBox args={[0.13, 0.09, 0.15]} radius={0.04} smoothness={3} position={[sgn * 0.03, 0.03, 0]} material={mattePolymer} castShadow />
+          {/* short outboard flank panel down the upper deltoid */}
+          <RoundedBox args={[0.07, 0.11, 0.13]} radius={0.03} smoothness={3} position={[sgn * 0.085, -0.03, 0]} rotation-z={sgn * 0.45} material={panelShade} castShadow />
+          {/* recessed seam dividing the cap from the flank */}
+          <RoundedBox args={[0.01, 0.016, 0.12]} radius={0.003} smoothness={2} position={[sgn * 0.06, -0.005, 0]} material={seamInset} />
           {/* visible hinge pivot along the inboard edge (hinge axis = z) */}
-          <mesh position={[sgn * -0.1, 0.06, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
-            <cylinderGeometry args={[0.016, 0.016, 0.1, 10]} />
+          <mesh position={[sgn * -0.06, 0.05, 0]} rotation-x={HPI} material={brushedMetal} castShadow>
+            <cylinderGeometry args={[0.014, 0.014, 0.08, 10]} />
           </mesh>
         </>
       );
