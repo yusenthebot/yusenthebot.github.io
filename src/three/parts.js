@@ -419,9 +419,9 @@ const PARTS = [
     id: "hip_l",
     parent: "pelvis",
     kind: "actuator",
-    // PULLED IN (was -0.17) for a narrow G1-style hip (sep ~0.30). The legs hang
-    // close together under a slim pelvis — narrow hips, long legs.
-    origin: [-0.15, -0.1, 0],
+    // PULLED IN (was -0.17, then -0.15) for a narrow G1-style hip (sep ~0.27).
+    // The legs hang close together under a slim pelvis — narrow hips, long legs.
+    origin: [-0.135, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -436,7 +436,7 @@ const PARTS = [
     id: "hip_r",
     parent: "pelvis",
     kind: "actuator",
-    origin: [0.15, -0.1, 0],
+    origin: [0.135, -0.1, 0],
     band: null,
     motion: null,
     spec: [

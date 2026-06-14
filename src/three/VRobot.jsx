@@ -814,14 +814,14 @@ function PartMesh({ id, lip, ctx }) {
               joint without flaring the hips wider than the slim pelvis/legs. */}
           {(() => { const sgn = id.endsWith("_l") ? -1 : 1; return (
             <>
-              <mesh position={[sgn * 0.06, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
-                <cylinderGeometry args={[0.082, 0.082, 0.06, 28]} />
+              <mesh position={[sgn * 0.048, 0, 0]} rotation-z={HPI} material={darkPolymer} castShadow>
+                <cylinderGeometry args={[0.066, 0.066, 0.055, 28]} />
               </mesh>
-              <mesh position={[sgn * 0.095, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
-                <cylinderGeometry args={[0.042, 0.042, 0.02, 20]} />
+              <mesh position={[sgn * 0.078, 0, 0]} rotation-z={HPI} material={brushedMetal} castShadow>
+                <cylinderGeometry args={[0.034, 0.034, 0.02, 20]} />
               </mesh>
-              <mesh position={[sgn * 0.09, 0, 0]} rotation-z={HPI} material={lip}>
-                <torusGeometry args={[0.076, 0.009, 8, 28]} />
+              <mesh position={[sgn * 0.074, 0, 0]} rotation-z={HPI} material={lip}>
+                <torusGeometry args={[0.06, 0.008, 8, 28]} />
               </mesh>
             </>
           ); })()}
@@ -1046,19 +1046,27 @@ function PartMesh({ id, lip, ctx }) {
     case "neck_stack":
       return (
         <>
-          {[0, 0.06, 0.12].map((y) => (
-            <mesh key={y} position={[0, y, 0]} material={darkPolymer} castShadow>
-              <cylinderGeometry args={[0.06, 0.06, 0.04, 24]} />
-            </mesh>
-          ))}
-          {[0.03, 0.09].map((y) => (
+          {/* LIT tapered neck column — mattePolymer so the neck READS against the
+              black background instead of vanishing. A thin DARK neck made the head
+              look detached (it disappeared into the black panel); a lit column that
+              flares wide at the base to seat on the clavicle deck and necks down
+              into the head bridges shoulders->head as one continuous lit mass. */}
+          <mesh position={[0, 0.02, 0]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.082, 0.118, 0.12, 24]} />
+          </mesh>
+          <mesh position={[0, 0.13, 0]} material={mattePolymer} castShadow>
+            <cylinderGeometry args={[0.088, 0.082, 0.1, 24]} />
+          </mesh>
+          {/* exposed brushed actuator rings — the yaw servo stack, machined banding
+              proud of the lit column (stacked-disc neck spacer look) */}
+          {[0.05, 0.11, 0.17].map((y) => (
             <mesh key={y} position={[0, y, 0]} material={brushedMetal}>
-              <cylinderGeometry args={[0.046, 0.046, 0.035, 24]} />
+              <cylinderGeometry args={[0.094, 0.094, 0.015, 24]} />
             </mesh>
           ))}
           {/* white emissive neck seam ring — part of the one accent line */}
-          <mesh position={[0, 0.155, 0]} rotation-x={HPI} material={brightEmissiveSeam}>
-            <torusGeometry args={[0.058, 0.005, 8, 32]} />
+          <mesh position={[0, 0.185, 0]} rotation-x={HPI} material={brightEmissiveSeam}>
+            <torusGeometry args={[0.085, 0.005, 8, 32]} />
           </mesh>
         </>
       );
@@ -1095,9 +1103,11 @@ function PartMesh({ id, lip, ctx }) {
             ref={(m) => ctx.setExtra("faceMouth", m)}
             material={faceMat.mouth}
           />
-          {/* neck collar joining the stack */}
-          <mesh position={[0, -0.18, 0]} material={darkPolymer}>
-            <cylinderGeometry args={[0.07, 0.09, 0.08, 16]} />
+          {/* LIT neck collar joining the stack — mattePolymer (was dark) so the
+              head-to-neck join stays lit and continuous, no dark band that re-
+              breaks the head off from the body. */}
+          <mesh position={[0, -0.18, 0]} material={mattePolymer}>
+            <cylinderGeometry args={[0.078, 0.092, 0.08, 20]} />
           </mesh>
         </>
       );
