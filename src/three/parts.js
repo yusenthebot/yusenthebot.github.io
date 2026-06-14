@@ -8,10 +8,13 @@
 // (ball shoulders, elbow pads, an actuated pelvis block, knee linkages,
 // ankles); segmented forearms; five-finger hands; a smooth dark teardrop
 // helmet with two faint emissive eye rings behind the visor. The ONE accent is
-// a thin WHITE EMISSIVE seam at the face/neck perimeter (breaks the dither via
-// bloom, like the core). Proportions: ~7.5 heads tall, shoulders ~2.2x head
-// width, slim limbs, neutral FREE-STANDING pose on its own two feet — no rig,
-// no cradle, no dock; both feet planted flat on the dark floor.
+// expressive emissive EYES (with a mouth bar) behind the visor — the face
+// emotes; there is NO bright brow arc/halo over the head. Proportions (REV.8
+// proportion pass): ~7.5 heads tall, LONG legs (~half the standing height), a
+// slim PINCHED waist (no belly bulge), MODEST shoulders (~1.6x the hip width,
+// not dominant), narrow hips — a lean athletic humanoid, not top-heavy with
+// stubby legs. Neutral FREE-STANDING pose on its own two feet — no rig, no
+// cradle, no dock; both feet planted flat on the dark floor.
 //
 // Choreography law: every banded part owns a sub-interval of the shared depth
 // scrub (store.depth, 0..1). Pose is a pure function of depth via openFraction
@@ -20,7 +23,8 @@
 // first, then chest/core, arms, pelvis, legs, feet, and the optic mast last.
 // The L/R pairs overlap deliberately (staggered cascade) and that is safe
 // because they ride different kinematic chains; within one chain bands never
-// overlap. Bands tile ~0..0.84 with intentional headroom above.
+// overlap. Bands tile ~0..0.96 (head shell -> chest/core -> arms -> pelvis ->
+// legs -> optic mast) with a little headroom above.
 //
 // motion.pivot is where the hinge line / slide seat sits relative to the part
 // origin; hinge angle is radians about the named local axis ('x'|'z'); slide
@@ -32,7 +36,6 @@ const BAND_ORDER = [
   "head_shell",
   "chest_plate",
   "back_plate",
-  "chest_core_housing",
   "core",
   "pauldron_l",
   "pauldron_r",
@@ -68,7 +71,11 @@ const PARTS = [
     id: "pelvis",
     parent: "base_link",
     kind: "link",
-    origin: [0, 1.5, 0],
+    // RAISED (was 1.5) so the hip line sits higher and the legs read as a true
+    // half of standing height — the single biggest lever on the "legs too short"
+    // read. The leg chain below (thigh/shin) is lengthened to match so the feet
+    // still plant flat on the floor (y~0).
+    origin: [0, 1.62, 0],
     band: null,
     motion: null,
     spec: [
@@ -84,7 +91,7 @@ const PARTS = [
     parent: "pelvis",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.44, 0.52],
+    band: [0.5, 0.58],
     motion: { type: "slide", axis: [0, 0, 1], pivot: [0, 0, 0], dist: 0.16 },
     spec: [
       "pelvis fascia panel, PA12-GF 2.8mm",
@@ -98,7 +105,11 @@ const PARTS = [
     id: "torso",
     parent: "pelvis",
     kind: "link",
-    origin: [0, 0.46, 0],
+    // Lowered a touch (was 0.46) so the raised pelvis doesn't balloon total
+    // height — the trunk seats onto the higher hips. The abdomen geometry in
+    // VRobot is slimmed + shortened so the waist reads clearly pinched and the
+    // belly no longer bulges, exposing more of the (now longer) legs.
+    origin: [0, 0.42, 0],
     band: null,
     motion: null,
     spec: [
@@ -138,26 +149,14 @@ const PARTS = [
     ],
   },
   {
-    id: "chest_core_housing",
-    parent: "torso",
-    kind: "internal",
-    origin: [0, 0, 0.02],
-    band: [0.2, 0.27],
-    motion: { type: "slide", axis: [0, 0, 1], pivot: [0, 0, 0], dist: 0.2 },
-    spec: [
-      "core housing, machined AL cage",
-      "4 fasteners :: M3 :: slide-out rail mount",
-      "connector J4 :: 12-pin power+CAN",
-      "service: hot-swap NOT rated",
-    ],
-    lore: "Behind this is the part Yusen won't let me show you.",
-  },
-  {
     id: "core",
     parent: "torso",
     kind: "core",
     origin: [0, 0, 0.04],
-    band: [0.27, 0.34],
+    // re-tiled to fill the band left by the removed chest_core_housing — the
+    // core's emissive reveal ramp now begins right after the chest/back plates
+    // hinge open (no dead gap in the teardown scrub).
+    band: [0.2, 0.3],
     // the core never moves — its band drives the reveal (emissive ramp)
     motion: { type: "reveal" },
     spec: [
@@ -167,21 +166,6 @@ const PARTS = [
       "serial PROTOTYPE-7 :: PROPERTY OF YUSEN XIE",
     ],
     lore: "No. Not that one. Some things stay sealed.",
-  },
-  {
-    id: "spine",
-    parent: "torso",
-    kind: "internal",
-    origin: [0, 0, -0.12],
-    band: null,
-    motion: null,
-    spec: [
-      "spinal bus column, brushed AL",
-      "carries CAN trunk + power harness",
-      "segments x4 :: strain relief at C2",
-      "torsional limit +/-30deg",
-    ],
-    lore: "My C2 vertebra. Yusen printed the first one at 2am.",
   },
   {
     id: "shoulder_yoke",
@@ -202,7 +186,9 @@ const PARTS = [
     id: "shoulder_ball_l",
     parent: "shoulder_yoke",
     kind: "actuator",
-    origin: [-0.36, 0, 0],
+    // NARROWED (was -0.36) so the shoulder separation (~0.54) is ~1.7x the hip
+    // width (~0.30), not the old dominant ~2.1x. Modest shoulders, lean trunk.
+    origin: [-0.27, 0, 0],
     band: null,
     motion: null,
     spec: [
@@ -217,7 +203,7 @@ const PARTS = [
     id: "shoulder_ball_r",
     parent: "shoulder_yoke",
     kind: "actuator",
-    origin: [0.36, 0, 0],
+    origin: [0.27, 0, 0],
     band: null,
     motion: null,
     spec: [
@@ -405,7 +391,7 @@ const PARTS = [
     parent: "wrist_l",
     kind: "hand",
     origin: [0, -0.08, 0],
-    band: [0.42, 0.48],
+    band: [0.44, 0.5],
     motion: { type: "slide", axis: [0, -1, 0], pivot: [0, 0, 0], dist: 0.1 },
     spec: [
       "hand L, 5-finger underactuated gripper",
@@ -420,7 +406,7 @@ const PARTS = [
     parent: "wrist_r",
     kind: "hand",
     origin: [0, -0.08, 0],
-    band: [0.44, 0.5],
+    band: [0.46, 0.52],
     motion: { type: "slide", axis: [0, -1, 0], pivot: [0, 0, 0], dist: 0.1 },
     spec: [
       "hand R, 5-finger underactuated gripper",
@@ -433,7 +419,9 @@ const PARTS = [
     id: "hip_l",
     parent: "pelvis",
     kind: "actuator",
-    origin: [-0.17, -0.1, 0],
+    // PULLED IN (was -0.17) for a narrow G1-style hip (sep ~0.30). The legs hang
+    // close together under a slim pelvis — narrow hips, long legs.
+    origin: [-0.15, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -448,7 +436,7 @@ const PARTS = [
     id: "hip_r",
     parent: "pelvis",
     kind: "actuator",
-    origin: [0.17, -0.1, 0],
+    origin: [0.15, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -491,7 +479,7 @@ const PARTS = [
     parent: "thigh_l",
     kind: "shell",
     origin: [0, -0.18, 0.02],
-    band: [0.54, 0.64],
+    band: [0.58, 0.68],
     motion: { type: "hinge", axis: "x", pivot: [0, 0.2, -0.06], angle: 0.85 },
     spec: [
       "thigh shell L, PA12-GF 3.0mm",
@@ -506,7 +494,7 @@ const PARTS = [
     parent: "thigh_r",
     kind: "shell",
     origin: [0, -0.18, 0.02],
-    band: [0.56, 0.66],
+    band: [0.6, 0.7],
     motion: { type: "hinge", axis: "x", pivot: [0, 0.2, -0.06], angle: 0.85 },
     spec: [
       "thigh shell R, PA12-GF 3.0mm",
@@ -519,7 +507,10 @@ const PARTS = [
     id: "knee_l",
     parent: "thigh_l",
     kind: "actuator",
-    origin: [0, -0.6, 0],
+    // LOWERED (was -0.6) to lengthen the thigh segment — part of pushing the
+    // legs to ~half the standing height. The thigh geometry in VRobot is
+    // lengthened to span the longer gap; the knee bend direction is unchanged.
+    origin: [0, -0.7, 0],
     band: null,
     motion: null,
     spec: [
@@ -534,7 +525,7 @@ const PARTS = [
     id: "knee_r",
     parent: "thigh_r",
     kind: "actuator",
-    origin: [0, -0.6, 0],
+    origin: [0, -0.7, 0],
     band: null,
     motion: null,
     spec: [
@@ -577,7 +568,7 @@ const PARTS = [
     parent: "shin_l",
     kind: "shell",
     origin: [0, -0.16, 0.02],
-    band: [0.64, 0.74],
+    band: [0.7, 0.8],
     motion: { type: "hinge", axis: "x", pivot: [0, 0.18, -0.06], angle: 0.8 },
     spec: [
       "shin shell L, PA12-GF 2.8mm",
@@ -592,7 +583,7 @@ const PARTS = [
     parent: "shin_r",
     kind: "shell",
     origin: [0, -0.16, 0.02],
-    band: [0.66, 0.76],
+    band: [0.72, 0.82],
     motion: { type: "hinge", axis: "x", pivot: [0, 0.18, -0.06], angle: 0.8 },
     spec: [
       "shin shell R, PA12-GF 2.8mm",
@@ -605,7 +596,10 @@ const PARTS = [
     id: "ankle_l",
     parent: "shin_l",
     kind: "actuator",
-    origin: [0, -0.54, 0],
+    // LOWERED (was -0.54) to lengthen the shin segment and drop the foot toward
+    // the floor — the legs grow to match the raised hip so the feet stay planted
+    // (foot world y ~0). Shin geometry in VRobot is lengthened to span the gap.
+    origin: [0, -0.6, 0],
     band: null,
     motion: null,
     spec: [
@@ -620,7 +614,7 @@ const PARTS = [
     id: "ankle_r",
     parent: "shin_r",
     kind: "actuator",
-    origin: [0, -0.54, 0],
+    origin: [0, -0.6, 0],
     band: null,
     motion: null,
     spec: [
@@ -703,36 +697,6 @@ const PARTS = [
     lore: "You're opening my head. I'd like it noted that I objected.",
   },
   {
-    id: "visor_glass",
-    parent: "head_base",
-    kind: "internal",
-    origin: [0, 0, 0],
-    band: null,
-    motion: null,
-    spec: [
-      "visor, smoked PC teardrop 2mm",
-      "optical grade :: AR coated inner face",
-      "near-black glossy blank :: do not polish",
-      "replace if scored",
-    ],
-    lore: "I see you through this. Right now, in fact.",
-  },
-  {
-    id: "face_seam",
-    parent: "head_base",
-    kind: "internal",
-    origin: [0, 0, 0],
-    band: null,
-    motion: null,
-    spec: [
-      "face/neck seam, light-pipe edge accent",
-      "white emitter :: 0.2W :: always-on",
-      "the one accent line :: do not gel",
-      "datum: visor perimeter",
-    ],
-    lore: "The bright line. It's how you know I'm awake.",
-  },
-  {
     id: "eye_ring_l",
     parent: "head_base",
     kind: "eye",
@@ -766,7 +730,7 @@ const PARTS = [
     parent: "head_base",
     kind: "internal",
     origin: [0, 0.05, -0.02],
-    band: [0.76, 0.84],
+    band: [0.82, 0.96],
     motion: { type: "slide", axis: [0, 0.55, 0.835], pivot: [0, 0, 0], dist: 0.09 },
     spec: [
       "optic core, stereo sensor mast",
@@ -818,7 +782,7 @@ function outwardNormal(part) {
   // hands/feet hang off the limb end — pop them down-forward so they clear it
   if (id.startsWith("hand_") || id.startsWith("foot_")) return [0, -0.7, 0.71];
   // head / optic internals lift up-forward, away from the neck
-  if (id === "head_base" || id === "head_shell" || id === "optic_internal" || id.startsWith("eye_") || id === "visor_glass" || id === "face_seam") {
+  if (id === "head_base" || id === "head_shell" || id === "optic_internal" || id.startsWith("eye_")) {
     return [0, 0.5, 0.866];
   }
   // anything clearly on a left/right chain pops straight outboard
