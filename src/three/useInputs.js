@@ -8,7 +8,8 @@ import useVStore from "./store.js";
 //     VERTICAL   delta -> camera elevation orbit (store.setPitch, store-clamped)
 //   Drag NO LONGER scrubs teardown depth — the slim TEARDOWN slider + arrows +
 //   commands own depth now.
-//   wheel / two-finger pinch -> zoom the figure (store.setScale)
+//   wheel / two-finger pinch -> DOLLY the camera framing (store.setFraming):
+//     enter zoomed-in on the face, dolly OUT to reveal the full standing body
 //   ArrowUp/Down -> depth scrub   Escape -> clearFocus
 // A press that never crosses the ~6px threshold stays a CLICK (open part / talk).
 // All depth writes go through setDepth(v, source) which bumps tweenToken,
@@ -22,7 +23,7 @@ const YAW_TURNS_PER_WIDTH = (Math.PI * 2) / 1.5;
 // than the store's [-0.45, 0.55] clamp so a normal drag reaches the limits and
 // the clamp (not the gesture) defines the ceiling/floor.
 const PITCH_PER_HEIGHT = 1.6;
-const WHEEL_ZOOM = 0.0012; // wheel zoom sensitivity (per the task spec)
+const FRAMING_WHEEL = 0.0016; // wheel -> camera framing dolly (0..1 over ~a few notches)
 const KEY_STEP = 0.04;
 const MODE_EPSILON = 0.02;
 const CLICK_SUPPRESS_MS = 350;
@@ -71,7 +72,7 @@ export default function useInputs() {
     // active pointers for pinch detection (pointerId -> {x, y})
     const points = new Map();
     // pinch state: set when two pointers are down
-    const pinch = { active: false, startDist: 0, startScale: 1 };
+    const pinch = { active: false, startDist: 0, startFraming: 0 };
 
     const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
@@ -79,7 +80,7 @@ export default function useInputs() {
       const [a, b] = [...points.values()];
       pinch.active = true;
       pinch.startDist = Math.max(1, dist(a, b));
-      pinch.startScale = useVStore.getState().scale;
+      pinch.startFraming = useVStore.getState().framing;
       // a pinch cancels any in-progress single-finger drag and the click after it
       if (drag.active) drag.suppressClickUntil = performance.now() + CLICK_SUPPRESS_MS;
       drag.id = null;
@@ -116,7 +117,9 @@ export default function useInputs() {
       if (pinch.active && points.size >= 2) {
         const [a, b] = [...points.values()];
         const ratio = Math.max(1, dist(a, b)) / pinch.startDist;
-        useVStore.getState().setScale(pinch.startScale * ratio);
+        // SPREAD (ratio > 1) = zoom IN on the face (framing toward 0); PINCH
+        // together (ratio < 1) = zoom OUT to the full body (framing toward 1).
+        useVStore.getState().setFraming(pinch.startFraming + (1 - ratio));
         return;
       }
 
@@ -178,7 +181,9 @@ export default function useInputs() {
     const onWheel = (e) => {
       e.preventDefault(); // canvas-only; the terminal panel keeps native scroll
       const s = useVStore.getState();
-      s.setScale(s.scale * (1 - e.deltaY * WHEEL_ZOOM));
+      // wheel DOLLIES the camera framing: scroll DOWN = zoom OUT to the full body
+      // (framing up), scroll UP = zoom back IN to the face (framing down).
+      s.setFraming(s.framing + e.deltaY * FRAMING_WHEEL);
     };
 
     const onKeyDown = (e) => {

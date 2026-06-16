@@ -1231,6 +1231,14 @@ export default function Root() {
         if (!Number.isNaN(v)) store.setScale(v);
       }
 
+      // ?v8frame=<0..1> — force the camera dolly framing for headless shots
+      // (0 = close head+chest entry, 1 = full standing body). Default entry is 0.
+      const frameRaw = params.get("v8frame");
+      if (frameRaw !== null) {
+        const v = parseFloat(frameRaw);
+        if (!Number.isNaN(v)) store.setFraming(v);
+      }
+
       // ?v8open=<id> (repeatable) — force individual parts open for headless
       // screenshots of the per-part open animation. Also focus the last one.
       const openIds = params.getAll("v8open");

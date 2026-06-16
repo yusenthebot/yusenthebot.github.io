@@ -35,10 +35,20 @@ const useVStore = create((set, get) => ({
     const n = Number.isFinite(v) ? v : 0;
     set({ pitch: Math.min(0.55, Math.max(-0.45, n)) });
   },
-  scale: 1, // zoom factor for the figure (wheel / pinch), clamped to a sane band
+  scale: 1, // zoom factor for the figure (legacy lever; no longer wheel-driven)
   setScale(v) {
     const n = Number.isFinite(v) ? v : 1;
     set({ scale: Math.min(1.8, Math.max(0.6, n)) });
+  },
+  // camera DOLLY framing: 0 = CLOSE (head + chest, the intimate entry view) ..
+  // 1 = FULL standing body. Wheel / pinch drive this so the visitor lands zoomed
+  // in on V's face and can dolly OUT to reveal the whole figure. CameraRig reads
+  // it and blends a close framing toward the hero framing; the robot is NOT
+  // resized (that is `scale`). Starts at 0 = the friendly zoomed-in entry.
+  framing: 0,
+  setFraming(v) {
+    const n = Number.isFinite(v) ? v : 0;
+    set({ framing: Math.min(1, Math.max(0, n)) });
   },
 
   // per-part open state (id -> bool). Clicking a part toggles its individual

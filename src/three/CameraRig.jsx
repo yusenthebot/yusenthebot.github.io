@@ -18,16 +18,20 @@ import { focusCameraTargetFor, smoothstep } from "./Teardown.jsx";
 // y0..2.8 and its true vertical center is ~y1.4. The right panel is a tall
 // portrait, so distance is set by the body HEIGHT, not its width.
 
-// Hero framing matches the Canvas default in Scene.jsx so mount never jumps.
-// Pulled back to hold the whole standing body — crown to planted feet — at a
-// slight 3/4 angle, look settled at the chest/pelvis seam (~y1.45, a touch above
-// true center so the head reads without cropping the feet). fov 38 (Canvas).
+// FRAMING. The ENTRY (CLOSE) looks directly AT THE HEAD so the head is the frame
+// CENTRE on ANY panel aspect — a fixed look at the head can never push the head out
+// of frame (a chest-look does, on a short panel). The robot's head centre is ~y2.3
+// (crown ~2.65, chin ~2.0). HERO frames the whole standing body; INSPECT frames the
+// opened chassis during teardown. (An earlier aspect-fit that divided the distance
+// by the panel aspect blew up on extreme wide/short panels — reverted to robust
+// fixed positions; head-centred CLOSE is what keeps the head visible everywhere.)
 const HERO_POS = new THREE.Vector3(3.2, 1.95, 6.6);
 const HERO_LOOK = new THREE.Vector3(0, 1.45, 0);
-// Inspection framing: dolly-in + slight crane-up onto the opened chassis. Stays
-// far enough back that panels opening from head to feet stay mostly in frame; the
-// look rises toward the torso/pelvis (the densest mid-body reveal) without
-// losing the legs as shells cascade open down to the shins.
+// CLOSE entry (store.framing = 0): centred ON THE HEAD (look y2.3), dollied close so
+// the head + upper body fill the panel with the head dead-centre. Wheel/pinch
+// dollies out to HERO (full body).
+const CLOSE_POS = new THREE.Vector3(1.06, 2.3, 2.27);
+const CLOSE_LOOK = new THREE.Vector3(0, 2.3, 0);
 const INSPECT_POS = new THREE.Vector3(2.7, 2.15, 5.0);
 const INSPECT_LOOK = new THREE.Vector3(0, 1.55, 0);
 
@@ -38,6 +42,9 @@ const CRANE_LIFT = 0.28; // focus flights rise then settle — slight crane
 
 const _target = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
 const _offset = new THREE.Vector3();
+// scratch for the framing blend (CLOSE -> HERO) before the teardown dolly
+const _baseP = new THREE.Vector3();
+const _baseL = new THREE.Vector3();
 // scratch for the clamped elevation orbit: spin the camera offset about the
 // horizontal axis perpendicular to the view so the camera rises/falls while
 // still aiming at the look target.
@@ -45,14 +52,18 @@ const _orbitAxis = new THREE.Vector3();
 const _orbitQuat = new THREE.Quaternion();
 const _WORLD_UP = new THREE.Vector3(0, 1, 0);
 
-// Scrub-driven rest framing: pure function of depth, blended hero -> inspect.
-function scrubFramingInto(out, depth, mode) {
+// Scrub-driven rest framing: blend CLOSE->HERO by `framing` (the wheel/pinch
+// dolly), THEN ride the teardown base->inspect dolly on top.
+function scrubFramingInto(out, depth, mode, framing) {
+  const f = smoothstep(Math.min(1, Math.max(0, framing)));
+  _baseP.lerpVectors(CLOSE_POS, HERO_POS, f);
+  _baseL.lerpVectors(CLOSE_LOOK, HERO_LOOK, f);
   const k =
     mode === "teardown"
       ? smoothstep((depth - INSPECT_START) / (1 - INSPECT_START))
       : 0;
-  out.pos.lerpVectors(HERO_POS, INSPECT_POS, k);
-  out.look.lerpVectors(HERO_LOOK, INSPECT_LOOK, k);
+  out.pos.lerpVectors(_baseP, INSPECT_POS, k);
+  out.look.lerpVectors(_baseL, INSPECT_LOOK, k);
   return out;
 }
 
@@ -61,7 +72,7 @@ export default function CameraRig() {
   const mode = useVStore((s) => s.mode);
   const focusPartId = useVStore((s) => s.focusPartId);
   const rigRef = useRef({
-    pos: HERO_POS.clone(),
+    pos: new THREE.Vector3(3.2, 1.95, 6.6),
     look: HERO_LOOK.clone(),
     tweening: false,
     breath: 1,
@@ -101,7 +112,7 @@ export default function CameraRig() {
       rig.tl = tl;
     } else if (wasFocus) {
       // leaving focus: fly back to whatever the scrub framing currently is
-      scrubFramingInto(_target, useVStore.getState().depth, mode);
+      scrubFramingInto(_target, useVStore.getState().depth, mode, useVStore.getState().framing);
       rig.tweening = true;
       const tl = gsap.timeline({
         defaults: { ease: "power2.inOut", duration: 1.0 },
@@ -129,13 +140,13 @@ export default function CameraRig() {
 
   useFrame((state, delta) => {
     const rig = rigRef.current;
-    const { depth, mode: m, quality, pitch } = useVStore.getState();
+    const { depth, mode: m, quality, pitch, framing } = useVStore.getState();
     const dt = Math.min(delta || 0.016, 0.1);
 
-    // scrub framing: while teardown depth > 0.3, ease toward the inspection
-    // framing proportional to depth; GSAP owns the framing during focus flights
+    // scrub framing: blend CLOSE->HERO by the wheel/pinch `framing`, then ease
+    // toward the inspection framing by teardown depth; GSAP owns it during focus
     if (!rig.tweening && m !== "focus") {
-      scrubFramingInto(_target, depth, m);
+      scrubFramingInto(_target, depth, m, framing);
       const a = 1 - Math.exp(-4 * dt);
       rig.pos.lerp(_target.pos, a);
       rig.look.lerp(_target.look, a);
