@@ -91,8 +91,8 @@ const PARTS = [
     parent: "pelvis",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.5, 0.58],
-    motion: { type: "slide", axis: [0, 0, 1], pivot: [0, 0, 0], dist: 0.16 },
+    band: [0.57, 0.65],
+    motion: { type: "slide", axis: [0, 0, 1], pivot: [0, 0, 0], dist: 0.3 },
     spec: [
       "pelvis fascia panel, PA12-GF 2.8mm",
       "4 fasteners :: M3 torx :: torque 1.8Nm",
@@ -124,8 +124,8 @@ const PARTS = [
     parent: "torso",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.06, 0.18],
-    motion: { type: "hinge", axis: "x", pivot: [0, -0.34, 0.22], angle: 1.35 },
+    band: [0.07, 0.17],
+    motion: { type: "hinge", axis: "x", pivot: [0, -0.2, 0.18], angle: 1.45 },
     spec: [
       "chest plastron, PA12-GF 3.2mm",
       "4 fasteners :: M3 torx :: torque 2.1Nm",
@@ -139,8 +139,8 @@ const PARTS = [
     parent: "torso",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0.08, 0.2],
-    motion: { type: "hinge", axis: "x", pivot: [0, -0.34, -0.22], angle: -1.25 },
+    band: [0.1, 0.2],
+    motion: { type: "hinge", axis: "x", pivot: [0, -0.2, -0.18], angle: -1.4 },
     spec: [
       "dorsal shell, PA12-GF 3.2mm",
       "6 fasteners :: M3 torx :: torque 2.1Nm",
@@ -152,9 +152,12 @@ const PARTS = [
     id: "core",
     parent: "torso",
     kind: "core",
-    // pushed BACK (was z 0.04) so the core sphere stays fully behind the chest
-    // plastron at idle — it only shows in the cavity once the chest hinges open.
-    origin: [0, 0, -0.03],
+    // a flat REACTOR FACE on the chest FRONT (z just proud of the lit chest slab
+    // front ~0.125), tucked UNDER the chest plastron at idle (plate front ~0.148)
+    // so it is hidden until the chest hatch hinges open — then the glowing reactor
+    // is revealed dead-centre on the chest. (The old core sphere sat at z-0.03
+    // BEHIND the solid chest slab = permanently occluded; this fixes the reveal.)
+    origin: [0, 0.06, 0.1],
     // re-tiled to fill the band left by the removed chest_core_housing — the
     // core's emissive reveal ramp now begins right after the chest/back plates
     // hinge open (no dead gap in the teardown scrub).
@@ -188,9 +191,11 @@ const PARTS = [
     id: "shoulder_ball_l",
     parent: "shoulder_yoke",
     kind: "actuator",
-    // NARROWED (was -0.36) so the shoulder separation (~0.54) is ~1.7x the hip
-    // width (~0.30), not the old dominant ~2.1x. Modest shoulders, lean trunk.
-    origin: [-0.27, 0, 0],
+    // Shoulder separation 0.61 (+/-0.305) — a small outboard splay so the now-
+    // fatter arms clear the broad chest instead of tucking into its shadow. Kept
+    // MODEST relative to the broad chest/hips so the trunk stays stocky+rectangular,
+    // not a lanky V-taper.
+    origin: [-0.305, 0, 0],
     band: null,
     motion: null,
     spec: [
@@ -205,7 +210,7 @@ const PARTS = [
     id: "shoulder_ball_r",
     parent: "shoulder_yoke",
     kind: "actuator",
-    origin: [0.27, 0, 0],
+    origin: [0.305, 0, 0],
     band: null,
     motion: null,
     spec: [
@@ -220,8 +225,8 @@ const PARTS = [
     parent: "shoulder_ball_l",
     kind: "shell",
     origin: [0, 0.05, 0],
-    band: [0.28, 0.36],
-    motion: { type: "hinge", axis: "z", pivot: [0.1, 0.06, 0], angle: -1.1 },
+    band: [0.3, 0.38],
+    motion: { type: "hinge", axis: "z", pivot: [0.07, 0.1, 0], angle: -1.25 },
     spec: [
       "shoulder cap L, PA12-GF 2.8mm",
       "3 fasteners :: M3 torx :: torque 1.8Nm",
@@ -235,8 +240,8 @@ const PARTS = [
     parent: "shoulder_ball_r",
     kind: "shell",
     origin: [0, 0.05, 0],
-    band: [0.3, 0.38],
-    motion: { type: "hinge", axis: "z", pivot: [-0.1, 0.06, 0], angle: 1.1 },
+    band: [0.32, 0.4],
+    motion: { type: "hinge", axis: "z", pivot: [-0.07, 0.1, 0], angle: 1.25 },
     spec: [
       "shoulder cap R, PA12-GF 2.8mm",
       "3 fasteners :: M3 torx :: torque 1.8Nm",
@@ -336,8 +341,8 @@ const PARTS = [
     parent: "forearm_l",
     kind: "shell",
     origin: [0, -0.06, 0],
-    band: [0.36, 0.44],
-    motion: { type: "hinge", axis: "z", pivot: [0.05, 0.18, 0], angle: -0.9 },
+    band: [0.4, 0.48],
+    motion: { type: "hinge", axis: "z", pivot: [0.06, 0.2, 0], angle: -1.55 },
     spec: [
       "forearm cuff L, PA12-GF 2.4mm",
       "2 fasteners :: M2.5 :: torque 1.2Nm",
@@ -351,8 +356,8 @@ const PARTS = [
     parent: "forearm_r",
     kind: "shell",
     origin: [0, -0.06, 0],
-    band: [0.38, 0.46],
-    motion: { type: "hinge", axis: "z", pivot: [-0.05, 0.18, 0], angle: 0.9 },
+    band: [0.42, 0.5],
+    motion: { type: "hinge", axis: "z", pivot: [-0.06, 0.2, 0], angle: 1.55 },
     spec: [
       "forearm cuff R, PA12-GF 2.4mm",
       "2 fasteners :: M2.5 :: torque 1.2Nm",
@@ -393,8 +398,8 @@ const PARTS = [
     parent: "wrist_l",
     kind: "hand",
     origin: [0, -0.08, 0],
-    band: [0.44, 0.5],
-    motion: { type: "slide", axis: [0, -1, 0], pivot: [0, 0, 0], dist: 0.1 },
+    band: [0.48, 0.55],
+    motion: { type: "slide", axis: [-0.45, -0.89, 0], pivot: [0, 0, 0], dist: 0.2 },
     spec: [
       "hand L, 5-finger underactuated gripper",
       "11-DOF :: tendon-driven :: 6 motors",
@@ -408,8 +413,8 @@ const PARTS = [
     parent: "wrist_r",
     kind: "hand",
     origin: [0, -0.08, 0],
-    band: [0.46, 0.52],
-    motion: { type: "slide", axis: [0, -1, 0], pivot: [0, 0, 0], dist: 0.1 },
+    band: [0.5, 0.57],
+    motion: { type: "slide", axis: [0.45, -0.89, 0], pivot: [0, 0, 0], dist: 0.2 },
     spec: [
       "hand R, 5-finger underactuated gripper",
       "11-DOF :: tendon-driven :: 6 motors",
@@ -421,9 +426,10 @@ const PARTS = [
     id: "hip_l",
     parent: "pelvis",
     kind: "actuator",
-    // PULLED IN (was -0.17, then -0.15) for a narrow G1-style hip (sep ~0.27).
-    // The legs hang close together under a slim pelvis — narrow hips, long legs.
-    origin: [-0.155, -0.1, 0],
+    // WIDENED (was -0.155) for a broad, STOCKY G1 pelvis (sep 0.36) — the
+    // "too thin/elongated" fix is mass + width, so the legs hang under a broad
+    // pelvis instead of bunched under a slim one.
+    origin: [-0.18, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -438,7 +444,7 @@ const PARTS = [
     id: "hip_r",
     parent: "pelvis",
     kind: "actuator",
-    origin: [0.155, -0.1, 0],
+    origin: [0.18, -0.1, 0],
     band: null,
     motion: null,
     spec: [
@@ -481,8 +487,8 @@ const PARTS = [
     parent: "thigh_l",
     kind: "shell",
     origin: [0, -0.18, 0.02],
-    band: [0.58, 0.68],
-    motion: { type: "hinge", axis: "x", pivot: [0, 0.2, -0.06], angle: 0.85 },
+    band: [0.65, 0.73],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.24, -0.08], angle: 1.3 },
     spec: [
       "thigh shell L, PA12-GF 3.0mm",
       "3 fasteners :: M3 torx :: torque 2.1Nm",
@@ -496,8 +502,8 @@ const PARTS = [
     parent: "thigh_r",
     kind: "shell",
     origin: [0, -0.18, 0.02],
-    band: [0.6, 0.7],
-    motion: { type: "hinge", axis: "x", pivot: [0, 0.2, -0.06], angle: 0.85 },
+    band: [0.67, 0.75],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.24, -0.08], angle: 1.3 },
     spec: [
       "thigh shell R, PA12-GF 3.0mm",
       "3 fasteners :: M3 torx :: torque 2.1Nm",
@@ -570,8 +576,8 @@ const PARTS = [
     parent: "shin_l",
     kind: "shell",
     origin: [0, -0.16, 0.02],
-    band: [0.7, 0.8],
-    motion: { type: "hinge", axis: "x", pivot: [0, 0.18, -0.06], angle: 0.8 },
+    band: [0.75, 0.83],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.22, -0.08], angle: 1.25 },
     spec: [
       "shin shell L, PA12-GF 2.8mm",
       "3 fasteners :: M3 torx :: torque 1.8Nm",
@@ -585,8 +591,8 @@ const PARTS = [
     parent: "shin_r",
     kind: "shell",
     origin: [0, -0.16, 0.02],
-    band: [0.72, 0.82],
-    motion: { type: "hinge", axis: "x", pivot: [0, 0.18, -0.06], angle: 0.8 },
+    band: [0.77, 0.85],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.22, -0.08], angle: 1.25 },
     spec: [
       "shin shell R, PA12-GF 2.8mm",
       "3 fasteners :: M3 torx :: torque 1.8Nm",
@@ -673,7 +679,9 @@ const PARTS = [
     id: "head_base",
     parent: "neck_stack",
     kind: "link",
-    origin: [0, 0.2, 0],
+    // LOWERED (was 0.2) so the now-LARGER helmet seats down onto the shoulders
+    // and the head->neck gap closes — a big head perched high read as detached.
+    origin: [0, 0.17, 0],
     band: null,
     motion: null,
     spec: [
@@ -688,8 +696,8 @@ const PARTS = [
     parent: "head_base",
     kind: "shell",
     origin: [0, 0, 0],
-    band: [0, 0.06],
-    motion: { type: "hinge", axis: "x", pivot: [0, 0.13, -0.15], angle: -1.45 },
+    band: [0, 0.07],
+    motion: { type: "hinge", axis: "x", pivot: [0, 0.26, -0.16], angle: -0.62 },
     spec: [
       "cranium shell, PA12 2.8mm",
       "2 fasteners + rear hinge :: torque 1.2Nm",
@@ -702,7 +710,9 @@ const PARTS = [
     id: "eye_ring_l",
     parent: "head_base",
     kind: "eye",
-    origin: [-0.085, 0.01, 0.18],
+    // the two Vector-style eyes, set PROUD of the flat dark face screen and spaced
+    // WIDE enough that they stay two distinct eyes (not one merged bloom blob).
+    origin: [-0.086, 0.008, 0.228],
     band: null,
     motion: null,
     spec: [
@@ -717,7 +727,7 @@ const PARTS = [
     id: "eye_ring_r",
     parent: "head_base",
     kind: "eye",
-    origin: [0.085, 0.01, 0.18],
+    origin: [0.086, 0.008, 0.228],
     band: null,
     motion: null,
     spec: [
@@ -732,7 +742,7 @@ const PARTS = [
     parent: "head_base",
     kind: "internal",
     origin: [0, 0.05, -0.02],
-    band: [0.82, 0.96],
+    band: [0.86, 0.96],
     motion: { type: "slide", axis: [0, 0.55, 0.835], pivot: [0, 0, 0], dist: 0.09 },
     spec: [
       "optic core, stereo sensor mast",

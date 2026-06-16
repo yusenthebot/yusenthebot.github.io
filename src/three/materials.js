@@ -100,6 +100,18 @@ export const darkGlass = new THREE.MeshPhysicalMaterial({
   depthWrite: false,
 });
 
+// V's FACE SCREEN — the flat dark DISPLAY the two bright eyes sit on. FULLY
+// matte (roughness 1, zero metalness) so the convex panel catches NO specular
+// highlight — the old darkPolymer screen threw a broad highlight that dithered
+// into a bright "smudge" on the face. Near-black so it resolves as a clean dark
+// screen the emissive eyes bloom against; DoubleSide so it never drops out.
+export const faceScreen = new THREE.MeshStandardMaterial({
+  color: gray(0.05),
+  metalness: 0.0,
+  roughness: 1.0,
+  side: THREE.DoubleSide,
+});
+
 // The core. toneMapped off so the bloom pass keys off raw HDR values —
 // the one smooth-white hole punched in the dither world.
 export const emissiveCore = new THREE.MeshStandardMaterial({
