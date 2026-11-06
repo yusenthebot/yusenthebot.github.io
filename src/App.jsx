@@ -45,8 +45,8 @@ function App() {
   const [history, setHistory] = useState([
     { type: "ascii", text: HEADER_ASCII },
     { type: "system", text: "SYSTEM INITIALIZED. Welcome to Yusen Xie's personal terminal." },
-    { type: "intro", text: "Robotics + AI Engineer @ Carnegie Mellon University" },
-    { type: "intro", text: "Co-founder of Vector Robotics — Building Vector OS Nano" },
+    { type: "intro", text: "Partner at ZENO AI" },
+    { type: "intro", text: "Head of Brand, Comms & Partnerships" },
     { type: "system", text: 'Type "help" to see available commands. Click V to talk.' },
   ]);
   const [input, setInput] = useState("");
@@ -526,7 +526,14 @@ function App() {
                 letterSpacing: 3, textTransform: "uppercase",
               }}
             >
-              The Manifesto
+              Yusen Xie
+            </div>
+            <div style={{ fontSize: 20, lineHeight: 1.6, marginBottom: 24 }}>
+              Partner at ZENO AI<br />
+              <span style={{ fontSize: 16, color: "#bbb" }}>Head of Brand, Comms &amp; Partnerships</span>
+            </div>
+            <div style={{ fontSize: 12, color: "#888", marginBottom: 24 }}>
+              Previously: Co-founder of Vector Robotics
             </div>
             <div style={{ fontSize: 18, lineHeight: 2.2, color: "#ddd", fontStyle: "italic" }}>
               "What iron hands shall till the earth,<br />
@@ -548,14 +555,14 @@ function App() {
         data-screen-label="01 Main"
       >
         <header
-          className="w-full flex items-center justify-between gap-2 md:gap-6 border-b border-gray-800 shrink-0 text-sm md:text-base font-bold px-2"
-          style={{ height: "8%" }}
+          className="w-full flex flex-wrap md:flex-nowrap items-center justify-between gap-2 md:gap-6 border-b border-gray-800 shrink-0 text-[11px] md:text-base font-bold px-2 pb-2 md:pb-0"
+          style={{ minHeight: "8%" }}
         >
-          <div className="flex items-center gap-3 md:gap-5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1 md:gap-5 whitespace-nowrap">
             <a
               href="#"
               onClick={(e) => { e.preventDefault(); setShowAbout(true); }}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-2 rounded transition-all cursor-pointer"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all cursor-pointer"
             >
               [ ABOUT ]
             </a>
@@ -563,23 +570,24 @@ function App() {
               href="https://github.com/yusenthebot"
               target="_blank"
               rel="noreferrer"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-2 rounded transition-all"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all"
             >
               [ GITHUB ]
             </a>
             <a
-              href="https://github.com/VectorRobotics/vector-os-nano"
+              href="https://zenobot.ai/"
               target="_blank"
-              rel="noreferrer"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-2 rounded transition-all"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all"
             >
-              [ VECTOR OS ]
+              [ zenobot.ai ]
+              <span className="block text-center text-[8px] md:text-[10px] font-normal text-gray-500">Made by me lol</span>
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://linkedin.com/in/yusen-xie-5327b8382"
               target="_blank"
               rel="noreferrer"
-              className="text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-2 rounded transition-all"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all"
             >
               [ LINKEDIN ]
             </a>
@@ -732,9 +740,11 @@ export default function Root() {
     try { return sessionStorage.getItem("v_intro_seen") === "1"; } catch (_) { return false; }
   });
   const [replayKey, setReplayKey] = useState(0);
+  const [hasEntered, setHasEntered] = useState(introDone);
 
   const handleDone = () => {
     try { sessionStorage.setItem("v_intro_seen", "1"); } catch (_) {}
+    setHasEntered(true);
     setIntroDone(true);
   };
 
@@ -746,9 +756,9 @@ export default function Root() {
   return (
     <>
       {!introDone && <IntroSequence key={replayKey} onComplete={handleDone} />}
-      <div style={{ opacity: introDone ? 1 : 0, transition: "opacity 600ms ease-in" }}>
+      {hasEntered && <div inert={!introDone} aria-hidden={!introDone} style={{ opacity: introDone ? 1 : 0, transition: "opacity 600ms ease-in" }}>
         <App />
-      </div>
+      </div>}
       {introDone && (
         <button
           onClick={replay}

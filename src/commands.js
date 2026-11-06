@@ -9,13 +9,13 @@ export const HEADER_ASCII = `
 
 export const COMMANDS = {
   help: () => ({
-    out: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  vectoros   - Vector OS Nano project\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  INTERACT WITH V\n  ttt        - Play tic-tac-toe vs V\n  rps        - Rock paper scissors\n  quiz       - Robot trivia\n  dance      - V performs a move\n  bow        - V bows\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT effects\n  sound      - Toggle audio\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???',
-    speech: 'Here are all the commands. Try "ttt" or "vectoros".',
+    out: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  zeno       - Current role at ZENO AI\n  vectoros   - Previous Vector OS Nano work\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  INTERACT WITH V\n  ttt        - Play tic-tac-toe vs V\n  rps        - Rock paper scissors\n  quiz       - Robot trivia\n  dance      - V performs a move\n  bow        - V bows\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT effects\n  sound      - Toggle audio\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???',
+    speech: 'Here are all the commands. Try "about" or "zeno".',
     action: 'nod', state: 'success',
   }),
   about: () => ({
-    out: 'ABOUT ME:\nYusen Xie — Full-Stack Robotics Engineer & AI Systems Builder.\nCo-founder of Vector Robotics. Building Vector OS Nano.\n\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\n  ───────────────────────────────────────────\n\n  "What iron hands shall till the earth,\n   That flesh and bone may know its worth?\n   Let steel awake, let circuits sing,\n   A paradise of our engineering."',
-    speech: 'Nice to meet you. I build robots that think and act.',
+    out: 'ABOUT ME:\nYusen Xie — Partner at ZENO AI.\nHead of Brand, Comms & Partnerships.\n\nPreviously: Co-founder of Vector Robotics.\nTechnical background: Robotics & AI systems.\n\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\n  ───────────────────────────────────────────\n\n  "What iron hands shall till the earth,\n   That flesh and bone may know its worth?\n   Let steel awake, let circuits sing,\n   A paradise of our engineering."',
+    speech: 'Nice to meet you. I lead Brand, Comms & Partnerships at ZENO AI.',
     action: 'nod', state: 'success',
   }),
   skills: () => ({
@@ -24,17 +24,22 @@ export const COMMANDS = {
     action: 'nod', state: 'success',
   }),
   neofetch: () => ({
-    out: '  yusen@cmu\n  ─────────────────────\n  OS:       Human v24\n  Host:     Carnegie Mellon University\n  Kernel:   AI Engineering\n  Uptime:   4 years in robotics\n  Shell:    ROS2 Humble\n  Terminal: This one :)\n  CPU:      Caffeinated Neural Net\n  GPU:      Isaac Sim + MuJoCo\n  Memory:   Lots of papers\n  Org:      Vector Robotics (Co-founder)\n  Project:  Vector OS Nano',
+    out: '  yusen@zeno\n  ─────────────────────\n  OS:       Human v24\n  Host:     Carnegie Mellon University\n  Kernel:   AI Engineering\n  Uptime:   4 years in robotics\n  Shell:    ROS2 Humble\n  Terminal: This one :)\n  CPU:      Caffeinated Neural Net\n  GPU:      Isaac Sim + MuJoCo\n  Memory:   Lots of papers\n  Org:      ZENO AI (Partner)\n  Role:     Head of Brand, Comms & Partnerships\n  Previous: Vector Robotics (Co-founder)',
     state: 'success',
   }),
+  zeno: () => ({
+    out: 'ZENO AI\n══════════════════════════════════════════════\n\n  Yusen Xie\n  Partner at ZENO AI\n  Head of Brand, Comms & Partnerships\n\n  Focus: Brand, communications and partnerships\n  Contact: yusenthebot@outlook.com\n\n  Previously: Co-founder of Vector Robotics',
+    speech: 'I am a partner at ZENO AI, leading Brand, Comms & Partnerships.',
+    action: 'nod', state: 'success',
+  }),
   vectoros: () => ({
-    out: 'VECTOR OS NANO\n══════════════════════════════════════════════\n\nCross-embodiment robot operating system.\n\n  Status:    ACTIVE DEVELOPMENT\n  Role:      Co-founder & Builder\n  Org:       github.com/VectorRobotics\n  Repo:      github.com/VectorRobotics/vector-os-nano\n\n  Features:\n  > Industrial-grade autonomous navigation\n  > Natural language control interface\n  > Sim-to-real transfer pipeline\n  > Multi-embodiment support\n\n  Hardware:  Unitree Go2 + SO-ARM101\n  Stack:     ROS2 Humble / MuJoCo / Isaac Sim\n  Origin:    CMU Robotics Institute',
-    speech: 'Vector OS is my primary project. A real robot operating system.',
+    out: 'VECTOR OS NANO\n══════════════════════════════════════════════\n\nCross-embodiment robot operating system.\n\n  Context:   PREVIOUS WORK — I have left Vector Robotics\n  Past role: Co-founder & Builder\n  Org:       github.com/VectorRobotics\n  Repo:      github.com/VectorRobotics/vector-os-nano\n\n  Features:\n  > Industrial-grade autonomous navigation\n  > Natural language control interface\n  > Sim-to-real transfer pipeline\n  > Multi-embodiment support\n\n  Hardware:  Unitree Go2 + SO-ARM101\n  Stack:     ROS2 Humble / MuJoCo / Isaac Sim\n  Origin:    CMU Robotics Institute',
+    speech: 'Vector OS is part of my previous work at Vector Robotics.',
     action: 'nod', state: 'success',
   }),
   projects: () => ({
-    out: 'ALL PROJECTS:\n\n  [01] Vector OS Nano         (type "vectoros" for details)\n       Cross-embodiment robot OS — autonomous nav + NL control\n\n  [02] Vector Robotics Core\n       General-purpose agentic robotics system (Ubuntu + ROS2)\n\n  [03] G1 Locomotion\n       End-to-end humanoid locomotion & manipulation\n\n  [04] OpenClaw Dashboard\n       Terminal-aesthetic real-time agent monitoring panel\n\n  [05] TermFolio\n       This site — cyberpunk terminal portfolio with Bayer dithering',
-    speech: 'Five projects. One of them is me.',
+    out: 'CURRENT ROLE:\n  ZENO AI — Partner\n  Head of Brand, Comms & Partnerships\n  Type "zeno" for details.\n\nPROJECT PORTFOLIO:\n\n  [01] Vector OS Nano (previous work)         (type "vectoros" for details)\n       Cross-embodiment robot OS — autonomous nav + NL control\n\n  [02] Vector Robotics Core (previous work)\n       General-purpose agentic robotics system (Ubuntu + ROS2)\n\n  [03] G1 Locomotion\n       End-to-end humanoid locomotion & manipulation\n\n  [04] OpenClaw Dashboard\n       Terminal-aesthetic real-time agent monitoring panel\n\n  [05] TermFolio\n       This site — cyberpunk terminal portfolio with Bayer dithering',
+    speech: 'ZENO AI is my current focus. Here is my project portfolio, including previous work.',
     action: 'think', state: 'success',
   }),
   resume: () => ({
@@ -42,11 +47,11 @@ export const COMMANDS = {
     state: 'success',
   }),
   contact: () => ({
-    out: 'CONTACT INFORMATION:\n  Email:    yusenthebot@outlook.com\n  GitHub:   github.com/yusenthebot\n  LinkedIn: linkedin.com/in/yusen-xie-5327b8382\n  Org:      github.com/VectorRobotics',
+    out: 'CONTACT INFORMATION:\n  Email:    yusenthebot@outlook.com\n  GitHub:   github.com/yusenthebot\n  LinkedIn: linkedin.com/in/yusen-xie-5327b8382\n  Org:      ZENO AI\n  Role:     Partner · Head of Brand, Comms & Partnerships',
     state: 'success', action: 'nod',
   }),
   links: () => ({
-    out: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Vector OS]  github.com/VectorRobotics/vector-os-nano\n  [VectorOrg]  github.com/VectorRobotics\n  [LinkedIn]   linkedin.com/in/yusen-xie-5327b8382\n  [Email]      yusenthebot@outlook.com',
+    out: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusen-xie-5327b8382\n  [Email]      yusenthebot@outlook.com',
     state: 'success',
   }),
   scan: () => ({

@@ -238,7 +238,7 @@ export function RockPaperScissors({ onFinish, onVSpeak, onVState }) {
 // ========================================================================
 const QUIZ = [
   { q: "What does ROS stand for?", choices: ["Robot Operating System", "Remote Observation Suite", "Runtime Object Scheduler", "Really Old Software"], a: 0 },
-  { q: "Which of these is Yusen's primary project?", choices: ["Vector OS Nano", "SkynetGPT", "BotForge", "PixelPilot"], a: 0 },
+  { q: "Where is Yusen a partner?", choices: ["ZENO AI", "SkynetGPT", "BotForge", "PixelPilot"], a: 0 },
   { q: "SLAM =", choices: ["Simultaneous Localization and Mapping", "Stochastic Learning Algorithm Model", "Synchronous Linked Actuator Mesh", "Self-Locating Autonomous Machine"], a: 0 },
   { q: "Which simulator does V train in?", choices: ["MuJoCo / Isaac Sim", "Unity XR", "Blender Physics", "Roblox Studio"], a: 0 },
   { q: "What is V, really?", choices: ["200 KB of JavaScript", "A sentient AGI", "A Unitree Go2 firmware", "Your overlord"], a: 0 },
