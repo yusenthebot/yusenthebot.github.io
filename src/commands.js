@@ -43,15 +43,15 @@ export const COMMANDS = {
     action: 'think', state: 'success',
   }),
   resume: () => ({
-    out: 'RESUME:\n  Status: Available upon request.\n  Contact: yusenthebot@outlook.com\n  LinkedIn: linkedin.com/in/yusen-xie-5327b8382',
+    out: 'RESUME:\n  Status: Available upon request.\n  Contact: yusenthebot@outlook.com\n  LinkedIn: linkedin.com/in/yusenxie',
     state: 'success',
   }),
   contact: () => ({
-    out: 'CONTACT INFORMATION:\n  Email:    yusenthebot@outlook.com\n  GitHub:   github.com/yusenthebot\n  LinkedIn: linkedin.com/in/yusen-xie-5327b8382\n  Org:      ZENO AI\n  Role:     Partner · Head of Brand, Comms & Partnerships',
+    out: 'CONTACT INFORMATION:\n  Email:    yusenthebot@outlook.com\n  GitHub:   github.com/yusenthebot\n  LinkedIn: linkedin.com/in/yusenxie\n  Org:      ZENO AI\n  Role:     Partner · Head of Brand, Comms & Partnerships',
     state: 'success', action: 'nod',
   }),
   links: () => ({
-    out: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusen-xie-5327b8382\n  [Email]      yusenthebot@outlook.com',
+    out: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusenxie\n  [Email]      yusenthebot@outlook.com',
     state: 'success',
   }),
   scan: () => ({

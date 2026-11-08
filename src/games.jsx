@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import useTimeouts from "./useTimeouts.js";
 import AudioEngine from "./audio.js";
 
 // ========================================================================
@@ -39,6 +40,7 @@ function minimax(board, player) {
 }
 
 export function TicTacToe({ onFinish, onVSpeak, onVState }) {
+  const { schedule, cancel } = useTimeouts();
   const [board, setBoard] = useState(Array(9).fill(null));
   const [turn, setTurn] = useState("X");
   const [status, setStatus] = useState("your turn");
@@ -55,7 +57,7 @@ export function TicTacToe({ onFinish, onVSpeak, onVState }) {
 
   useEffect(() => {
     if (turn === "O" && !done) {
-      const t = setTimeout(() => {
+      const t = schedule(() => {
         const result = checkWin(board);
         if (result) return;
         let idx;
@@ -69,9 +71,9 @@ export function TicTacToe({ onFinish, onVSpeak, onVState }) {
         AudioEngine?.servoClick(0.8);
         setTurn("X");
       }, 700);
-      return () => clearTimeout(t);
+      return () => cancel(t);
     }
-  }, [turn, board, done]);
+  }, [turn, board, done, cancel, schedule]);
 
   useEffect(() => {
     const result = checkWin(board);
@@ -92,11 +94,11 @@ export function TicTacToe({ onFinish, onVSpeak, onVState }) {
         onVSpeak?.("A tie. Acceptable.");
         AudioEngine?.beep(500, 0.15);
       }
-      setTimeout(() => onFinish?.(), 2800);
+      schedule(() => onFinish?.(), 2800);
     } else if (turn === "X" && !done) {
       setStatus("your turn — enter a cell number");
     }
-  }, [board, turn, done]);
+  }, [board, turn, done, schedule]);
 
   const cellClass = (i) => {
     const highlight = winRef.current?.line?.includes(i);
@@ -116,7 +118,7 @@ export function TicTacToe({ onFinish, onVSpeak, onVState }) {
     };
     window.addEventListener("ttt-key", handler);
     return () => window.removeEventListener("ttt-key", handler);
-  }, [turn, board, done]);
+  }, [turn, board, done, cancel, schedule]);
 
   return (
     <div className="border border-gray-700 rounded p-3 my-2 bg-black/60 font-mono text-sm">
@@ -139,6 +141,7 @@ export function TicTacToe({ onFinish, onVSpeak, onVState }) {
 // ROCK PAPER SCISSORS
 // ========================================================================
 export function RockPaperScissors({ onFinish, onVSpeak, onVState }) {
+  const { schedule } = useTimeouts();
   const [, setRound] = useState(0);
   const [score, setScore] = useState({ you: 0, v: 0 });
   const [reveal, setReveal] = useState(null);
@@ -152,9 +155,9 @@ export function RockPaperScissors({ onFinish, onVSpeak, onVState }) {
     if (shaking || done) return;
     setShaking(true);
     AudioEngine?.servoClick();
-    setTimeout(() => AudioEngine?.servoClick(1.2), 250);
-    setTimeout(() => AudioEngine?.servoClick(0.8), 500);
-    setTimeout(() => {
+    schedule(() => AudioEngine?.servoClick(1.2), 250);
+    schedule(() => AudioEngine?.servoClick(0.8), 500);
+    schedule(() => {
       const v = ["r", "p", "s"][Math.floor(Math.random() * 3)];
       const result = you === v ? "tie" : beats[you] === v ? "you" : "v";
       setReveal({ you, v, result });
@@ -170,12 +173,12 @@ export function RockPaperScissors({ onFinish, onVSpeak, onVState }) {
 
       if (ns.you >= 3 || ns.v >= 3) {
         setDone(true);
-        setTimeout(() => {
+        schedule(() => {
           onVSpeak?.(ns.you >= 3 ? "Match lost. I will require patching." : "Match won. As expected.");
           onFinish?.();
         }, 2200);
       } else {
-        setTimeout(() => { setReveal(null); setRound((r) => r + 1); }, 1500);
+        schedule(() => { setReveal(null); setRound((r) => r + 1); }, 1500);
       }
     }, 800);
   };
@@ -245,6 +248,7 @@ const QUIZ = [
 ];
 
 export function Quiz({ onFinish, onVSpeak, onVState }) {
+  const { schedule } = useTimeouts();
   const [i, setI] = useState(0);
   const [score, setScore] = useState(0);
   const [picked, setPicked] = useState(null);
@@ -263,10 +267,10 @@ export function Quiz({ onFinish, onVSpeak, onVState }) {
       onVSpeak?.("Incorrect. Recalibrating my expectations of humans.");
       AudioEngine?.error(); onVState?.("error");
     }
-    setTimeout(() => {
+    schedule(() => {
       if (i + 1 >= QUIZ.length) {
         setDone(true);
-        setTimeout(() => {
+        schedule(() => {
           const final = score + (correct ? 1 : 0);
           onVSpeak?.(final >= 4 ? "Score: " + final + "/5. You may proceed." : "Score: " + final + "/5. Study harder.");
           onFinish?.();

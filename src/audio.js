@@ -6,6 +6,25 @@ const AudioEngine = (() => {
   let enabled = true;
   let initialized = false;
 
+  const pending = new Set();
+  const schedule = (callback, delay) => {
+    const id = setTimeout(() => { pending.delete(id); callback(); }, delay);
+    pending.add(id);
+  };
+  const dispose = () => {
+    pending.forEach(clearTimeout);
+    pending.clear();
+    const previous = ctx;
+    if (masterGain) masterGain.disconnect();
+    ctx = null;
+    masterGain = null;
+    initialized = false;
+    enabled = true;
+    if (previous && previous.state !== "closed") {
+      previous.close().catch((error) => console.warn("Audio close failed", error));
+    }
+  };
+
   const init = () => {
     if (initialized) return;
     try {
@@ -113,7 +132,7 @@ const AudioEngine = (() => {
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
     osc.connect(g); g.connect(masterGain);
     osc.start(t); osc.stop(t + 0.5);
-    setTimeout(() => beep(1200, 0.1), 450);
+    schedule(() => beep(1200, 0.1), 450);
   };
 
   const powerDown = () => {
@@ -134,24 +153,24 @@ const AudioEngine = (() => {
   const error = () => {
     if (!ctx || !enabled) return;
     beep(220, 0.08, "square");
-    setTimeout(() => beep(180, 0.12, "square"), 80);
+    schedule(() => beep(180, 0.12, "square"), 80);
   };
 
   const success = () => {
     if (!ctx || !enabled) return;
     beep(660, 0.05);
-    setTimeout(() => beep(880, 0.08), 60);
+    schedule(() => beep(880, 0.08), 60);
   };
 
   const scan = () => {
     chirp(400, 1600, 0.3);
-    setTimeout(() => chirp(1600, 400, 0.3), 320);
+    schedule(() => chirp(1600, 400, 0.3), 320);
   };
 
   const glitch = () => {
     if (!ctx || !enabled) return;
     for (let i = 0; i < 5; i++) {
-      setTimeout(
+      schedule(
         () => beep(200 + Math.random() * 800, 0.03 + Math.random() * 0.04, "square"),
         i * 40
       );
@@ -175,7 +194,7 @@ const AudioEngine = (() => {
   };
 
   return {
-    init, resume, setEnabled,
+    init, resume, setEnabled, dispose,
     servoClick, keyPress, beep, chirp,
     powerOn, powerDown, error, success, scan, glitch, yawn,
     get enabled() { return enabled; },

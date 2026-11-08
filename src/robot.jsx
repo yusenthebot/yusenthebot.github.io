@@ -67,7 +67,8 @@ export default function PixelAvatar({
     actionRef.current = { name: action || "idle", t0: performance.now() };
     if (action && action !== "idle") {
       AudioEngine?.servoClick();
-      setTimeout(() => AudioEngine?.servoClick(0.9), 150);
+      const timer = setTimeout(() => AudioEngine?.servoClick(0.9), 150);
+      return () => clearTimeout(timer);
     }
   }, [action]);
 
