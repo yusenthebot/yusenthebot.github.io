@@ -42,6 +42,10 @@ const V_RESPONSES = [
 ];
 
 const CREEP_ACTIONS = ["think", "point-terminal", "nod", "shake-head"];
+const COMMAND_ALIASES = new Map([["open blog", "blog"]]);
+const COMMAND_NAMES = [...Object.keys(COMMANDS), ...COMMAND_ALIASES.keys()];
+const SHORTCUTS = ["blog", "projects", "help"];
+const normalizeCommand = (value) => value.trim().toLowerCase().replace(/\s+/g, " ");
 
 function TerminalSession() {
   const { schedule, cancel } = useTimeouts();
@@ -64,7 +68,7 @@ function TerminalSession() {
     { type: "intro", text: "Partner at ZENO AI" },
     { type: "intro", text: "Head of Brand, Comms & Partnerships" },
     { type: "intro", text: zLab.role },
-    { type: "system", text: 'Type "help" to see available commands. Click V to talk.' },
+    { type: "system", text: 'Type "blog" for articles or "help" for commands. Click V to talk.' },
   ]);
   const [input, setInput] = useState("");
   const [cmdHistory, setCmdHistory] = useState([]);
@@ -225,20 +229,25 @@ function TerminalSession() {
       const n = Math.max(-1, cmdHistoryIdx - 1);
       setCmdHistoryIdx(n);
       setInput(n === -1 ? "" : cmdHistory[cmdHistory.length - 1 - n] || "");
-    } else if (e.key === "Tab") {
-      e.preventDefault();
-      const cmds = Object.keys(COMMANDS);
-      const match = cmds.find((c) => c.startsWith(input.toLowerCase()));
-      if (match) { setInput(match); AudioEngine?.beep(1200, 0.04); }
+    } else if (e.key === "Tab" && !e.shiftKey) {
+      const prefix = normalizeCommand(input);
+      if (!prefix || COMMAND_NAMES.includes(prefix)) return;
+      const match = COMMAND_NAMES.find((name) => name.startsWith(prefix));
+      if (match) {
+        e.preventDefault();
+        setInput(match);
+        AudioEngine?.beep(1200, 0.04);
+      }
     }
   };
 
-  const handleCommand = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const handleCommand = (event, value = input) => {
+    event.preventDefault();
+    const raw = value.trim();
+    if (!raw) return;
     if (!soundInitialized) initAudio();
-    const raw = input.trim();
-    const cmd = raw.toLowerCase();
+    const normalized = normalizeCommand(raw);
+    const cmd = COMMAND_ALIASES.get(normalized) ?? normalized;
 
     setCmdHistory((h) => [...h, raw]);
     setCmdHistoryIdx(-1);
@@ -248,7 +257,7 @@ function TerminalSession() {
     const newHist = [...history, { type: "user", text: `guest@yusen-xie:~$ ${raw}` }];
     AudioEngine?.beep(440, 0.04);
 
-    const handler = COMMANDS[cmd];
+    const handler = Object.hasOwn(COMMANDS, cmd) ? COMMANDS[cmd] : null;
 
     if (!handler) {
       newHist.push({
@@ -269,8 +278,15 @@ function TerminalSession() {
     if (res.special?.kind === "clear") {
       setHistory([]); setInput(""); return;
     }
+    if (res.special?.kind === "navigate") {
+      window.location.assign(res.special.hash);
+      return;
+    }
 
-    if (res.out) newHist.push({ type: res.type || "output", text: res.out });
+    const link = res.special?.kind === "open-link" ? res.special : null;
+    if (link) window.open(link.href, "_blank", "noopener,noreferrer");
+
+    if (res.out || link) newHist.push({ type: res.type || "output", text: res.out, link });
     if (res.speech) speak(res.speech);
     if (res.action) triggerAction(res.action, 1800);
     if (res.state) setAvatarState(res.state);
@@ -586,12 +602,11 @@ function TerminalSession() {
       )}
 
       <div
-        className="h-screen w-screen flex flex-col p-4 md:p-6 crt-text relative z-10"
+        className="h-full w-full flex flex-col p-4 md:px-6 crt-text relative z-10"
         data-screen-label="01 Main"
       >
         <header
-          className="w-full flex flex-wrap md:flex-nowrap items-center justify-between gap-2 md:gap-6 border-b border-gray-800 shrink-0 text-[11px] md:text-base font-bold px-2 pb-2 md:pb-0"
-          style={{ minHeight: "8%" }}
+          className="w-full flex flex-wrap md:flex-nowrap items-center justify-between gap-2 md:gap-6 border-b border-gray-800 shrink-0 text-[11px] md:text-base font-bold px-2 pb-2"
         >
           <div className="flex min-w-0 flex-wrap items-center gap-1 md:gap-5 whitespace-nowrap">
             <a
@@ -654,12 +669,9 @@ function TerminalSession() {
           </button>
         </header>
 
-        <div
-          className="w-full flex flex-col md:flex-row gap-4 md:gap-6 pt-4 pb-1"
-          style={{ height: "92%" }}
-        >
+        <div className="w-full flex flex-1 min-h-0 flex-col md:flex-row gap-4 md:gap-6 pt-4 pb-1">
           <div
-            className="flex-1 flex flex-col h-full bg-black border border-gray-800 rounded shadow-2xl overflow-hidden relative cursor-text"
+            className="flex-1 flex flex-col min-w-0 min-h-[23.5rem] md:min-h-0 bg-black border border-gray-800 rounded shadow-2xl overflow-hidden relative cursor-text"
             onClick={() => inputRef.current?.focus()}
           >
             <div className="flex items-center justify-between border-b border-gray-800 pb-2 px-4 pt-3 shrink-0">
@@ -669,12 +681,12 @@ function TerminalSession() {
 
             <div
               ref={endRef}
-              className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-2 px-4 py-3"
+              className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-1 md:gap-2 px-4 py-3"
             >
               {history.map((line, i) => {
                 if (line.type === "ascii") {
                   return (
-                    <div key={i} className="w-full overflow-x-auto pb-2">
+                    <div key={i} className="w-full shrink-0 overflow-x-auto pb-2">
                       <pre
                         className="whitespace-pre text-gray-300 inline-block"
                         style={{
@@ -692,7 +704,7 @@ function TerminalSession() {
                   return (
                     <div
                       key={i}
-                      className="text-base md:text-lg font-bold text-white whitespace-pre-wrap break-words tracking-wide"
+                      className="text-sm md:text-lg font-bold text-white whitespace-pre-wrap break-words tracking-wide"
                     >
                       {line.text}
                     </div>
@@ -712,7 +724,7 @@ function TerminalSession() {
                 return (
                   <div
                     key={i}
-                    className={`text-sm whitespace-pre-wrap break-words ${
+                    className={`text-xs md:text-sm whitespace-pre-wrap break-words ${
                       line.type === "error"
                         ? "text-gray-400"
                         : line.type === "system"
@@ -723,11 +735,37 @@ function TerminalSession() {
                     }`}
                   >
                     {line.text}
+                    {line.link && (
+                      <a
+                        href={line.link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block w-fit text-white underline underline-offset-4 hover:text-gray-300"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        {line.link.label}
+                      </a>
+                    )}
                   </div>
                 );
               })}
             </div>
 
+            <div className="terminal-shortcuts" role="group" aria-label="Quick commands">
+              {SHORTCUTS.map((command) => (
+                <button
+                  key={command}
+                  type="button"
+                  disabled={Boolean(activeGame)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleCommand(event, command);
+                  }}
+                >
+                  {command}
+                </button>
+              ))}
+            </div>
             <form
               onSubmit={handleCommand}
               className="flex items-center px-4 py-3 border-t border-gray-800 shrink-0 gap-2"
@@ -740,6 +778,7 @@ function TerminalSession() {
               <input
                 ref={inputRef}
                 type="text"
+                aria-label="Terminal command"
                 value={input}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
@@ -748,7 +787,7 @@ function TerminalSession() {
                     ? `[in-game: ${activeGame}]  Tab/↑ recall`
                     : "type command... [Tab] autocomplete  [↑] history"
                 }
-                className="flex-1 bg-transparent border-none outline-none text-white crt-text placeholder-gray-700 text-sm"
+                className="flex-1 min-w-0 bg-transparent border-none outline-none text-white crt-text placeholder-gray-700 text-sm"
                 autoFocus
                 spellCheck="false"
                 autoComplete="off"
@@ -760,7 +799,7 @@ function TerminalSession() {
             </form>
           </div>
 
-          <div className="flex-1 h-full bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden flex flex-col">
+          <div className="flex-1 min-w-0 min-h-48 md:min-h-0 bg-black border border-gray-800 rounded shadow-2xl relative overflow-hidden flex flex-col">
             <div className="flex-1 relative overflow-hidden">
               <PixelAvatar
                 avatarState={avatarState}
@@ -806,37 +845,28 @@ export default function Terminal() {
 
   return (
     <>
-      <nav className="terminal-view-switch view-switch" aria-label="View">
-        <a href="#/">Portfolio</a>
-        <a href="#/terminal" aria-current="page">Terminal</a>
-      </nav>
+      <header className="terminal-toolbar">
+        <nav className="view-switch" aria-label="View">
+          <a href="#/">Portfolio</a>
+          <a href={profile.blog}>Blog ↗</a>
+          <a href="#/terminal" aria-current="page">Terminal</a>
+        </nav>
+        {introDone && (
+          <button className="terminal-replay" type="button" onClick={replay} title="Replay intro">
+            ▶ REPLAY
+          </button>
+        )}
+      </header>
       {!introDone && <IntroSequence key={replayKey} onComplete={handleDone} />}
-      {hasEntered && <div inert={!introDone} aria-hidden={!introDone} style={{ opacity: introDone ? 1 : 0, transition: "opacity 600ms ease-in" }}>
-        <TerminalSession />
-      </div>}
-      {introDone && (
-        <button
-          onClick={replay}
-          title="Replay intro"
-          style={{
-            position: "fixed", top: 8, right: 8, zIndex: 60,
-            background: "rgba(0,0,0,0.6)", border: "1px solid #333",
-            color: "#888", fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 8, letterSpacing: 1.5, padding: "3px 6px",
-            cursor: "pointer", borderRadius: 2,
-            transition: "all 0.15s", lineHeight: 1,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = "#fff";
-            e.currentTarget.style.borderColor = "#666";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = "#888";
-            e.currentTarget.style.borderColor = "#333";
-          }}
+      {hasEntered && (
+        <div
+          className="terminal-content"
+          inert={!introDone}
+          aria-hidden={!introDone}
+          style={{ opacity: introDone ? 1 : 0 }}
         >
-          ▶ REPLAY
-        </button>
+          <TerminalSession />
+        </div>
       )}
     </>
   );

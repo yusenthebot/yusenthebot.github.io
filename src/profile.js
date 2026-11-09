@@ -13,6 +13,7 @@ export const profile = {
     "I work at the intersection of AI agents and the physical world — from research and engineering to the way technology is understood and shared.",
   email: "yusenthebot@outlook.com",
   github: "https://github.com/yusenthebot",
+  blog: "https://yusenthebot.github.io/blog/",
   linkedin: "https://www.linkedin.com/in/yusenxie/",
   x: "https://x.com/YusenTheBot",
   portrait: "yusen-portrait.webp",
@@ -457,6 +458,7 @@ export const projectCollections = [
         "detail": "40 training motions · one seed · simulation study",
         "href": "https://github.com/yusenthebot/macmimic",
         "link": "Code & report",
+        "articleHref": new URL("posts/macmimic/", profile.blog).href,
         "image": {
           "file": "macmimic-walk.webp",
           "alt": "MacMimic G1 simulation comparing the learned walking policy with reference motion",

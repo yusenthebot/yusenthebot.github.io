@@ -11,8 +11,8 @@ import {
 import Profile from "./Profile.jsx";
 
 const Terminal = lazy(() => import("./Terminal.jsx"));
-const getView = () =>
-  window.location.hash === "#/terminal" ? "terminal" : "profile";
+const TERMINAL_HASH = "#/terminal";
+const getHash = () => window.location.hash;
 
 class TerminalBoundary extends Component {
   state = { failed: false };
@@ -64,12 +64,12 @@ export default function App() {
   const previousView = useRef(null);
   const subscribe = useCallback((notify) => {
     const onProfileClick = (event) => {
-      if (getView() !== "profile" || !(event.target instanceof Element)) return;
-      const entry = event.target.closest('a[href="#/terminal"]');
+      if (getHash() === TERMINAL_HASH || !(event.target instanceof Element)) return;
+      const entry = event.target.closest(`a[href="${TERMINAL_HASH}"]`);
       if (entry) profileTrigger.current = entry.id || null;
     };
     const onHashChange = () => {
-      if (getView() === "terminal") profileScroll.current = window.scrollY;
+      if (getHash() === TERMINAL_HASH) profileScroll.current = window.scrollY;
       notify();
     };
     window.addEventListener("hashchange", onHashChange);
@@ -79,7 +79,8 @@ export default function App() {
       document.removeEventListener("click", onProfileClick);
     };
   }, []);
-  const view = useSyncExternalStore(subscribe, getView);
+  const hash = useSyncExternalStore(subscribe, getHash);
+  const view = hash === TERMINAL_HASH ? "terminal" : "profile";
 
   useLayoutEffect(() => {
     const returningToProfile = previousView.current === "terminal";
@@ -93,10 +94,16 @@ export default function App() {
       return;
     }
     const frame = requestAnimationFrame(() => {
-      const section = document.getElementById(window.location.hash.slice(1));
-      if (section) section.scrollIntoView();
-      else window.scrollTo(0, profileScroll.current);
-      if (returningToProfile) {
+      const section = document.getElementById(hash.slice(1));
+      const collection = section?.closest("details");
+      if (section) {
+        if (collection) collection.open = true;
+        section.scrollIntoView();
+        if (collection) section.focus({ preventScroll: true });
+      } else if (returningToProfile) {
+        window.scrollTo(0, profileScroll.current);
+      }
+      if (returningToProfile && !collection) {
         const trigger = document.getElementById(profileTrigger.current);
         const target =
           section || trigger || document.getElementById("profile-name");
@@ -104,7 +111,7 @@ export default function App() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [view]);
+  }, [hash, view]);
 
   return view === "terminal" ? (
     <div className="terminal-shell">

@@ -11,10 +11,49 @@ export const HEADER_ASCII = `
 
 export const COMMANDS = {
   help: () => ({
-    out: 'AVAILABLE COMMANDS:\n\n  IDENTITY\n  about      - Who is Yusen?\n  skills     - Full tech stack\n  neofetch   - System info summary\n\n  WORK\n  zeno       - Current role at ZENO AI\n  vectoros   - Previous Vector OS Nano work\n  projects   - View all projects\n  resume     - Download resume\n\n  SOCIAL\n  contact    - How to reach me\n  links      - All external links\n\n  INTERACT WITH V\n  ttt        - Play tic-tac-toe vs V\n  rps        - Rock paper scissors\n  quiz       - Robot trivia\n  dance      - V performs a move\n  bow        - V bows\n\n  SYSTEM\n  scan       - Activate robot scan mode\n  theme      - Toggle CRT effects\n  sound      - Toggle audio\n  clear      - Clear terminal\n  sudo       - ???\n  hack       - ???',
-    speech: 'Here are all the commands. Try "about" or "zeno".',
+    out: `AVAILABLE COMMANDS:
+
+  NAVIGATION
+  blog       - Open the robotics & AI blog in a new tab
+  open blog  - Same as blog
+  portfolio  - Return to the portfolio
+  links      - Show external links
+
+  IDENTITY
+  about      - Who is Yusen?
+  skills     - Full tech stack
+  neofetch   - System info summary
+
+  WORK
+  zeno       - Current role at ZENO AI
+  vectoros   - Previous Vector OS Nano work
+  projects   - View all projects
+  resume     - How to request my résumé
+  contact    - How to reach me
+
+  INTERACT WITH V
+  ttt        - Play tic-tac-toe vs V
+  rps        - Rock paper scissors
+  quiz       - Robot trivia
+  dance      - V performs a move
+  bow        - V bows
+
+  SYSTEM
+  scan       - Activate robot scan mode
+  theme      - Toggle CRT effects
+  sound      - Toggle audio
+  clear      - Clear terminal
+  sudo       - ???
+  hack       - ???`,
+    speech: 'Try "blog" for articles or "zeno" for my current work.',
     action: 'nod', state: 'success',
   }),
+  blog: () => ({
+    out: "YUSEN_BLOG · Robotics and AI explainers. If the new tab is blocked, use the link below.",
+    special: { kind: "open-link", href: profile.blog, label: "Open Blog ↗" },
+    state: "success",
+  }),
+  portfolio: () => ({ special: { kind: "navigate", hash: "#/" } }),
   about: () => ({
     out: 'ABOUT ME:\nYusen Xie — Partner at ZENO AI.\nHead of Brand, Comms & Partnerships.\n\nPreviously: Co-founder of Vector Robotics.\nTechnical background: Robotics & AI systems.\n\n  > Perception  — Computer vision, LiDAR, sensor fusion\n  > Planning    — Motion planning, task scheduling, SLAM\n  > Control     — Real-time C++ controllers, ROS2 lifecycle nodes\n  > Hardware    — AI + Hardware co-design, embedded systems\n  > Web/Cloud   — React, Node.js, Docker, CI/CD pipelines\n\n  ───────────────────────────────────────────\n\n  "What iron hands shall till the earth,\n   That flesh and bone may know its worth?\n   Let steel awake, let circuits sing,\n   A paradise of our engineering."',
     speech: 'Nice to meet you. I lead Brand, Comms & Partnerships at ZENO AI.',
@@ -71,7 +110,7 @@ export const COMMANDS = {
     state: 'success', action: 'nod',
   }),
   links: () => ({
-    out: `EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Z Lab]      zlab.bot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusenxie\n  [X]          ${profile.x}\n  [Email]      yusenthebot@outlook.com`,
+    out: `EXTERNAL LINKS:\n  [Blog]       ${profile.blog}\n  [GitHub]     github.com/yusenthebot\n  [Z Lab]      zlab.bot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusenxie\n  [X]          ${profile.x}\n  [Email]      yusenthebot@outlook.com`,
     state: 'success',
   }),
   scan: () => ({

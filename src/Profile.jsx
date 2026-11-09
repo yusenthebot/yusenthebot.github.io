@@ -201,10 +201,11 @@ function ProjectCollection({ collection, open, onToggle, onOpen }) {
               className="collection-project"
               id={`project-${item.id}`}
               key={item.id}
+              tabIndex={-1}
             >
               <p className="resume-entry__period">{item.period}</p>
               <h4>
-                {item.href ? (
+                {item.href && !item.articleHref ? (
                   <Link href={item.href}>{item.title} ↗</Link>
                 ) : (
                   item.title
@@ -213,6 +214,12 @@ function ProjectCollection({ collection, open, onToggle, onOpen }) {
               <p className="resume-entry__description">{item.description}</p>
               {item.detail && (
                 <p className="resume-entry__detail">{item.detail}</p>
+              )}
+              {item.articleHref && (
+                <div className="resume-entry__links">
+                  {item.href && <Link href={item.href}>{item.link || "Code"} ↗</Link>}
+                  <a href={item.articleHref}>Read the write-up ↗</a>
+                </div>
               )}
               <Evidence image={item.image} title={item.title} onOpen={onOpen} />
             </article>
@@ -323,6 +330,7 @@ export default function Profile({ openCollections, onCollectionToggle }) {
             <a href="#/" aria-current="page">
               Portfolio
             </a>
+            <a href={profile.blog}>Blog ↗</a>
             <a id="open-terminal" href="#/terminal">
               Terminal ↗
             </a>
@@ -375,6 +383,24 @@ export default function Profile({ openCollections, onCollectionToggle }) {
             </Link>
           )}
         </section>
+
+        <nav className="resume-start" aria-label="Start here">
+          <a href="#experience">
+            <span className="resume-start__label">Current work</span>
+            <strong>ZENO / Z Lab <span aria-hidden="true">↓</span></strong>
+            <span>Brand, partnerships and experimental engineering.</span>
+          </a>
+          <a href="#project-macmimic">
+            <span className="resume-start__label">Research project</span>
+            <strong>MacMimic <span aria-hidden="true">↓</span></strong>
+            <span>Whole-body motion tracking on Apple Silicon.</span>
+          </a>
+          <a href={new URL("posts/ep13-real-world-rl/", profile.blog).href}>
+            <span className="resume-start__label">Article · <span lang="zh-CN">中文</span></span>
+            <strong>Real-world robot RL <span aria-hidden="true">↗</span></strong>
+            <span>EP13 · From QT-Opt to HIL-SERL.</span>
+          </a>
+        </nav>
 
         <nav className="resume-index" aria-label="On this page">
           <a href="#experience">Experience</a>
