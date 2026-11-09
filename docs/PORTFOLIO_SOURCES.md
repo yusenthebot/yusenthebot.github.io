@@ -19,6 +19,20 @@ sections supply these entries:
 Vector Robotics is retained as previous work from the owner's confirmed history;
 its dates are unspecified. Junyun is excluded at the owner's request.
 
+On 2026-11-09, the owner clarified the Advance internship as data-entry automation
+software development, retaining the previously sourced Excel-to-SAP workflow.
+They also confirmed co-founding Vector Robotics and working across fundraising,
+website design/development and agentic systems. The entry describes those activities
+without asserting an investment amount, a completed funding round or sole authorship.
+
+The owner also confirmed establishing Z Lab within ZENO AI and requested the title
+"Co-leader of Z Lab". Its stated purpose is exploring frontier technology and
+unconventional ideas through engineering prototypes, rather than academic
+publication or mass production. [zlab.bot](https://zlab.bot/) was checked on
+2026-11-09 and describes a lab connecting emerging AI, robotics and hardware ideas
+to prototypes. The personal role and the exploration-first emphasis are supplied
+by the owner; no independent founding date or research results are asserted.
+
 CMU is described as an in-progress M.S. program, matching the profile's About
 section, rather than treating its listed 2026 end year as evidence of graduation.
 The University of Sydney entry retains First Class Honours.
@@ -121,29 +135,36 @@ The owner supplied both original profile-code images on 2026-11-08:
   is invented; the account opens as a scan card and the ID is shown in text.
 
 The public Xiaohongshu profile was inspected on 2026-11-08. Its visible posts include
-Jev, Super Agent, Astra, MacMimic and FlyArm. The nine-grid uses the owner's original
-technical diagrams from those topics. Exact carousel slide sequences were not
-independently matched; these are nine diagrams across five topics, not nine posts.
+Jev, Super Agent, Astra, MacMimic and FlyArm. On 2026-11-09, the selection was revised
+to one diagram per topic, adding four original local technical diagrams. Those four
+are research/communication originals, not verified Xiaohongshu attachments. Exact
+carousel slide sequences were not independently matched; the grid does not establish
+nine published posts. A fresh browser lookup timed out before profile content loaded.
 The original scan-card bio is not used to change the LinkedIn education status.
 
 ### Xiaohongshu diagram grid
 
 | Tile | Original local source |
 | --- | --- |
-| Jev / Architecture | `jev-figures/post/Figure1_架构.png` |
 | Jev / Comparison | `jev-figures/post/Figure2_对比.png` |
-| Jev / Workflows | `jev-figures/post/Figure3_用法.png` |
 | Super Agent / Roles | `superagent-study/v3/figures/01-role-reversal.png` |
-| Super Agent / Events | `superagent-study/v3/figures/02-events-and-context.png` |
-| Super Agent / Runtime | `superagent-study/v3/figures/03-always-on-system.png` |
+| VLM / Robot loop | `Agentic System/Block diagrams/agentic-robot-framework-figure.png` |
+| JEPA / World models | `Agentic System/Block diagrams/jepa-world-model-figure.png` |
+| Skills / Learning | `neural-skill-graph-figure/neural_skill_graph-figure.png` |
+| Multi-robot / Coordination | `Agentic System/Block diagrams/multi-robot-network-figure.png` |
 | Astra / Control | `Astra 6 Casestudy/Block diagrams/astra-control-figure.png` |
 | MacMimic / Method | `macmimic/docs/figures/supermimic-figure.png` |
 | FlyArm / Pipeline | `FlyArm/docs/figures/pipeline-figure.png` |
 
 Jev's local `post/xiaohongshu-post.md` and Super Agent's `v3/post.md` and
-`captions.md` associate their figures with the post drafts. All diagrams are
-proportionally resized into `social/xhs-01.webp` through `xhs-09.webp`, with separate
-600-pixel-wide thumbnails. The full `social/xiaohongshu-nine.webp` is 2400×1680.
+`captions.md` associate their figures with the post drafts. The three new Agentic
+System figures have editable sources and source-code docstrings identifying them as
+conceptual illustrations inspired by public research, not experimental results.
+The neural skill graph has an adjacent `CAPTION.md` describing a local research
+draft and illustrative robot renders. All nine use original PNG exports, resized
+proportionally, with separate 600-pixel-wide thumbnails. The full
+`social/xiaohongshu-topics-v10.webp` is 2400×1680. No additional publication or
+performance claims are inferred from these illustrations.
 
 ### Douyin episode grid
 
@@ -154,21 +175,22 @@ in the source frames are preserved.
 
 | Episode | Source video | Timestamp |
 | --- | --- | --- |
+| EP01 / Extended Kalman Filtering | `200次观星_横屏.mp4` | 00:03 |
+| EP03 / VLA and Action Generation | `从烘干机里拿衣服_横屏.mp4` | 00:11 |
 | EP04 / World Action Models | `动手前先做梦_横屏.mp4` | 00:28 |
 | EP05 / In-Context Learning | `电机接反了_横屏.mp4` | 01:40 |
 | EP06 / Imitation Learning | `越走越偏_横屏.mp4` | 00:58 |
-| EP07 / Quadruped RL | `没人教它走路_横屏.mp4` | 00:17 |
-| EP08 / Bipedal RL | `被推了一把_横屏.mp4` | 00:04 |
 | EP09 / Motion Tracking | `照着人跳_横屏.mp4` | 00:48 |
 | EP10 / Hierarchical Control | `快慢脑_横屏.mp4` | 00:40 |
 | EP11 / Robot Training Data | `机器人吃什么数据_横屏.mp4` | 01:48 |
 | EP12 / Touch and Force | `机器人捏鸡蛋_横屏.mp4` | 01:28 |
 
-Uncropped 1200×675 frames are served as `social/douyin-ep04.webp` through
-`douyin-ep12.webp`, with 600×338 thumbnails. The full `social/douyin-nine.webp` is
+EP01 and EP03 replace EP07 and EP08 to vary the visual subject matter. Apollo is
+an explanatory animation and the laundry scene is an illustrative simulation,
+not historical or real-robot footage. Uncropped 1200×675 frames use episode-based
+filenames with 600×338 thumbnails. The full `social/douyin-selected-v10.webp` is
 2400×1680. Each tile opens its larger image; both full grids can also be enlarged.
 
 The editable HTML/CSS layout, full PNG exports and source-path/timestamp manifest
-are retained in the adjacent `yusen-personal-site-media/resume-v8/` folder. No new
-artwork or platform UI was generated. These V8 grids replace the earlier two
-cover-and-frame collages.
+are retained in the adjacent `yusen-personal-site-media/resume-v10/` folder. Earlier
+exports remain in `resume-v8/`. No new artwork or platform UI was generated.

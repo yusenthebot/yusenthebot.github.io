@@ -1,3 +1,10 @@
+export const zLab = {
+  role: "Co-leader of Z Lab",
+  href: "https://zlab.bot/",
+  description:
+    "Established Z Lab at ZENO AI to turn frontier technologies and unconventional ideas into experimental engineering prototypes. The focus is exploration, rather than academic publications or mass production.",
+};
+
 export const profile = {
   name: "Yusen Xie",
   position: "Partner at ZENO AI",
@@ -51,26 +58,15 @@ export const creatorContent = {
       "id": "xiaohongshu-nine",
       "channelId": "xiaohongshu",
       "title": "Research in diagrams",
-      "description": "Jev, Super Agent, Astra, MacMimic and FlyArm — explained through original technical diagrams.",
+      "description": "Nine topics, one diagram each — AI agents, world models, skill learning and robot control.",
       "image": {
-        "file": "social/xiaohongshu-nine.webp",
-        "alt": "Nine original technical diagrams by Yusen covering Jev, Super Agent, Astra, MacMimic and FlyArm",
-        "caption": "Nine original diagrams · Jev / Super Agent / Astra / MacMimic / FlyArm",
+        "file": "social/xiaohongshu-topics-v10.webp",
+        "alt": "Nine distinct technical topics: Jev, Super Agent, VLM robot control, JEPA, neural skill graphs, multi-robot coordination, Astra, MacMimic and FlyArm",
+        "caption": "Nine topics · one original diagram per topic",
         "width": 2400,
         "height": 1680
       },
       "items": [
-        {
-          "id": "xhs-01",
-          "title": "Jev architecture",
-          "shortTitle": "Jev / Architecture",
-          "file": "social/xhs-01.webp",
-          "thumbnailFile": "social/xhs-01-thumb.webp",
-          "alt": "Jev architecture — original technical diagram",
-          "caption": "Jev architecture · original technical diagram",
-          "width": 1800,
-          "height": 2400
-        },
         {
           "id": "xhs-02",
           "title": "Jev compared with LLMs",
@@ -81,17 +77,6 @@ export const creatorContent = {
           "caption": "Jev compared with LLMs · original technical diagram",
           "width": 1800,
           "height": 728
-        },
-        {
-          "id": "xhs-03",
-          "title": "Jev agent workflows",
-          "shortTitle": "Jev / Workflows",
-          "file": "social/xhs-03.webp",
-          "thumbnailFile": "social/xhs-03-thumb.webp",
-          "alt": "Jev agent workflows — original technical diagram",
-          "caption": "Jev agent workflows · original technical diagram",
-          "width": 1800,
-          "height": 628
         },
         {
           "id": "xhs-04",
@@ -105,26 +90,48 @@ export const creatorContent = {
           "height": 900
         },
         {
-          "id": "xhs-05",
-          "title": "Super-agent events and task lifecycle",
-          "shortTitle": "Super Agent / Events",
-          "file": "social/xhs-05.webp",
-          "thumbnailFile": "social/xhs-05-thumb.webp",
-          "alt": "Super-agent events and task lifecycle — original technical diagram",
-          "caption": "Super-agent events and task lifecycle · original technical diagram",
+          "id": "xhs-vlm-control",
+          "title": "VLM and VLA robot control",
+          "shortTitle": "VLM / Robot loop",
+          "caption": "VLM and VLA robot control · conceptual perception, reasoning, action and verification loop",
+          "file": "social/xhs-vlm-control.webp",
+          "thumbnailFile": "social/xhs-vlm-control-thumb.webp",
+          "alt": "VLM and VLA robot control — original technical diagram",
           "width": 1800,
-          "height": 1220
+          "height": 576
         },
         {
-          "id": "xhs-06",
-          "title": "Super-agent persistent system",
-          "shortTitle": "Super Agent / Runtime",
-          "file": "social/xhs-06.webp",
-          "thumbnailFile": "social/xhs-06-thumb.webp",
-          "alt": "Super-agent persistent system — original technical diagram",
-          "caption": "Super-agent persistent system · original technical diagram",
+          "id": "xhs-jepa",
+          "title": "JEPA world models",
+          "shortTitle": "JEPA / World models",
+          "caption": "JEPA world models · conceptual diagram of representation learning, prediction and planning",
+          "file": "social/xhs-jepa.webp",
+          "thumbnailFile": "social/xhs-jepa-thumb.webp",
+          "alt": "JEPA world models — original technical diagram",
           "width": 1800,
-          "height": 1000
+          "height": 628
+        },
+        {
+          "id": "xhs-neural-skills",
+          "title": "Neural skill graphs",
+          "shortTitle": "Skills / Learning",
+          "caption": "Neural skill graphs · local research diagram with illustrative robot renders",
+          "file": "social/xhs-neural-skills.webp",
+          "thumbnailFile": "social/xhs-neural-skills-thumb.webp",
+          "alt": "Neural skill graphs — original technical diagram",
+          "width": 1800,
+          "height": 1003
+        },
+        {
+          "id": "xhs-multi-robot",
+          "title": "Multi-robot coordination",
+          "shortTitle": "Multi-robot / Coordination",
+          "caption": "Multi-robot coordination · conceptual diagram of task allocation, robot agents and shared state",
+          "file": "social/xhs-multi-robot.webp",
+          "thumbnailFile": "social/xhs-multi-robot-thumb.webp",
+          "alt": "Multi-robot coordination — original technical diagram",
+          "width": 1800,
+          "height": 900
         },
         {
           "id": "xhs-07",
@@ -165,15 +172,37 @@ export const creatorContent = {
       "id": "douyin-nine",
       "channelId": "douyin",
       "title": "Science video series",
-      "description": "Nine episodes on world models, robot learning, control and touch.",
+      "description": "From spacecraft navigation to robot learning and touch — nine selected episodes.",
       "image": {
-        "file": "social/douyin-nine.webp",
-        "alt": "A three-by-three collection of original video frames from science explainer episodes four through twelve",
-        "caption": "EP04–12 · Original science explainer video frames",
+        "file": "social/douyin-selected-v10.webp",
+        "alt": "Nine selected explainer frames on spacecraft navigation, VLA, world models, learning, motion, hierarchical control, robot data and touch",
+        "caption": "EP01 / 03 / 04 / 05 / 06 / 09 / 10 / 11 / 12 · Original explainer frames",
         "width": 2400,
         "height": 1680
       },
       "items": [
+        {
+          "id": "douyin-ep01",
+          "title": "EP01 — Extended Kalman Filtering",
+          "shortTitle": "EP01 / 200次观星",
+          "file": "social/douyin-ep01.webp",
+          "thumbnailFile": "social/douyin-ep01-thumb.webp",
+          "alt": "Apollo 8 and Earth · explanatory animation",
+          "caption": "EP01 · 200次观星 · 00:03 · apollo 8 and earth · explanatory animation",
+          "width": 1200,
+          "height": 675
+        },
+        {
+          "id": "douyin-ep03",
+          "title": "EP03 — VLA and Action Generation",
+          "shortTitle": "EP03 / 从烘干机里拿衣服",
+          "file": "social/douyin-ep03.webp",
+          "thumbnailFile": "social/douyin-ep03-thumb.webp",
+          "alt": "Taking clothes from a dryer · explanatory simulation",
+          "caption": "EP03 · 从烘干机里拿衣服 · 00:11 · taking clothes from a dryer · explanatory simulation",
+          "width": 1200,
+          "height": 675
+        },
         {
           "id": "douyin-ep04",
           "title": "EP04 — World Action Models",
@@ -204,28 +233,6 @@ export const creatorContent = {
           "thumbnailFile": "social/douyin-ep06-thumb.webp",
           "alt": "DAgger demonstration and corrective trajectory diagram",
           "caption": "EP06 · 越走越偏 · 00:58 · video frame",
-          "width": 1200,
-          "height": 675
-        },
-        {
-          "id": "douyin-ep07",
-          "title": "EP07 — Quadruped Reinforcement Learning",
-          "shortTitle": "EP07 / 没人教它走路",
-          "file": "social/douyin-ep07.webp",
-          "thumbnailFile": "social/douyin-ep07-thumb.webp",
-          "alt": "Go2 simulation explaining reward components",
-          "caption": "EP07 · 没人教它走路 · 00:17 · video frame",
-          "width": 1200,
-          "height": 675
-        },
-        {
-          "id": "douyin-ep08",
-          "title": "EP08 — Bipedal Reinforcement Learning",
-          "shortTitle": "EP08 / 被推了一把",
-          "file": "social/douyin-ep08.webp",
-          "thumbnailFile": "social/douyin-ep08-thumb.webp",
-          "alt": "Simulated G1 capture-point explanation",
-          "caption": "EP08 · 被推了一把 · 00:04 · video frame",
           "width": 1200,
           "height": 675
         },
@@ -287,6 +294,7 @@ export const experience = [
     role: "Partner · Head of Brand, Comms & Partnerships",
     description:
       "Own the brand, social media, communications and partnerships across ZENO AI.",
+    initiative: zLab,
   },
   {
     id: "cmu-ri",
@@ -324,7 +332,8 @@ export const experience = [
     organization: "Hangzhou Advance Gearbox Group",
     logo: { file: "advance.png", href: "https://en.chinaadvance.com/" },
     role: "Software Engineer Intern",
-    description: "Automated mechanical design data imports from Excel to SAP.",
+    description:
+      "Developed data-entry automation software to transfer mechanical design records from Excel into SAP.",
   },
   {
     id: "vector",
@@ -333,7 +342,7 @@ export const experience = [
     logo: { file: "vector.png", href: "https://github.com/VectorRobotics", theme: "full" },
     role: "Co-founder",
     description:
-      "Worked across robot software, perception and language-model integration.",
+      "Co-founded the company and worked across fundraising, website design and development, and agentic robotics systems.",
   },
 ];
 
@@ -384,7 +393,6 @@ export const featuredProjects = [
     ],
     href: "https://zenobot.ai/",
     link: "zenobot.ai",
-    note: "Made by me lol",
     image: {
       file: "zeno-website.webp",
       alt: "English homepage of ZENO AI, designed and built by Yusen Xie",

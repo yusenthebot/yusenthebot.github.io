@@ -37,6 +37,7 @@
 .resume-position { font-size: 14px; font-weight: 600; }
 .resume-position a { color: var(--accent); }
 .resume-role { font-size: 12px; margin-top: 2px !important; }
+.resume-role a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .resume-intro { font-size: 13px; color: var(--muted); max-width: 650px; margin-top: 14px !important; }
 .resume-socials { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; font-size: 11px; color: var(--accent); }
 .resume-socials a:hover { text-decoration: underline; text-underline-offset: 4px; }
@@ -61,6 +62,8 @@
 .resume-entry__body { min-width: 0; }
 .resume-entry h3 { font-size: 14px; font-weight: 600; line-height: 1.55; letter-spacing: -.025em; }
 .resume-entry__role { font-size: 12px; margin-top: 2px !important; }
+.resume-initiative { margin-top: 14px; padding-left: 14px; border-left: 2px solid var(--line); }
+.resume-initiative h4 { font-size: 12px; font-weight: 600; }
 .resume-entry__description { color: #48554b; font-size: 13px; margin-top: 6px !important; line-height: 1.75; }
 .resume-entry__detail { color: #687462; font-size: 10px; margin-top: 8px !important; }
 .resume-entry__context { color: #63725f; font-size: 10px; line-height: 1.8; }
@@ -219,7 +222,8 @@
  .resume-identity h1 { grid-area: name; font-size: 39px; margin-bottom: 10px; white-space: nowrap; }
  .resume-cursor { display: none; }
  .resume-position { grid-area: position; font-size: 12px; }
- .resume-role { grid-area: role; font-size: 10px; }
+ .resume-roles { grid-area: role; }
+ .resume-role { font-size: 10px; }
  .resume-intro { grid-area: intro; font-size: 12px; }
  .resume-socials { grid-area: social; font-size: 10px; margin-top: 14px; }
  .resume-portrait { grid-area: portrait; width: 84px; height: 84px; margin-top: 5px; }

@@ -134,7 +134,6 @@ export default function IntroSequence({ onComplete }) {
           <a href="https://zenobot.ai/" target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}>
             zenobot.ai <span aria-hidden="true">↗</span>
           </a>
-          <span className="video-intro__credit">Made by me lol</span>
         </p>
       </div>
       <button ref={skipRef} className="video-intro__skip" onClick={finish}>

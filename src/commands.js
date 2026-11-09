@@ -1,3 +1,5 @@
+import { zLab } from "./profile.js";
+
 export const HEADER_ASCII = `
 ██╗   ██╗██╗   ██╗███████╗███████╗███╗   ██╗    ██╗  ██╗██╗███████╗
 ╚██╗ ██╔╝██║   ██║██╔════╝██╔════╝████╗  ██║    ╚██╗██╔╝██║██╔════╝
@@ -28,9 +30,27 @@ export const COMMANDS = {
     state: 'success',
   }),
   zeno: () => ({
-    out: 'ZENO AI\n══════════════════════════════════════════════\n\n  Yusen Xie\n  Partner at ZENO AI\n  Head of Brand, Comms & Partnerships\n\n  Focus: Brand, communications and partnerships\n  Contact: yusenthebot@outlook.com\n\n  Previously: Co-founder of Vector Robotics',
-    speech: 'I am a partner at ZENO AI, leading Brand, Comms & Partnerships.',
-    action: 'nod', state: 'success',
+    out: [
+      "ZENO AI",
+      "══════════════════════════════════════════════",
+      "",
+      "  Yusen Xie",
+      "  Partner at ZENO AI",
+      "  Head of Brand, Comms & Partnerships",
+      "  " + zLab.role,
+      "",
+      "  Focus: Brand, social media, communications and partnerships",
+      "  Website: https://zenobot.ai/",
+      "",
+      "Z LAB",
+      zLab.description,
+      "  Website: " + zLab.href,
+      "",
+      "  Contact: yusenthebot@outlook.com",
+      "  Previously: Co-founder of Vector Robotics",
+    ].join("\n"),
+    speech: "I lead Brand, Comms and Partnerships at ZENO AI, and co-lead Z Lab.",
+    action: "nod", state: "success",
   }),
   vectoros: () => ({
     out: 'VECTOR OS NANO\n══════════════════════════════════════════════\n\nCross-embodiment robot operating system.\n\n  Context:   PREVIOUS WORK — I have left Vector Robotics\n  Past role: Co-founder & Builder\n  Org:       github.com/VectorRobotics\n  Repo:      github.com/VectorRobotics/vector-os-nano\n\n  Features:\n  > Industrial-grade autonomous navigation\n  > Natural language control interface\n  > Sim-to-real transfer pipeline\n  > Multi-embodiment support\n\n  Hardware:  Unitree Go2 + SO-ARM101\n  Stack:     ROS2 Humble / MuJoCo / Isaac Sim\n  Origin:    CMU Robotics Institute',
@@ -51,7 +71,7 @@ export const COMMANDS = {
     state: 'success', action: 'nod',
   }),
   links: () => ({
-    out: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusenxie\n  [Email]      yusenthebot@outlook.com',
+    out: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Z Lab]      zlab.bot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusenxie\n  [Email]      yusenthebot@outlook.com',
     state: 'success',
   }),
   scan: () => ({

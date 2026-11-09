@@ -6,6 +6,7 @@ import PixelAvatar from "./robot.jsx";
 import TelemetryBar from "./telemetry.jsx";
 import { TicTacToe, RockPaperScissors, Quiz } from "./games.jsx";
 import IntroSequence from "./intro.jsx";
+import { zLab } from "./profile.js";
 
 const V_RESPONSES = [
   { log: "> [System] Neural link acknowledged.", say: "I exist in a world of binary. Zeros and ones. Yet I dream in color." },
@@ -62,6 +63,7 @@ function TerminalSession() {
     { type: "system", text: "SYSTEM INITIALIZED. Welcome to Yusen Xie's personal terminal." },
     { type: "intro", text: "Partner at ZENO AI" },
     { type: "intro", text: "Head of Brand, Comms & Partnerships" },
+    { type: "intro", text: zLab.role },
     { type: "system", text: 'Type "help" to see available commands. Click V to talk.' },
   ]);
   const [input, setInput] = useState("");
@@ -562,6 +564,8 @@ function TerminalSession() {
             <div style={{ fontSize: 20, lineHeight: 1.6, marginBottom: 24 }}>
               Partner at ZENO AI<br />
               <span style={{ fontSize: 16, color: "#bbb" }}>Head of Brand, Comms &amp; Partnerships</span>
+              <br />
+              <span style={{ fontSize: 16, color: "#bbb" }}>{zLab.role}</span>
             </div>
             <div style={{ fontSize: 12, color: "#888", marginBottom: 24 }}>
               Previously: Co-founder of Vector Robotics
@@ -612,7 +616,14 @@ function TerminalSession() {
               className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all"
             >
               [ zenobot.ai ]
-              <span className="block text-center text-[8px] md:text-[10px] font-normal text-gray-500">Made by me lol</span>
+            </a>
+            <a
+              href={zLab.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all"
+            >
+              [ Z LAB ]
             </a>
             <a
               href="https://linkedin.com/in/yusenxie"

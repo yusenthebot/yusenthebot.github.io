@@ -6,6 +6,7 @@ import {
   featuredProjects,
   projectCollections,
   creatorContent,
+  zLab,
 } from "./profile.js";
 import RobotPortal from "./RobotPortal.jsx";
 
@@ -337,7 +338,12 @@ export default function Profile({ openCollections, onCollectionToggle }) {
             <p className="resume-position">
               Partner at <Link href={profile.company}>ZENO AI ↗</Link>
             </p>
-            <p className="resume-role">{profile.title}</p>
+            <div className="resume-roles">
+              <p className="resume-role">{profile.title}</p>
+              <p className="resume-role">
+                <Link href={zLab.href}>{zLab.role} ↗</Link>
+              </p>
+            </div>
             <p className="resume-intro">{profile.introduction}</p>
             <div className="resume-socials">
               <a href={`mailto:${profile.email}`}>Email ↗</a>
@@ -389,6 +395,17 @@ export default function Profile({ openCollections, onCollectionToggle }) {
                 <h3>{item.organization}</h3>
                 <p className="resume-entry__role">{item.role}</p>
                 <p className="resume-entry__description">{item.description}</p>
+                {item.initiative && (
+                  <div className="resume-initiative">
+                    <h4>{item.initiative.role}</h4>
+                    <p className="resume-entry__description">
+                      {item.initiative.description}
+                    </p>
+                    <div className="resume-entry__links">
+                      <Link href={item.initiative.href}>zlab.bot ↗</Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </article>
           ))}
