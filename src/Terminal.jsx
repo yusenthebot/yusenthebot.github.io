@@ -6,7 +6,7 @@ import PixelAvatar from "./robot.jsx";
 import TelemetryBar from "./telemetry.jsx";
 import { TicTacToe, RockPaperScissors, Quiz } from "./games.jsx";
 import IntroSequence from "./intro.jsx";
-import { zLab } from "./profile.js";
+import { profile, zLab } from "./profile.js";
 
 const V_RESPONSES = [
   { log: "> [System] Neural link acknowledged.", say: "I exist in a world of binary. Zeros and ones. Yet I dream in color." },
@@ -632,6 +632,14 @@ function TerminalSession() {
               className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all"
             >
               [ LINKEDIN ]
+            </a>
+            <a
+              href={profile.x}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 px-1 md:px-3 py-2 rounded transition-all"
+            >
+              [ X ]
             </a>
           </div>
           <button

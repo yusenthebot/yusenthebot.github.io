@@ -1,4 +1,4 @@
-import { zLab } from "./profile.js";
+import { profile, zLab } from "./profile.js";
 
 export const HEADER_ASCII = `
 ██╗   ██╗██╗   ██╗███████╗███████╗███╗   ██╗    ██╗  ██╗██╗███████╗
@@ -67,11 +67,11 @@ export const COMMANDS = {
     state: 'success',
   }),
   contact: () => ({
-    out: 'CONTACT INFORMATION:\n  Email:    yusenthebot@outlook.com\n  GitHub:   github.com/yusenthebot\n  LinkedIn: linkedin.com/in/yusenxie\n  Org:      ZENO AI\n  Role:     Partner · Head of Brand, Comms & Partnerships',
+    out: `CONTACT INFORMATION:\n  Email:    yusenthebot@outlook.com\n  GitHub:   github.com/yusenthebot\n  LinkedIn: linkedin.com/in/yusenxie\n  X:        ${profile.x}\n  Org:      ZENO AI\n  Role:     Partner · Head of Brand, Comms & Partnerships`,
     state: 'success', action: 'nod',
   }),
   links: () => ({
-    out: 'EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Z Lab]      zlab.bot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusenxie\n  [Email]      yusenthebot@outlook.com',
+    out: `EXTERNAL LINKS:\n  [GitHub]     github.com/yusenthebot\n  [Z Lab]      zlab.bot\n  [Previous work: Vector OS] github.com/VectorRobotics/vector-os-nano\n  [LinkedIn]   linkedin.com/in/yusenxie\n  [X]          ${profile.x}\n  [Email]      yusenthebot@outlook.com`,
     state: 'success',
   }),
   scan: () => ({

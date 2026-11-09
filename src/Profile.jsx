@@ -296,6 +296,9 @@ function CreatorSection({ onOpen }) {
           );
         })}
       </div>
+      <div className="resume-entry__links">
+        <Link href={profile.x}>X · @YusenTheBot ↗</Link>
+      </div>
     </section>
   );
 }
@@ -349,6 +352,7 @@ export default function Profile({ openCollections, onCollectionToggle }) {
               <a href={`mailto:${profile.email}`}>Email ↗</a>
               <Link href={profile.github}>GitHub ↗</Link>
               <Link href={profile.linkedin}>LinkedIn ↗</Link>
+              <Link href={profile.x}>X ↗</Link>
               <Link href={creatorContent.channels[0].href}><span lang="zh-CN">小红书</span> ↗</Link>
               <button type="button" onClick={() => setSelectedImage(creatorContent.channels[1].code)} aria-label="Show Douyin profile code">
                 <span lang="zh-CN">抖音</span> ↗
@@ -500,6 +504,7 @@ export default function Profile({ openCollections, onCollectionToggle }) {
           </p>
           <div className="resume-contact__links">
             <a href={`mailto:${profile.email}`}>{profile.email} ↗</a>
+            <Link href={profile.x}>X · @YusenTheBot ↗</Link>
           </div>
         </section>
         <footer className="resume-footer">

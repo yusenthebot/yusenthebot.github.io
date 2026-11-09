@@ -14,6 +14,7 @@ export const profile = {
   email: "yusenthebot@outlook.com",
   github: "https://github.com/yusenthebot",
   linkedin: "https://www.linkedin.com/in/yusenxie/",
+  x: "https://x.com/YusenTheBot",
   portrait: "yusen-portrait.webp",
   company: "https://zenobot.ai/",
 };
